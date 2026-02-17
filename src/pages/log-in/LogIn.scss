@@ -1,0 +1,36 @@
+@import '../../scss/config';
+
+.login-page {
+    background-color: #fff;
+    min-height: 100vh;
+    padding: 42px 0;
+
+    @include mediaLg {
+        padding: 92px 0;
+    }
+
+    display: grid;
+    place-items: center;
+
+    .page-wrapper {
+        display: grid;
+        margin: auto;
+        // @include mediaXlg {
+        //     grid-template-columns: 42% 1fr;
+        // }
+
+        align-items: center;
+        grid-gap: 32px;
+
+        .img-wrap {
+            img {
+                max-width: 100%;
+            }
+        }
+
+        .form-top-level-wrapper {
+            display: grid;
+            justify-items: center;
+        }
+    }
+}

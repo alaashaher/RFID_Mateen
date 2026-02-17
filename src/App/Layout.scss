@@ -1,0 +1,141 @@
+@import '../scss/config';
+
+.logo-link {
+  img {
+
+
+    height: 30px;
+    width: 30px;
+    margin: auto;
+    @include mediaLg {
+      height: 46px;
+      width: 56px;
+
+    }
+
+  }
+
+  display: grid;
+  align-items: start;
+  justify-items: start;
+  margin: 30px 16px;
+
+}
+
+.app-aside-menu {
+  .ant-menu-item {
+    font-size: 18px;
+    height: 50px !important;
+    line-height: 50px !important;
+
+    .anticon {
+
+      // color: #fff;
+      svg {
+        height: 18px;
+        width: 18px;
+      }
+    }
+  }
+}
+
+.ant-layout-header {
+  background: linear-gradient(to bottom, #005F61 0%, rgb(0 95 97 / 82%) 100%) !important;
+  border-radius: 0% !important;
+}
+
+.site-layout .site-layout-background {
+  background: #fff;
+  background-color: rgb(85 110 120 / 2%);
+  box-shadow: 0 0 6px 4px rgb(85 110 120 / 10%);
+  border-radius: 10px;
+}
+
+.ant-layout-content {
+
+  margin-top: 22px !important;
+}
+
+.ant-table {
+  margin-top: 30px !important;
+}
+
+.app-site-layout {
+  .ant-layout-header {
+    display: flex;
+    justify-content: space-between;
+    height: 72px;
+
+    .trigger-layout-btn {
+      padding: 0 24px;
+      font-size: 25px;
+      line-height: 72px;
+      cursor: pointer;
+      transition: color 0.3s;
+      color: $main-app-color;
+
+    }
+
+    .trigger-layout-btn:hover {
+      color: $main-app-color;
+
+    }
+
+    .avatar-wrapper {
+      padding: 0 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      display: flex;
+      align-items: center;
+
+      .profile-menu-btn {
+        height: auto;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+
+        .user-name {
+          margin-bottom: 4px;
+          margin-left: 6px;
+          color: $main-app-color;
+          font-weight: bold;
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+
+.ant-layout-sider-collapsed {
+
+
+  .logo-link {
+    img {
+      height: 30px;
+      width: 30px;
+    }
+  }
+}
+
+@media screen and (min-device-width: 401px) and (max-device-width: 768px) {
+  .ant-layout-sider {
+    min-width: 100% !important;
+    width: 100% !important;
+    position: fixed !important;
+    z-index: 1000 !important;
+
+    &.ant-layout-sider-collapsed {
+      max-width: 0px !important;
+      min-width: 0px !important;
+      width: 0px !important;
+
+      .logo-link {
+        img {
+          height: 30px;
+          width: 30px;
+        }
+      }
+    }
+  }
+}

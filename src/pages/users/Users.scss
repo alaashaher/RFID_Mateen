@@ -1,0 +1,38 @@
+@use'../../scss/config';
+
+.users {
+    .custom-contain {
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+        background-color: #f7f7f7;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }      
+    .header-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #566071;
+    }
+
+    .chr {
+        background-color: #f9f9f9;
+        border-color: transparent;
+        margin: 20px 0;
+    }
+
+    .inn-form {
+        display: grid;
+        grid-gap: 20px;
+        grid-template-columns: 1fr 1fr 1fr;
+
+
+        @media screen and (max-width: 900px) and (min-width: 230px) {
+            display: flex;
+            flex-direction: column;
+        }
+
+    }
+
+    
+}

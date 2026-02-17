@@ -1,0 +1,171 @@
+@import "../../scss/config";
+
+.home-statistics {
+    padding: 62px 0;
+    display: flex;
+    .btn-view {
+        display: grid;
+        justify-content: center;
+
+        button {
+            width: fit-content;
+        }
+    }
+
+    .statistics-ul {
+        display: grid;
+        //   @include mediaMd {
+        grid-template-columns: 1fr 1fr;
+        justify-content: start;
+        margin: auto;
+
+        @include mediaLg {
+            grid-template-columns: 28% 35% 24%;
+        }
+
+        grid-gap: 92px 10px;
+
+        &>.li {
+            background-color: #f5f5f5;
+            padding: 32px 22px;
+            border-radius: 8px;
+            display: grid;
+
+            .form-divNew {
+                grid-template-columns: 1fr 1fr 1fr;
+                margin: auto;
+                display: flex;
+                gap: 20px;
+            }
+
+            // @include mediaLg {
+            //     grid-column-end: span 2;
+            // }
+
+            justify-content: space-around;
+            // grid-gap: 12px;
+            align-items: center;
+            border: 1px solid rgba(#000, 0.04);
+            box-shadow: 0 8px 12px rgba(#000, 0.1);
+
+            @include mediaXXlg {
+                padding: 52px 22px;
+            }
+
+            .img-wrap {
+                background-color: #f5f5f5;
+                border-radius: 999px;
+                //   margin-top: -82px;
+                padding: 28px;
+                margin: auto;
+                display: flow;
+                //   width: 101px;;
+                text-align: center;
+
+                svg {
+                    font-size: 50px;
+                }
+
+                @include mediaXXlg {
+                    // margin-top: -102px;
+                    padding: 34px;
+                }
+
+                img {
+                    height: 72px;
+                    width: 72px;
+
+                    @include mediaXXlg {
+                        height: 92px;
+                        width: 92px;
+                    }
+                }
+            }
+
+            .s-text {
+                display: grid;
+                justify-items: center;
+                text-align: center;
+                grid-gap: 14px;
+                margin-top: -18px;
+
+                @include mediaXXlg {
+                    grid-gap: 18px;
+                    margin-top: -28px;
+                }
+
+                span {
+                    line-height: 1;
+
+                    &:first-of-type {
+                        color: $main-app-color;
+                        font-size: 62px;
+                        font-weight: bold;
+
+                        @include mediaXXlg {
+                            font-size: 92px;
+                        }
+                    }
+
+                    &:last-of-type {
+                        font-size: 18px;
+                        font-weight: bold;
+                    }
+                }
+            }
+
+            //
+            // @include mediaLg {
+            //     &:nth-of-type(1) {
+            //         grid-column-start: 2;
+            //     }
+
+            //     &:nth-of-type(1),
+            //     &:nth-of-type(2) {
+            //         grid-column-end: span 3;
+            //     }
+
+            //     &:nth-of-type(3) {
+            //         grid-column-start: 2;
+            //     }
+            // }
+        }
+    }
+}
+
+.main-div {
+    gap: 30px;
+    display: grid;
+    grid-template-columns: 1fr;
+
+    @include mediaLg {
+        grid-template-columns: 1fr 1fr;
+
+    }
+
+    margin-top: 50px;
+
+    &.main-div-one {
+        grid-template-columns: 1fr;
+
+        @include mediaLg {
+            grid-template-columns: 1fr;
+
+        }
+    }
+
+    .single-chart {
+        border: 1px solid #343434;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        justify-content: center;
+
+        div {
+            margin: auto;
+        }
+
+    }
+
+
+}

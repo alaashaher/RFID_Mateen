@@ -1,0 +1,168 @@
+$main-black-color: #595f6f;
+$main-app-color: #d5b990;
+$secondary-app-color: #ecb11c;
+
+$headerMd-height: 62px;
+$headerLg-height: 72px;
+$headerXlg-height: 82px;
+$headerXXlg-height: 92px;
+$MainBackground: #EFE8E0;
+
+@mixin mediaXsm {
+  @media only screen and (min-width: 320px) {
+    @content;
+  }
+}
+
+@mixin mediaSm {
+  @media only screen and (min-width: 375px) {
+    @content;
+  }
+}
+
+@mixin mediaSmd {
+  @media only screen and (min-width: 576px) {
+    @content;
+  }
+}
+
+@mixin mediaMd {
+  @media only screen and (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin mediaLg {
+  @media only screen and (min-width: 992px) {
+    @content;
+  }
+}
+
+@mixin mediaLLg {
+  @media only screen and (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin mediaXlg {
+
+  // @media only screen and (min-width: 1200px) {
+  @media only screen and (min-width: 1366px) {
+    @content;
+  }
+}
+
+@mixin mediaXXlg {
+  @media only screen and (min-width: 1400px) {
+    @content;
+  }
+}
+
+@mixin mediaXXXlg {
+  @media only screen and (min-width: 1600px) {
+    @content;
+  }
+}
+
+.custom-container {
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @include mediaSmd {
+    max-width: 540px;
+  }
+
+  @include mediaMd {
+    max-width: 720px;
+  }
+
+  @include mediaLg {
+    max-width: 960px;
+  }
+
+  @include mediaXlg {
+    max-width: 1140px;
+    // max-width: 1300px;
+  }
+
+  @include mediaXXlg {
+    // max-width: 1340px;
+    max-width: 1280px;
+  }
+
+  @include mediaXXXlg {
+    max-width: 1540px;
+    // max-width: 1280px;
+  }
+}
+
+.dsp-flx {
+  display: flex;
+}
+
+.sp-btwn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.prnt {
+  color: #2f353b;
+  border-color: #2f353b;
+
+  &:hover {
+    color: #ffffff !important;
+    background-color: #2f353b;
+    border-color: #2f353b !important;
+  }
+}
+
+.pdf {
+  color: #32c5d2;
+  border-color: #32c5d2;
+
+  &:hover {
+    color: #ffffff !important;
+    background-color: #32c5d2;
+    border-color: #32c5d2 !important;
+  }
+}
+
+.csv {
+  color: #8e44ad;
+  border-color: #8e44ad;
+
+  &:hover {
+    color: #ffffff !important;
+    background-color: #8e44ad;
+    border-color: #8e44ad !important;
+  }
+}
+
+.new-btn {
+  background-color: #1677ff;
+  // background-color: ;
+  padding: 10px 50px;
+  color: #fff;
+  border-color: transparent;
+  padding: 5px 9px;
+  border-radius: 4px;
+  min-width: 109px;
+
+  cursor: pointer;
+
+  &:hover {
+    color: #fff !important;
+  }
+
+  // cursor: pointer;
+  // &:hover{
+  //   color: #fff !important;
+  //   background-color: #4d8db9;
+  //   border-color: #4d8db9;
+  // }
+}

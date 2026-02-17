@@ -1,0 +1,10 @@
+@import "../../scss/config";
+
+.notFoundPage {
+	display: grid;
+	place-items: center;
+	min-height: 50vh;
+	.notFoundContent {
+		text-align: center;
+	}
+}

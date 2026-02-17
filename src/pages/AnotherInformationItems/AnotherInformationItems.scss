@@ -1,0 +1,30 @@
+
+
+.citys-itmss{
+    min-height: 100vh;
+    display: flex;
+    .main-cont{
+        display: grid;
+        margin: auto;
+        width: 40%;
+        cursor: pointer;
+        a{
+            text-decoration: none !important;
+        }
+        .slb-crd{
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #FAFAFA;
+            // background-color: #D1C8C0;
+            // background-color: #AA8662;
+            border: 1px solid #f0f0f0;
+            min-height: 100px;
+            span{
+                font-size: 18px;
+            }
+        }
+    }
+    
+}

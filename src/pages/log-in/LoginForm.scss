@@ -1,0 +1,72 @@
+@import '../../scss/config';
+
+.login-form {
+  width: 100%;
+  display: grid;
+  height: max-content;
+  border: 5px solid #fff;
+  max-width: 578px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 0 16px rgba(41, 42, 51, 0.06), 0 6px 20px rgba(41, 42, 51, 0.02);
+
+  .form-logo {
+    display: grid;
+    // padding: 10px;
+    // padding-bottom: 8px;
+    place-items: center;
+    img {
+      width: 100%;
+      height: 200px;
+      margin-bottom: 12px;
+      // border-radius: 20px;
+    }
+  }
+  .form-header {
+    background-color: #f5f5f5;
+    padding-top: 10px;
+    p {
+      text-align: center;
+      color: rgba(#000, 0.4);
+      font-size: 22px;
+      margin-bottom: 22px;
+    }
+  }
+
+  .form-body {
+    background-color: #f5f5f5;
+    padding: 18px 16px;
+    @include mediaLg {
+      padding: 22px 32px;
+    }
+    display: grid;
+    grid-gap: 12px;
+    .ant-input-affix-wrapper {
+      border-radius: 6px;
+      height: 48px;
+      background-color: transparent;
+      input {
+        background-color: transparent;
+      }
+    }
+
+    .ant-checkbox-wrapper {
+      color: #777;
+      font-size: 16px;
+    }
+
+    .submit-btn {
+      margin-top: 12px;
+      cursor: pointer;
+      background-color: $main-app-color !important;
+      outline: 0;
+      border: 0;
+      color: #fff;
+      padding: 8px 18px;
+      height: 48px;
+      border-radius: 5px;
+      width: 200px;
+      font-size: 18px;
+    }
+  }
+}
