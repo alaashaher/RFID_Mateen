@@ -130,22 +130,22 @@ const BuildingsPage = () => {
       dataIndex: "BuildingCode",
       key: "BuildingCode",
     },
-    // {
-    //   title: "مفعل",
-    //   dataIndex: "IsActive",
-    //   key: "IsActive",
-    //   render: (_, record) => {
-    //     return record?.IsActive ? (
-    //       <div>
-    //         <FontAwesomeIcon icon={faCheck} />
-    //       </div>
-    //     ) : (
-    //       <div>
-    //         <FontAwesomeIcon icon={faXmark} />
-    //       </div>
-    //     );
-    //   },
-    // },
+    {
+      title: "نوع المبني",
+      dataIndex: "BuilingTypeId",
+      key: "BuilingTypeId",
+      render: (_, record) => {
+        return record?.BuilingTypeId == 1 ? (
+          <div>
+            مستودع
+          </div>
+        ) : (
+          <div>
+            مبني اداري
+          </div>
+        );
+      },
+    },
     {
       title: "إجراءات",
       dataIndex: "Actions",

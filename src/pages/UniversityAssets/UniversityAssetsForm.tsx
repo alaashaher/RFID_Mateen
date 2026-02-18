@@ -40,7 +40,7 @@ const UniversityAssetsForm = () => {
     // UniversityAssetDate: toEdit ? toEdit.UniversityAssetDate : "",
     GrossValue: toEdit ? toEdit.GrossValue : "",
     AssetBarcode: toEdit ? toEdit.AssetBarcode : "",
-    // AssetCode: toEdit ? toEdit.AssetCode : "",
+    BuilingTypeId: toEdit ? toEdit.BuilingTypeId : "",
     RoomId: toEdit ? toEdit.RoomId : "",
     CategoryId: toEdit ? toEdit.CategoryId : "",
     FloorId: toEdit ? toEdit.FloorId : "",
@@ -54,7 +54,7 @@ const UniversityAssetsForm = () => {
       // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
       // GrossValue: Yup.string().required("ادخل العمله"),
       AssetBarcode: Yup.string().required("ادخل اسم الاصل"),
-      // AssetCode: Yup.string().required("ادخل العمله"),
+      BuilingTypeId: Yup.string().required("ادخل نوع المبني"),
       RoomId: Yup.string().required("ادخل الغرفه"),
       CategoryId: Yup.string().required("ادخل الصنف"),
       BuildingId: Yup.string().required("ادخل المبني"),
@@ -139,7 +139,7 @@ const UniversityAssetsForm = () => {
       // setValue("UniversityAssetDate", toEdit.UniversityAssetDate);
       setValue("GrossValue", toEdit.GrossValue);
       setValue("AssetBarcode", toEdit.AssetBarcode);
-      // setValue("AssetCode", toEdit.AssetCode);
+      setValue("BuilingTypeId", toEdit.BuilingTypeId);
       setValue("RoomId", String(toEdit.RoomId))
       setValue("CategoryId", String(toEdit.CategoryId))
     }
@@ -156,7 +156,7 @@ const UniversityAssetsForm = () => {
         // UniversityAssetDate: data.UniversityAssetDate,
         GrossValue: data.GrossValue,
         AssetBarcode: data.AssetBarcode,
-        // AssetCode: data.AssetCode,
+        BuilingTypeId: data.BuilingTypeId,
         CreationDate: moment(new Date()).format('YYYY-MM-DD'),
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
@@ -251,6 +251,20 @@ const UniversityAssetsForm = () => {
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
+
+            <AntdSelectOption
+              control={control}
+              name="BuilingTypeId"
+              formClassName="custom-form"
+              setValue={setValue}
+              errorMsg={errors.BuilingTypeId?.message}
+              label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder=" نوع المبني"
+              options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+
             <AntdSelectOption
               control={control}
               name="BuildingId"
@@ -264,7 +278,7 @@ const UniversityAssetsForm = () => {
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
-
+          
             <AntdSelectOption
               control={control}
               name="FloorId"
@@ -276,19 +290,21 @@ const UniversityAssetsForm = () => {
               options={floors?.map((item) => ({ title: item.UniversityFloorName, value: item.UniversityFloorId }))}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {watch("BuilingTypeId") == 2 &&
+            <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
-            <AntdSelectOption
-              control={control}
-              name="RoomId"
-              setValue={setValue}
-              formClassName="custom-form"
-              errorMsg={errors.RoomId?.message}
-              label={<span>  الغرفه<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" الغرفه"
-              options={rooms?.map((item) => ({ title: item.RoomName, value: item.RoomId }))}
-            />
-          </Col>
+              <AntdSelectOption
+                control={control}
+                name="RoomId"
+                setValue={setValue}
+                formClassName="custom-form"
+                errorMsg={errors.RoomId?.message}
+                label={<span>  الغرفه<span style={{ color: '#252627' }}>*</span></span>}
+                placeholder=" الغرفه"
+                options={rooms?.map((item) => ({ title: item.RoomName, value: item.RoomId }))}
+              />
+            </Col>
+          }
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdTextField
               control={control}
@@ -300,7 +316,7 @@ const UniversityAssetsForm = () => {
               type={'text'}
             />
           </Col>
-          
+
           {/* <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
 
           التاريخ الحالي للاصل:   {moment(new Date(toEdit?.UniversityAssetDate).toISOString()).format("YYYY-DD-MM")}
