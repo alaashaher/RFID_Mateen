@@ -135,7 +135,7 @@ const BuildingsPage = () => {
       dataIndex: "BuilingTypeId",
       key: "BuilingTypeId",
       render: (_, record) => {
-        return record?.BuilingTypeId == 1 ? (
+        return record?.BuildingTypeId == 1 ? (
           <div>
             مستودع
           </div>

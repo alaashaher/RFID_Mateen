@@ -26,14 +26,14 @@ const CityArchitecturalStyleForm = () => {
   const defaultValues = {
     BuildingName: toEdit ? toEdit.BuildingName : "",
     BuildingCode: toEdit ? toEdit.BuildingCode : "",
-    BuilingTypeId: toEdit ? toEdit.BuilingTypeId : ""
+    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : ""
   };
 
   const schema = Yup.object().shape(
     {
       BuildingName: Yup.string().required("اسم المنبي مطلوب"),
       BuildingCode: Yup.string().required("كود المبني مطلوب"),
-      BuilingTypeId: Yup.string().required("نوع المبني مطلوب")
+      BuildingTypeId: Yup.string().required("نوع المبني مطلوب")
     }
   );
 
@@ -55,10 +55,11 @@ const CityArchitecturalStyleForm = () => {
   });
 
   useEffect(() => {
+    console.log("🚀 ~ CityArchitecturalStyleForm ~ toEdit:", toEdit)
     if (toEdit) {
       setValue("BuildingCode", toEdit.BuildingCode)
       setValue("BuildingName", toEdit.BuildingName);
-      setValue("BuilingTypeId", String(toEdit.BuilingTypeId));
+      setValue("BuildingTypeId", String(toEdit.BuildingTypeId));
     }
   }, [toEdit, setValue]);
 
@@ -74,7 +75,7 @@ const CityArchitecturalStyleForm = () => {
         BuildingId: toEdit ? toEdit.BuildingId : 0,
         BuildingCode: data.BuildingCode,
         BuildingName: data.BuildingName,
-        BuilingTypeId: data.BuilingTypeId
+        BuildingTypeId: parseInt(data.BuildingTypeId)
       };
 
       if (toEdit) {
@@ -145,13 +146,13 @@ const CityArchitecturalStyleForm = () => {
 
             <AntdSelectOption
               control={control}
-              name="BuilingTypeId"
+              name="BuildingTypeId"
               formClassName="custom-form"
               setValue={setValue}
-              errorMsg={errors.BuilingTypeId?.message}
+              errorMsg={errors.BuildingTypeId?.message}
               label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" نوع المبني"
-              options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
+              options={[{ title: "مستودع", value: "1" }, { title: "مبني أدري", value: "2" }]}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >

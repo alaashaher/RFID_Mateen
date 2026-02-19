@@ -40,7 +40,7 @@ const UniversityAssetsForm = () => {
     // UniversityAssetDate: toEdit ? toEdit.UniversityAssetDate : "",
     GrossValue: toEdit ? toEdit.GrossValue : "",
     AssetBarcode: toEdit ? toEdit.AssetBarcode : "",
-    BuilingTypeId: toEdit ? toEdit.BuilingTypeId : "",
+    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "",
     RoomId: toEdit ? toEdit.RoomId : "",
     CategoryId: toEdit ? toEdit.CategoryId : "",
     FloorId: toEdit ? toEdit.FloorId : "",
@@ -54,7 +54,7 @@ const UniversityAssetsForm = () => {
       // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
       // GrossValue: Yup.string().required("ادخل العمله"),
       AssetBarcode: Yup.string().required("ادخل اسم الاصل"),
-      BuilingTypeId: Yup.string().required("ادخل نوع المبني"),
+      BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
       RoomId: Yup.string().required("ادخل الغرفه"),
       CategoryId: Yup.string().required("ادخل الصنف"),
       BuildingId: Yup.string().required("ادخل المبني"),
@@ -139,7 +139,7 @@ const UniversityAssetsForm = () => {
       // setValue("UniversityAssetDate", toEdit.UniversityAssetDate);
       setValue("GrossValue", toEdit.GrossValue);
       setValue("AssetBarcode", toEdit.AssetBarcode);
-      setValue("BuilingTypeId", toEdit.BuilingTypeId);
+      setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "");
       setValue("RoomId", String(toEdit.RoomId))
       setValue("CategoryId", String(toEdit.CategoryId))
     }
@@ -156,7 +156,7 @@ const UniversityAssetsForm = () => {
         // UniversityAssetDate: data.UniversityAssetDate,
         GrossValue: data.GrossValue,
         AssetBarcode: data.AssetBarcode,
-        BuilingTypeId: data.BuilingTypeId,
+        BuildingTypeId: data.BuildingTypeId ? parseInt(data.BuildingTypeId) : null,
         CreationDate: moment(new Date()).format('YYYY-MM-DD'),
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
@@ -254,10 +254,10 @@ const UniversityAssetsForm = () => {
 
             <AntdSelectOption
               control={control}
-              name="BuilingTypeId"
+              name="BuildingTypeId"
               formClassName="custom-form"
               setValue={setValue}
-              errorMsg={errors.BuilingTypeId?.message}
+              errorMsg={errors.BuildingTypeId?.message}
               label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" نوع المبني"
               options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
@@ -290,7 +290,7 @@ const UniversityAssetsForm = () => {
               options={floors?.map((item) => ({ title: item.UniversityFloorName, value: item.UniversityFloorId }))}
             />
           </Col>
-          {watch("BuilingTypeId") == 2 &&
+          {watch("BuildingTypeId") == 2 &&
             <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
               <AntdSelectOption

@@ -167,7 +167,7 @@ const RoomsForm = () => {
               errorMsg={errors.BuildingId?.message}
               label={<span>  المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" المبني"
-              options={buildings?.map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
+              options={buildings?.filter((item)=> item.BuildingTypeId != 1).map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
