@@ -55,7 +55,7 @@ const UniversityAssetsForm = () => {
       // GrossValue: Yup.string().required("ادخل العمله"),
       AssetBarcode: Yup.string().required("ادخل اسم الاصل"),
       BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
-      RoomId: Yup.string().required("ادخل الغرفه"),
+      RoomId: Yup.string(),
       CategoryId: Yup.string().required("ادخل الصنف"),
       BuildingId: Yup.string().required("ادخل المبني"),
       FloorId: Yup.string().required("ادخل الدور"),
