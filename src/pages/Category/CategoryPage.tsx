@@ -31,16 +31,12 @@ const CategoryPage = () => {
     const fetchCategoryTypes = async () => {
       const resp = await getFromApi(`CategoryType/get-categoryType-ddl`);
       setcategoryType(resp);
-    
     };
     fetchCategoryTypes();
   }, []);
   const {
     rowData,
     setRowData,
-
-
-   
     setToEdit,
     pageSize,
     setPageSize,
@@ -64,7 +60,7 @@ const CategoryPage = () => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `AssetType/get-all-AssetType-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&categoryType=${selectedCatType ? selectedCatType : ""}`
+          `AssetType/get-all-AssetType-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&categoryId=${selectedCatType ? selectedCatType : ""}`
         );
         setRowData(resp);
       } catch (error) {
@@ -206,9 +202,9 @@ const CategoryPage = () => {
 
 
       <div className="sub-table">
-        <h5 style={{ justifySelf: 'center' , marginBottom: '20px'}}>الاصناف الرئيسية</h5>
+        <h5 style={{ justifySelf: 'center' , marginBottom: '20px'}}> تصنيف الاصول</h5>
         <div className='sp-btwn'>
-          <Input type='text' placeholder='ابحث بالاسم (نوع الأصل) او كود نوع الاصل' onChange={(e) => setkeyword(e.target.value)} />
+          <Input type='text' placeholder='ابحث بالاسم (نوع الأصل) او كود  تصنيف الاصول' onChange={(e) => setkeyword(e.target.value)} />
           <Select
             allowClear
             placeholder="اختر وصف نوع الأصل"
@@ -261,8 +257,8 @@ const CategoryPage = () => {
           open={openFormModel}
           title={
             toEdit
-              ? "تعديل نوع الاصل"
-              : "اضافة نوع الاصل"
+              ? "تعديل  تصنيف الاصول"
+              : "اضافة تصنيف الاصول"
           }
           footer={false}
           onCancel={handleCloseFormModel}

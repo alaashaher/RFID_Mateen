@@ -104,13 +104,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
     //   icon: <BarChartOutlined />,
     //   hidden: (user?.user?.Permissions?.includes("ViewCategoryTypes")) ? false : true
     // },
-    // {
-    //   key: 1,
-    //   path: routerLinks.category,
-    //   name: "الاصناف",
-    //   icon: <ControlOutlined />,
-    //   hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
-    // }, 
+    {
+      key: 1,
+      path: routerLinks.category,
+      name: "اصناف الاصول",
+      icon: <ControlOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+    }, 
     {
       key: 2,
       path: routerLinks.Buildings,

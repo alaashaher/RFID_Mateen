@@ -27,7 +27,7 @@ const CategoryForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const res = await getFromApi(`CategoryType/get-category-type-ddl`);
+        const res = await getFromApi(`Category/get-category-ddl`);
         setBuildings(res);
       } catch (error) {
         //console.log(error);
@@ -38,7 +38,7 @@ const CategoryForm = () => {
   const defaultValues = {
     AssetTypeName: toEdit ? toEdit.AssetTypeName : "",
     AssetTypeCode: toEdit ? toEdit.AssetTypeCode : "",
-    ParentAssetTypeId: toEdit ? toEdit.ParentAssetTypeId : "",
+    CategoryId: toEdit ? toEdit.CategoryId : "",
     UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية"
 
 
@@ -46,7 +46,7 @@ const CategoryForm = () => {
   const schema = Yup.object().shape({
     AssetTypeName: Yup.string().required("ادخل اسم الطابق"),
     AssetTypeCode: Yup.string().required('ادخل كود الدور'),
-    ParentAssetTypeId: Yup.string().required("ادخل نوع الاصل"),
+    CategoryId: Yup.string().required("ادخل نوع الاصل"),
     UniversityName: Yup.string()
   })
     ;
@@ -68,7 +68,7 @@ const CategoryForm = () => {
     if (toEdit) {
       setValue("AssetTypeName", toEdit.AssetTypeName);
       setValue("AssetTypeCode", toEdit.AssetTypeCode);
-      setValue("ParentAssetTypeId", String(toEdit.ParentAssetTypeId))
+      setValue("CategoryId", String(toEdit.CategoryId))
       setValue("UniversityName", toEdit.UniversityName);
     }
   }, [toEdit, setValue]);
@@ -79,7 +79,7 @@ const CategoryForm = () => {
     try {
 
       const payload = {
-        ParentAssetTypeId: data.ParentAssetTypeId,
+        CategoryId: data.CategoryId,
         AssetTypeId: toEdit ? toEdit.AssetTypeId : 0,
         AssetTypeName: data.AssetTypeName,
         AssetTypeCode: data.AssetTypeCode,
@@ -149,13 +149,13 @@ const CategoryForm = () => {
 
             <AntdSelectOption
               control={control}
-              name="ParentAssetTypeId"
+              name="CategoryId"
               setValue={setValue}
               formClassName="custom-form"
-              errorMsg={errors.ParentAssetTypeId?.message}
+              errorMsg={errors.CategoryId?.message}
               label={<span>  وصف نوع الأصل<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" وصف نوع الأصل "
-              options={buildings?.map((item) => ({ title: item.CategoryTypeName, value: item.CategoryTypeId }))}
+              options={buildings?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
