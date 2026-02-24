@@ -86,7 +86,7 @@ const UniversityAssetsForm = () => {
     fetchLanguages();
     const fetchCats = async () => {
       try {
-        const res = await getFromApi(`Category/get-category-ddl?BuldingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
         setCats(res);
       } catch (error) {
         //console.log(error);
