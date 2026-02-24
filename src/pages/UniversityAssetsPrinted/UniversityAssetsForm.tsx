@@ -160,10 +160,11 @@ const UniversityAssetsForm = () => {
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
         IsScanned: null,
-        RoomId: data.RoomId,
+       RoomId: (data.RoomId == "" || data.RoomId == null) ? null : data.RoomId,
         CategoryId: data.CategoryId
 
       };
+       console.log("payload3____,", payload)
       if (toEdit) {
         res = await putToApi(`UniversityAsset/update-UniversityAsset`, payload);
       } else {

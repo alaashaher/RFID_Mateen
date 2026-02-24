@@ -149,6 +149,7 @@ const UniversityAssetsForm = () => {
     let res;
     setLoading(true);
     try {
+
       const payload = {
         UniversityAssetId: toEdit.UniversityAssetId,
         // BuildingCode: "",
@@ -158,10 +159,11 @@ const UniversityAssetsForm = () => {
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
 
-        RoomId: data.RoomId,
+        RoomId: (data.RoomId == "" || data.RoomId == null) ? null : data.RoomId,
 
 
       };
+      console.log("payload4____,", payload)
       if (toEdit) {
         res = await putToApi(`UniversityAsset/update-tree-forAsset`, payload);
       } else {
