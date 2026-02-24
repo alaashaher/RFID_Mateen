@@ -39,7 +39,7 @@ const CategoryForm = () => {
     AssetTypeName: toEdit ? toEdit.AssetTypeName : "",
     AssetTypeCode: toEdit ? toEdit.AssetTypeCode : "",
     ParentAssetTypeId: toEdit ? toEdit.ParentAssetTypeId : "",
-    UniversityName: toEdit ? toEdit.UniversityName : "جامعة نايف العربية للعلوم الأمنية"
+    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية"
 
 
   };

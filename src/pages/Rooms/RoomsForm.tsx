@@ -47,7 +47,7 @@ const RoomsForm = () => {
       BuildingId: Yup.string().required("ادخل المبني"),
       FloorId: Yup.string().required("ادخل الدور"),
       RoomName: Yup.string().required("ادخل اسم الطابق"),
-      RoomCode: Yup.string().required('ادخل كود الدور'),
+      RoomCode: Yup.string(),
     });
   const handleCloseModal = () => {
     setToEdit(null);
@@ -196,7 +196,7 @@ const RoomsForm = () => {
             />
           </Col>
 
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
               name={`RoomCode`}
@@ -206,7 +206,7 @@ const RoomsForm = () => {
               validateStatus={errors?.[`RoomCode`] ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
 
 
         </Row>

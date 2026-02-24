@@ -93,17 +93,17 @@ const AppLayout: React.FC<any> = ({ children }) => {
     {
       key: 1,
       path: routerLinks.CategoryNew,
-      name: " الأصناف",
+      name: " تصنيف الاصول",
       icon: <BranchesOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
-    {
-      key: 111,
-      path: routerLinks.CategoryTypes,
-      name: "أنواع الأصناف",
-      icon: <BarChartOutlined />,
-      hidden: (user?.user?.Permissions?.includes("ViewCategoryTypes")) ? false : true
-    },
+    // {
+    //   key: 111,
+    //   path: routerLinks.CategoryTypes,
+    //   name: "أنواع الأصناف",
+    //   icon: <BarChartOutlined />,
+    //   hidden: (user?.user?.Permissions?.includes("ViewCategoryTypes")) ? false : true
+    // },
     // {
     //   key: 1,
     //   path: routerLinks.category,

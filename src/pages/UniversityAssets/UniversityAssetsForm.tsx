@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Button, Col, Form, Row, Select } from "antd";
-import { useForm } from "react-hook-form";
+import { get, useForm } from "react-hook-form";
 import AntdTextField from "../../common/antd-form-components/AntdTextField";
 import * as Yup from "yup";
 import AntdCheckbox from "../../common/antd-form-components/AntdCheckbox";
@@ -53,7 +53,7 @@ const UniversityAssetsForm = () => {
       // Currency: Yup.string().required("ادخل العمله"),
       // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
       // GrossValue: Yup.string().required("ادخل العمله"),
-      AssetBarcode: Yup.string().required("ادخل اسم الاصل"),
+      AssetBarcode: Yup.string(),
       BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
       RoomId: Yup.string(),
       CategoryId: Yup.string().required("ادخل الصنف"),
@@ -86,14 +86,14 @@ const UniversityAssetsForm = () => {
     fetchLanguages();
     const fetchCats = async () => {
       try {
-        const res = await getFromApi(`AssetType/get-assetType-ddl`);
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
         setCats(res);
       } catch (error) {
         //console.log(error);
       }
     };
     fetchCats();
-  }, []);
+  }, [getValues("BuildingTypeId")]);
   useEffect(() => {
     if (getValues("BuildingId") != "") {
       const fetchLanguages = async () => {
@@ -237,20 +237,7 @@ const UniversityAssetsForm = () => {
               type={'text'}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
-
-            <AntdSelectOption
-              control={control}
-              name="CategoryId"
-              formClassName="custom-form"
-              setValue={setValue}
-              errorMsg={errors.CategoryId?.message}
-              label={<span>  الصنف<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" الصنف"
-              options={cats?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
-            />
-          </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
 
@@ -267,6 +254,20 @@ const UniversityAssetsForm = () => {
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
+
+            <AntdSelectOption
+              control={control}
+              name="CategoryId"
+              formClassName="custom-form"
+              setValue={setValue}
+              errorMsg={errors.CategoryId?.message}
+              label={<span>  تصنيف الاصل<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder=" تصنيف الاصل"
+              options={cats?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+
             <AntdSelectOption
               control={control}
               name="BuildingId"
@@ -275,12 +276,12 @@ const UniversityAssetsForm = () => {
               errorMsg={errors.BuildingId?.message}
               label={<span>  المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" المبني"
-              options={buildings?.filter((item)=> item.BuildingTypeId == watch("BuildingTypeId")).map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
+              options={buildings?.filter((item) => item.BuildingTypeId == watch("BuildingTypeId")).map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
-          
+
             <AntdSelectOption
               control={control}
               name="FloorId"
@@ -307,7 +308,7 @@ const UniversityAssetsForm = () => {
               />
             </Col>
           }
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdTextField
               control={control}
               name={`AssetBarcode`}
@@ -317,7 +318,7 @@ const UniversityAssetsForm = () => {
               validateStatus={errors?.AssetBarcode ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
 
           {/* <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
 

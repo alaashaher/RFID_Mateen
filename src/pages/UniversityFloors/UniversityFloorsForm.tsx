@@ -41,7 +41,7 @@ const UniversityFloorsForm = () => {
   };
   const schema = Yup.object().shape({
     UniversityFloorName: Yup.string().required("ادخل اسم الطابق"),
-    UniversityFloorCode: Yup.string().required('ادخل كود الدور'),
+    UniversityFloorCode: Yup.string(),
     BuildingId: Yup.string().required("ادخل المبني"),
 
   })
@@ -163,7 +163,7 @@ const UniversityFloorsForm = () => {
             />
           </Col>
 
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
               name={`UniversityFloorCode`}
@@ -173,7 +173,7 @@ const UniversityFloorsForm = () => {
               validateStatus={errors?.[`UniversityFloorCode`] ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
 
         </Row>
         <div className="footer-form">

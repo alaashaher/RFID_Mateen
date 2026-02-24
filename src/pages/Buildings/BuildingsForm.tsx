@@ -32,7 +32,7 @@ const CityArchitecturalStyleForm = () => {
   const schema = Yup.object().shape(
     {
       BuildingName: Yup.string().required("اسم المنبي مطلوب"),
-      BuildingCode: Yup.string().required("كود المبني مطلوب"),
+      BuildingCode: Yup.string(),
       BuildingTypeId: Yup.string().required("نوع المبني مطلوب")
     }
   );
@@ -166,7 +166,7 @@ const CityArchitecturalStyleForm = () => {
               type={'text'}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+          {/* <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
             <AntdTextField
               control={control}
               name={`BuildingCode`}
@@ -176,7 +176,7 @@ const CityArchitecturalStyleForm = () => {
               validateStatus={errors?.BuildingCode ? "error" : ""}
               type={"text"}
             />
-          </Col>
+          </Col> */}
 
         </Row>
         <div className="footer-form">
