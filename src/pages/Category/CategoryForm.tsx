@@ -22,54 +22,59 @@ const CategoryForm = () => {
 
   } = useContext(CategoryContext);
   const [buildings, setBuildings] = useState([]);
-
-  useEffect(() => {
-
-    const fetchLanguages = async () => {
-      try {
-        const res = await getFromApi(`Category/get-category-ddl`);
-        setBuildings(res);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    fetchLanguages();
-  }, [])
   const defaultValues = {
     AssetTypeName: toEdit ? toEdit.AssetTypeName : "",
     AssetTypeCode: toEdit ? toEdit.AssetTypeCode : "",
     CategoryId: toEdit ? toEdit.CategoryId : "",
-    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية"
+    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية",
 
-
+    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "1"
   };
   const schema = Yup.object().shape({
     AssetTypeName: Yup.string().required("ادخل اسم الطابق"),
     AssetTypeCode: Yup.string().required('ادخل كود الدور'),
     CategoryId: Yup.string().required("ادخل نوع الاصل"),
-    UniversityName: Yup.string()
-  })
-    ;
-  const handleCloseModal = () => {
-    setToEdit(null);
-    setOpenFormModel(false);
-  };
+    UniversityName: Yup.string(),
+    BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
+  });
   const [form] = Form.useForm();
   const {
     control,
     handleSubmit,
     setValue,
+    getValues,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues,
     resolver: yupResolver(schema),
   });
   useEffect(() => {
+
+    const fetchLanguages = async () => {
+      try {
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
+        setBuildings(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [watch("BuildingTypeId")])
+
+  const handleCloseModal = () => {
+    setToEdit(null);
+    setOpenFormModel(false);
+  };
+
+  useEffect(() => {
     if (toEdit) {
       setValue("AssetTypeName", toEdit.AssetTypeName);
       setValue("AssetTypeCode", toEdit.AssetTypeCode);
       setValue("CategoryId", String(toEdit.CategoryId))
       setValue("UniversityName", toEdit.UniversityName);
+      setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
+
     }
   }, [toEdit, setValue]);
   const onFinish = async (data) => {
@@ -84,7 +89,9 @@ const CategoryForm = () => {
         AssetTypeName: data.AssetTypeName,
         AssetTypeCode: data.AssetTypeCode,
         "IsActive": true,
-        UniversityName: data.UniversityName
+        UniversityName: data.UniversityName,
+        BuildingTypeId: data.BuildingTypeId,
+        Category: {}
       };
       if (toEdit) {
         res = await putToApi(`AssetType/update-AssetType`, payload);
@@ -145,6 +152,18 @@ const CategoryForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+            <AntdSelectOption
+              control={control}
+              name="BuildingTypeId"
+              formClassName="custom-form"
+              setValue={setValue}
+              errorMsg={errors.BuildingTypeId?.message}
+              label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder=" نوع المبني"
+              options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
+            />
+          </Col>
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
 
             <AntdSelectOption
