@@ -40,7 +40,7 @@ const CategoryForm = () => {
     CategoryName: toEdit ? toEdit.CategoryName : "",
     CategoryCode: toEdit ? toEdit.CategoryCode : "",
     // ParentCategoryName: toEdit ? toEdit.ParentCategoryName : "",
-    UniversityName: toEdit ? toEdit.UniversityName : "جامعة نايف العربية للعلوم الأمنية"
+    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية"
 
 
   };

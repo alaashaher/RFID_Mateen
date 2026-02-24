@@ -27,7 +27,7 @@ const CategoryForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const res = await getFromApi(`Category/get-category-type-ddl`);
+        const res = await getFromApi(`BuildingType/get-buildingType-ddl`);
         setBuildings(res);
       } catch (error) {
         //console.log(error);
@@ -39,13 +39,13 @@ const CategoryForm = () => {
     CategoryName: toEdit ? toEdit.CategoryName : "",
     CategoryCode: toEdit ? toEdit.CategoryCode : "",
     ParentCategoryName: toEdit ? toEdit.ParentCategoryName : "",
-    UniversityName: toEdit ? toEdit.UniversityName : "جامعة نايف العربية للعلوم الأمنية"
+    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية"
 
 
   };
   const schema = Yup.object().shape({
     CategoryName: Yup.string().required("ادخل اسم "),
-    CategoryCode: Yup.string().required('ادخل كود '),
+    // CategoryCode: Yup.string().required('ادخل كود '),
     ParentCategoryName: Yup.string(),
     UniversityName: Yup.string()
   })
@@ -84,7 +84,7 @@ const CategoryForm = () => {
         CategoryId: toEdit ? toEdit.CategoryId : 0,
         CategoryName: data.CategoryName,
         CategoryCode: data.CategoryCode,
-        "ParentCategoryId": data.ParentCategoryName,
+        "BuildingTypeId": data.ParentCategoryName,
         UniversityName: data.UniversityName
       };
       if (toEdit) {
@@ -169,7 +169,7 @@ const CategoryForm = () => {
             />
           </Col>
 
-          <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+          {/* <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
             <AntdTextField
               control={control}
               name={`CategoryCode`}
@@ -179,7 +179,7 @@ const CategoryForm = () => {
               validateStatus={errors?.[`CategoryCode`] ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
 
           {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
@@ -202,9 +202,9 @@ const CategoryForm = () => {
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.ParentCategoryName?.message}
-              label={<span>  الصنف الرئيسي<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder={`الصنف الرئيسي`}
-              options={buildings?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
+              label={<span>  التصنيف الرئيسي<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder={`تصنيف رئيسي`}
+              options={buildings?.map((item) => ({ title: item.BuildingTypeName, value: item.BuildingTypeId }))}
             />
           </Col>
           {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
