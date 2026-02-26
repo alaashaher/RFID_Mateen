@@ -25,7 +25,9 @@ import { saveAs } from 'file-saver';
 const CategoryListPage = () => {
 
   const [categoryType, setcategoryType] = useState([]);
-  const [selectedCatType, setSelectedCatTypeId] = useState("");
+  //const [selectedCatType, setSelectedCatTypeId] = useState("");
+  const [selectedBuildingTypeId, setSelectedBuildingTypeId] = useState("");
+
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
@@ -66,7 +68,7 @@ const CategoryListPage = () => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `Category/get-all-category-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&categoryTypeId=${selectedCatType ? selectedCatType : ""}`
+          `Category/get-all-category-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&buildingTypeId=${selectedBuildingTypeId ? selectedBuildingTypeId : ""}`
         );
         setRowData(resp);
       } catch (error) {
@@ -74,7 +76,7 @@ const CategoryListPage = () => {
       }
     };
     getAllData();
-  }, [pageNumber, pageSize, keyword, detectChanges, selectedCatType]);
+  }, [pageNumber, pageSize, keyword, detectChanges, selectedBuildingTypeId]);
 
 
 
@@ -139,11 +141,10 @@ const CategoryListPage = () => {
       render: (item, record, index) => <>{index + 1}</>,
       width: 30,
     },
-    { title: " الاسم", dataIndex: "CategoryName", key: "CategoryName" },
-    { title: "الاسم الرئيسي", dataIndex: "ParentCategoryName", key: "ParentCategoryName" },
-    // { title: "وصف نوع الأصل", dataIndex: "ParentAssetTypeName", key: "ParentAssetTypeName" },
+    { title: " تصنيف الأصل", dataIndex: "CategoryName", key: "CategoryName" },
+    { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName" },
     { title: "الكود   ", dataIndex: "CategoryCode", key: "CategoryCode" },
-    { title: "اسم الجامعه ", dataIndex: "UniversityName", key: "UniversityName" },
+    { title: " الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -272,21 +273,21 @@ const CategoryListPage = () => {
 
 
       <div className="sub-table">
-        <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>الاصناف </h5>
+        <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>تصنيف الأصول(المحاور) </h5>
         <div className='sp-btwn'>
-          <Input type='text' placeholder='ابحث بالاسم (نوع الأصل) او كود نوع الاصل' onChange={(e) => setkeyword(e.target.value)} />
+          <Input type='text' placeholder='ابحث بالاسم (تصنيف الأصل) او كود تصنيف الأصل' onChange={(e) => setkeyword(e.target.value)} />
           <Select
             allowClear
-            placeholder="اختر وصف نوع الأصل"
-            onChange={setSelectedCatTypeId}
-            style={{ width: 530 }}
-          >
-            {categoryType.map((client) => (
-              <Option key={client.CategoryId} value={client.CategoryId}>
-                {client.CategoryName}
-              </Option>
-            ))}
-          </Select>
+            placeholder="اختر نوع مبنى الأصل"
+            onChange={(value) => {
+              setSelectedBuildingTypeId(value ?? "");
+            }}
+            style={{ width: 250 }}
+            options={[
+              { label: "مستودع", value: 1 },
+              { label: "مبني إداري", value: 2 },
+            ]}
+          />
         </div>
 
 

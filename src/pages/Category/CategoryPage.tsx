@@ -20,10 +20,17 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import CategoryForm from "./CategoryForm";
 import { Store } from "react-notifications-component";
 const { Option } = Select;
+
 const CategoryPage = () => {
 
   const [categoryType, setcategoryType] = useState([]);
   const [selectedCatType, setSelectedCatTypeId] = useState("");
+
+  // --- NEW STATES ---
+  const [selectedBuildingTypeId, setSelectedBuildingTypeId] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  // ------------------
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
@@ -34,6 +41,25 @@ const CategoryPage = () => {
     };
     fetchCategoryTypes();
   }, []);
+
+  // --- NEW: Fetch categories when BuildingTypeId changes ---
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await getFromApi(
+          `Category/get-category-ddl?BuildingTypeId=${selectedBuildingTypeId ? selectedBuildingTypeId : ""}`
+        );
+        setCategories(res);
+        // Reset category selection when building type changes
+        setSelectedCategoryId("");
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchCategories();
+  }, [selectedBuildingTypeId]);
+  // ---------------------------------------------------------
+
   const {
     rowData,
     setRowData,
@@ -54,13 +80,12 @@ const CategoryPage = () => {
   } = useContext(CategoryContext);
   const { user } = useContext(UserContext);
 
-
-
+  // --- UPDATED: Added selectedBuildingTypeId and selectedCategoryId to dependencies ---
   useEffect(() => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `AssetType/get-all-AssetType-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&categoryId=${selectedCatType ? selectedCatType : ""}`
+          `AssetType/get-all-AssetType-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&categoryId=${selectedCategoryId ? selectedCategoryId : ""}`
         );
         setRowData(resp);
       } catch (error) {
@@ -68,11 +93,10 @@ const CategoryPage = () => {
       }
     };
     getAllData();
-  }, [pageNumber, pageSize, keyword, detectChanges, selectedCatType]);
+  }, [pageNumber, pageSize, keyword, detectChanges, selectedCatType, selectedBuildingTypeId, selectedCategoryId]);
+  // ------------------------------------------------------------------------------------
 
-
-
- const handleEditMod = async (TableId) => {
+  const handleEditMod = async (TableId) => {
     try {
       const response = await getFromApi(
         `AssetType/get-assetType-by-id?categoryId=${TableId}`
@@ -126,6 +150,7 @@ const CategoryPage = () => {
       setLoading(false);
     }
   };
+
   const columns = [
     {
       title: "#",
@@ -135,8 +160,7 @@ const CategoryPage = () => {
     },
     { title: "نوع الأصل", dataIndex: "AssetTypeName", key: "AssetTypeName" },
     { title: "كود نوع الأصل", dataIndex: "AssetTypeCode", key: "AssetTypeCode" },
-    { title: "وصف نوع الأصل", dataIndex: "ParentAssetTypeName", key: "ParentAssetTypeName" },
-    // { title: "كود وصف نوع الأصل", dataIndex: "ParentAssetTypeCode", key: "ParentAssetTypeCode" },
+    { title: "تصنيف الأصل(المحور)", dataIndex: "CategoryName", key: "CategoryName" },
     { title: "اسم الجامعه ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
@@ -175,9 +199,7 @@ const CategoryPage = () => {
         );
       },
     },
-    // 
   ];
-
 
   const handleCloseFormModel = () => {
     setOpenFormModel(false);
@@ -198,16 +220,23 @@ const CategoryPage = () => {
         )}
       </div>
 
-
-
-
       <div className="sub-table">
-        <h5 style={{ justifySelf: 'center' , marginBottom: '20px'}}> تصنيف الاصول</h5>
-        <div className='sp-btwn'>
-          <Input type='text' placeholder='ابحث بالاسم (نوع الأصل) او كود  تصنيف الاصول' onChange={(e) => setkeyword(e.target.value)} />
-          <Select
+        <h5 style={{ justifySelf: "center", marginBottom: "20px" }}>
+          تصنيف الاصول
+        </h5>
+
+        <div className="sp-btwn">
+          {/* Search Input */}
+          <Input
+            type="text"
+            placeholder="ابحث بالاسم (نوع الأصل) او كود  تصنيف الاصول"
+            onChange={(e) => setkeyword(e.target.value)}
+          />
+
+          {/* OLD: CategoryType filter - kept as is */}
+          {/* <Select
             allowClear
-            placeholder="اختر وصف نوع الأصل"
+            placeholder="اختر نوع الفئة"
             onChange={setSelectedCatTypeId}
             style={{ width: 530 }}
           >
@@ -216,9 +245,40 @@ const CategoryPage = () => {
                 {client.CategoryTypeName}
               </Option>
             ))}
+          </Select> */}
+
+          {/* NEW: BuildingType filter - 2 static options */}
+          <Select
+            allowClear
+            placeholder="اختر نوع مبنى الأصل"
+            onChange={(value) => {
+              setSelectedBuildingTypeId(value ?? "");
+            }}
+            style={{ width: 250 }}
+            options={[
+              { label: "مستودع", value: 1 },
+              { label: "مبني إداري", value: 2 },
+            ]}
+          />
+
+          {/* NEW: Category filter - dynamic based on BuildingTypeId */}
+          <Select
+            allowClear
+            placeholder="تصنيف الأصل"
+            value={selectedCategoryId || undefined}
+            onChange={(value) => {
+              setSelectedCategoryId(value ?? "");
+            }}
+            style={{ width: 250 }}
+            disabled={!selectedBuildingTypeId}
+          >
+            {categories?.map((item) => (
+              <Option key={item.CategoryId} value={item.CategoryId}>
+                {item.CategoryName}
+              </Option>
+            ))}
           </Select>
         </div>
-
 
         <Table
           columns={columns}
@@ -226,9 +286,8 @@ const CategoryPage = () => {
           pagination={false}
           loading={loading}
           scroll={{ x: 200 }}
-
-
         />
+
         <Pagination
           pageSize={pageSize}
           style={{
@@ -250,16 +309,11 @@ const CategoryPage = () => {
         />
       </div>
 
-
       {openFormModel && (
         <Modal
           width={"52%"}
           open={openFormModel}
-          title={
-            toEdit
-              ? "تعديل  تصنيف الاصول"
-              : "اضافة تصنيف الاصول"
-          }
+          title={toEdit ? "تعديل  تصنيف الاصول" : "اضافة تصنيف الاصول"}
           footer={false}
           onCancel={handleCloseFormModel}
           onOk={handleCloseFormModel}
@@ -267,8 +321,6 @@ const CategoryPage = () => {
           <CategoryForm />
         </Modal>
       )}
-
-
     </div>
   );
 };

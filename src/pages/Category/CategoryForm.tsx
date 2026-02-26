@@ -32,7 +32,7 @@ const CategoryForm = () => {
   };
   const schema = Yup.object().shape({
     AssetTypeName: Yup.string().required("ادخل اسم الطابق"),
-    AssetTypeCode: Yup.string().required('ادخل كود الدور'),
+    AssetTypeCode: Yup.string(),
     CategoryId: Yup.string().required("ادخل نوع الاصل"),
     UniversityName: Yup.string(),
     BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
@@ -91,7 +91,7 @@ const CategoryForm = () => {
         "IsActive": true,
         UniversityName: data.UniversityName,
         BuildingTypeId: data.BuildingTypeId,
-        Category: {}
+        //Category: {}
       };
       if (toEdit) {
         res = await putToApi(`AssetType/update-AssetType`, payload);
@@ -172,8 +172,8 @@ const CategoryForm = () => {
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.CategoryId?.message}
-              label={<span>  وصف نوع الأصل<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" وصف نوع الأصل "
+              label={<span>  تصنيف الأصل(المحور)<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder=" تصنيف الأصل(المحور) "
               options={buildings?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
             />
           </Col>
@@ -189,7 +189,7 @@ const CategoryForm = () => {
             />
           </Col>
 
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
               name={`AssetTypeCode`}
@@ -199,13 +199,13 @@ const CategoryForm = () => {
               validateStatus={errors?.[`AssetTypeCode`] ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
               name={`UniversityName`}
-              placeholder={`اسم الجامعه`}
-              label={`اسم الجامعه`}
+              placeholder={`اسم الجهة`}
+              label={`اسم الجهة`}
               errorMsg={errors?.[`UniversityName`]?.message}
               validateStatus={errors?.[`UniversityName`] ? "error" : ""}
               type={'text'}

@@ -3,7 +3,7 @@ const RouterLinks = {
   homePage: "/",
   logIn: "/login",
   Buildings: "/Buildings",
-  category: "/category",
+  category: "/assetType",
   CategoryNew:"/category-list",
   CategoryTypes: '/CategoryTypes',
   Rooms: "/Rooms",
