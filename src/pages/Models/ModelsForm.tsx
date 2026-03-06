@@ -11,7 +11,7 @@ import { Store } from "react-notifications-component";
 import CategoryContext from "../../contexts/pages-context/CategoryProvider";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 
-const CategoryForm = () => {
+const ModelsForm = () => {
   const {
     setLoading,
     toEdit,
@@ -23,19 +23,20 @@ const CategoryForm = () => {
   } = useContext(CategoryContext);
   const [buildings, setBuildings] = useState([]);
   const defaultValues = {
-    AssetTypeName: toEdit ? toEdit.AssetTypeName : "",
-    AssetTypeCode: toEdit ? toEdit.AssetTypeCode : "",
-    CategoryId: toEdit ? toEdit.CategoryId : "",
-    UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية",
-
-    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "1"
+    ModelName: toEdit ? toEdit.ModelName : "",
+    ModelNumber: toEdit ? toEdit.ModelNumber : "",
+    AssetTypeId: toEdit ? toEdit.AssetTypeId : "",
+    Brand: toEdit ? toEdit.Brand : "",
+    ModelCode: toEdit ? toEdit.ModelCode : "",
+    Specifications: toEdit ? toEdit.Specifications : ""
   };
   const schema = Yup.object().shape({
-    AssetTypeName: Yup.string().required("ادخل اسم الطابق"),
-    AssetTypeCode: Yup.string(),
-    CategoryId: Yup.string().required("ادخل نوع الاصل"),
-    UniversityName: Yup.string(),
-    BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
+    ModelName: Yup.string().required("ادخل اسم الموديل"),
+    ModelCode: Yup.string().required("ادخل كود الموديل"),
+    ModelNumber: Yup.string(),
+    AssetTypeId: Yup.string().required("ادخل نوع الاصل"),
+    Brand: Yup.string(),
+    Specifications: Yup.string(),
   });
   const [form] = Form.useForm();
   const {
@@ -53,14 +54,16 @@ const CategoryForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
+        const res = await getFromApi(
+          `AssetType/get-assetType-ddl`
+        );
         setBuildings(res);
       } catch (error) {
         //console.log(error);
       }
     };
     fetchLanguages();
-  }, [watch("BuildingTypeId")])
+  }, [])
 
   const handleCloseModal = () => {
     setToEdit(null);
@@ -69,12 +72,12 @@ const CategoryForm = () => {
 
   useEffect(() => {
     if (toEdit) {
-      setValue("AssetTypeName", toEdit.AssetTypeName);
-      setValue("AssetTypeCode", toEdit.AssetTypeCode);
-      setValue("CategoryId", String(toEdit.CategoryId))
-      setValue("UniversityName", toEdit.UniversityName);
-      setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
-
+      setValue("ModelName", toEdit.ModelName);
+      setValue("ModelNumber", toEdit.ModelNumber);
+      setValue("AssetTypeId", String(toEdit.AssetTypeId))
+      setValue("Brand", toEdit.Brand);
+      setValue("Specifications", toEdit.Specifications);
+      setValue("ModelCode", toEdit.ModelCode)
     }
   }, [toEdit, setValue]);
   const onFinish = async (data) => {
@@ -84,19 +87,22 @@ const CategoryForm = () => {
     try {
 
       const payload = {
-        CategoryId: data.CategoryId,
-        AssetTypeId: toEdit ? toEdit.AssetTypeId : 0,
-        AssetTypeName: data.AssetTypeName,
-        AssetTypeCode: data.AssetTypeCode,
-        "IsActive": true,
+        AssetTypeId: data.AssetTypeId,
+        AssetModelId: toEdit ? toEdit.AssetModelId : 0,
+        ModelName: data.ModelName,
+        ModelNumber: data.ModelNumber,
+        Brand: data.Brand,
+        Specifications: data.Specifications,
+        ModelCode: data.ModelCode,
         UniversityName: data.UniversityName,
-        BuildingTypeId: data.BuildingTypeId,
+        "IsActive": true,
+        "IsDeleted": false
         //Category: {}
       };
       if (toEdit) {
-        res = await putToApi(`AssetType/update-AssetType`, payload);
+        res = await putToApi(`AssetModel/update-assetModel`, payload);
       } else {
-        res = await postToApi(`AssetType/add-AssetType`, payload);
+        res = await postToApi(`AssetModel/add-assetModel`, payload);
       }
       if (res) {
         setdetectChanges((prev) => prev + 1);
@@ -152,7 +158,7 @@ const CategoryForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdSelectOption
               control={control}
               name="BuildingTypeId"
@@ -163,53 +169,77 @@ const CategoryForm = () => {
               placeholder=" نوع المبني"
               options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
             />
-          </Col>
+          </Col> */}
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
 
             <AntdSelectOption
               control={control}
-              name="CategoryId"
+              name="AssetTypeId"
               setValue={setValue}
               formClassName="custom-form"
-              errorMsg={errors.CategoryId?.message}
+              errorMsg={errors.AssetTypeId?.message}
               label={<span>  تصنيف الأصل(المحور)<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" تصنيف الأصل(المحور) "
-              options={buildings?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
+              options={buildings?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
-              name={`AssetTypeName`}
-              placeholder={`اسم نوع الاصل`}
-              label={`اسم نوع الاصل`}
-              errorMsg={errors?.[`AssetTypeName`]?.message}
-              validateStatus={errors?.[`AssetTypeName`] ? "error" : ""}
+              name={`ModelName`}
+              placeholder={`اسم الموديل`}
+              label={`اسم الموديل`}
+              errorMsg={errors?.[`ModelName`]?.message}
+              validateStatus={errors?.[`ModelName`] ? "error" : ""}
               type={'text'}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`ModelCode`}
+              placeholder={`كود الموديل`}
+              label={`كود الموديل`}
+              errorMsg={errors?.[`ModelCode`]?.message}
+              validateStatus={errors?.[`ModelCode`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
             />
           </Col>
 
-          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
-            <AntdTextField
-              control={control}
-              name={`AssetTypeCode`}
-              placeholder={`كود نوع الاصل`}
-              label={`كود نوع الاصل`}
-              errorMsg={errors?.[`AssetTypeCode`]?.message}
-              validateStatus={errors?.[`AssetTypeCode`] ? "error" : ""}
-              type={'text'}
-            />
-          </Col> */}
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
-              name={`UniversityName`}
-              placeholder={`اسم الجهة`}
-              label={`اسم الجهة`}
-              errorMsg={errors?.[`UniversityName`]?.message}
-              validateStatus={errors?.[`UniversityName`] ? "error" : ""}
+              name={`ModelNumber`}
+              placeholder={`رقم الموديل`}
+              label={`رقم الموديل`}
+              errorMsg={errors?.[`ModelNumber`]?.message}
+              validateStatus={errors?.[`ModelNumber`] ? "error" : ""}
               type={'text'}
-              disabled={true}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`Brand`}
+              placeholder={`اسم الماركه`}
+              label={`اسم الماركه`}
+              errorMsg={errors?.[`Brand`]?.message}
+              validateStatus={errors?.[`Brand`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`Specifications`}
+              placeholder={`الخصائص`}
+              label={`الخصائص`}
+              errorMsg={errors?.[`Specifications`]?.message}
+              validateStatus={errors?.[`Specifications`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
             />
           </Col>
         </Row>
@@ -226,4 +256,4 @@ const CategoryForm = () => {
   );
 };
 
-export default CategoryForm;
+export default ModelsForm;

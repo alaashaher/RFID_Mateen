@@ -18,7 +18,6 @@ import Permission from "../pages/permissions/PermissionPage";
 import UnauthorizedPage from "../pages/unauthorized-page/UnauthorizedPage"
 import ProtectedRoute from "./ProtectedRoute";
 
-import CategoryPage from "../pages/Category/CategoryPage";
 import CategoryTypesPage from "../pages/CategoryTypes/CategoryTypesPage";
 import UniversityAssetsPage from "../pages/UniversityAssetsScsnned/UniversityAssetsPage";
 import UniversityAssetsPageRelocation from "../pages/UniversityAssetsRelocation/UniversityAssetsPageRelocation";
@@ -26,6 +25,8 @@ import CategoryListPage from "../pages/Category-list/CategoryListPage";
 import UniversityAssetsPrintedPage from "../pages/UniversityAssetsPrinted/UniversityAssetsPrintedPage";
 import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 import UniversityAssetsAdjustmentInfo from "../pages/UniversityAssetsScsnned/UniversityAssetsAdjustmentInfo";
+import AssetsTypePage from "../pages/AssetsType/AssetsTypePage";
+import ModelsPage from "../pages/Models/ModelsPage";
 
 
 
@@ -41,7 +42,12 @@ const Routess = () => {
 
       <Route path={routerLinks.category} element={
         <ProtectedRoute requiredPermission="ViewCategory">
-          <CategoryPage />
+          <AssetsTypePage />
+        </ProtectedRoute>
+      }></Route>
+      <Route path={routerLinks.models} element={
+        <ProtectedRoute requiredPermission="ViewCategory">
+          <ModelsPage />
         </ProtectedRoute>
       }></Route>
       <Route path={routerLinks.CategoryNew} element={

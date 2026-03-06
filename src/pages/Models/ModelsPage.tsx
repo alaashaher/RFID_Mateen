@@ -1,0 +1,333 @@
+import { useContext, useEffect, useState } from "react";
+
+import { deleteFromApi, getFromApi } from "../../apis/apis";
+import {
+  Pagination,
+  Table,
+  Input,
+  Select,
+  Button,
+  Tooltip,
+  Modal,
+  Popconfirm,
+} from "antd";
+
+import CategoryContext from "../../contexts/pages-context/CategoryProvider";
+import UserContext from "../../contexts/user-context/UserProvider";
+
+import BasicInformationContext from "../../contexts/pages-context/BasicInformationProvider";
+import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import ModelsForm from "./ModelsForm";
+import { Store } from "react-notifications-component";
+const { Option } = Select;
+
+const ModelsPage = () => {
+
+  const [categoryType, setcategoryType] = useState([]);
+  const [selectedCatType, setSelectedCatTypeId] = useState("");
+
+  // --- NEW STATES ---
+  const [selectedBuildingTypeId, setSelectedBuildingTypeId] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  // ------------------
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  useEffect(() => {
+    const fetchCategoryTypes = async () => {
+      const resp = await getFromApi(`CategoryType/get-categoryType-ddl`);
+      setcategoryType(resp);
+    };
+    fetchCategoryTypes();
+  }, []);
+
+  // --- NEW: Fetch categories when BuildingTypeId changes ---
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await getFromApi(
+          `AssetType/get-assetType-ddl`
+        );
+        setCategories(res);
+        // Reset category selection when building type changes
+        setSelectedCategoryId("");
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchCategories();
+  }, []);
+  // ---------------------------------------------------------
+
+  const {
+    rowData,
+    setRowData,
+    setToEdit,
+    pageSize,
+    setPageSize,
+    pageNumber,
+    setPageNumber,
+    keyword,
+    setkeyword,
+    setOpenFormModel,
+    loading,
+    toEdit,
+    detectChanges,
+    openFormModel,
+    setLoading,
+    setdetectChanges,
+  } = useContext(CategoryContext);
+  const { user } = useContext(UserContext);
+
+  // --- UPDATED: Added selectedBuildingTypeId and selectedCategoryId to dependencies ---
+  useEffect(() => {
+    const getAllData = async () => {
+      try {
+        const resp = await getFromApi(
+          `AssetModel/get-all-assetModel-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&assetTypeId=${selectedCategoryId ? selectedCategoryId : ""}`
+        );
+        setRowData(resp);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    getAllData();
+  }, [pageNumber, pageSize, keyword, detectChanges, selectedCatType, selectedBuildingTypeId, selectedCategoryId]);
+  // ------------------------------------------------------------------------------------
+
+  const handleEditMod = async (TableId) => {
+    // try {
+    //   const response = await getFromApi(
+    //     `AssetModel/get-assetModel-by-id?assetTypeId=${TableId}`
+    //   );
+    //   if (response) {
+        setToEdit(TableId);
+        setOpenFormModel(true);
+    //   }
+    // } catch (error) {
+    //   //console.log(error);
+    // }
+  };
+
+  const handleDelete = async (TableId: number) => {
+    try {
+      setLoading(true);
+      await deleteFromApi(
+        `AssetModel/delete-assetModel?categoryId=${TableId}`
+      );
+      setdetectChanges((prevState: number) => prevState + 1);
+      Store.addNotification({
+        title: "",
+        message: "تم الحذف بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: {
+          duration: 2000,
+          onScreen: true,
+        },
+      });
+      setLoading(false);
+    } catch (error) {
+      //console.log(error);
+      Store.addNotification({
+        title: "  ",
+        message: "Try again",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: {
+          duration: 2000,
+          showIcon: true,
+          onScreen: true,
+        },
+      });
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: "#",
+      key: "index",
+      render: (item, record, index) => <>{index + 1}</>,
+      width: 30,
+    },
+    { title: "اسم الموديل", dataIndex: "ModelName", key: "ModelName" },
+    { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber" },
+    { title: "الماركة", dataIndex: "Brand", key: "Brand" },
+    // { title: "له موديلات", dataIndex: "HasModels", key: "HasModels",
+    //   render: (_,value) => {
+    //     return value.HasModels ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+    //   }
+    //  },
+    // { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
+    {
+      title: "إجراءات",
+      dataIndex: "Actions",
+      key: "Actions",
+      render: (_, record) => {
+        return (
+          <div className="act-btns">
+            {user.user.Permissions.includes("EditCategory") && (
+              <Tooltip title="تعديل">
+                <Button
+                  onClick={() => {
+                    handleEditMod(record);
+                  }}
+                  icon={<EditOutlined />}
+                  shape="circle"
+                />
+              </Tooltip>
+            )}
+
+            {user.user.Permissions.includes("DeleteCategory") && (
+              <Popconfirm
+                title="هل أنت متأكد من الحذف؟"
+                onConfirm={() => {
+                  handleDelete(record?.AssetModelId);
+                }}
+                okText="نعم"
+                cancelText="لا"
+              >
+                <Tooltip title="حذف">
+                  <Button icon={<DeleteOutlined />} shape="circle" danger />
+                </Tooltip>
+              </Popconfirm>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const handleCloseFormModel = () => {
+    setOpenFormModel(false);
+    setToEdit(null);
+  };
+
+  return (
+    <div className="custom-container">
+      <div className="sec-dv">
+        {user?.user?.Permissions.includes("AddCategory") && (
+          <Button
+            onClick={() => {
+              setOpenFormModel(true);
+            }}
+          >
+            + إضافة جديد
+          </Button>
+        )}
+      </div>
+
+      <div className="sub-table">
+        <h5 style={{ justifySelf: "center", marginBottom: "20px" }}>
+          الموديلات
+        </h5>
+
+        <div className="sp-btwn">
+          {/* Search Input */}
+          <Input
+            type="text"
+            placeholder="ابحث بالاسم (الموديل) او كود  الموديل "
+            onChange={(e) => setkeyword(e.target.value)}
+          />
+
+          {/* OLD: CategoryType filter - kept as is */}
+          {/* <Select
+            allowClear
+            placeholder="اختر نوع الفئة"
+            onChange={setSelectedCatTypeId}
+            style={{ width: 530 }}
+          >
+            {categoryType.map((client) => (
+              <Option key={client.CategoryTypeId} value={client.CategoryTypeId}>
+                {client.CategoryTypeName}
+              </Option>
+            ))}
+          </Select> */}
+
+          {/* NEW: BuildingType filter - 2 static options */}
+          {/* <Select
+            allowClear
+            placeholder="اختر نوع مبنى الأصل"
+            onChange={(value) => {
+              setSelectedBuildingTypeId(value ?? "");
+            }}
+            style={{ width: 250 }}
+            options={[
+              { label: "مستودع", value: 1 },
+              { label: "مبني إداري", value: 2 },
+            ]}
+          /> */}
+
+          {/* NEW: Category filter - dynamic based on BuildingTypeId */}
+          <Select
+            allowClear
+            placeholder="اصناف الاصول"
+            value={selectedCategoryId || undefined}
+            onChange={(value) => {
+              setSelectedCategoryId(value ?? "");
+            }}
+            style={{ width: 250 }}
+            // disabled={!selectedBuildingTypeId}
+          >
+            {categories?.map((item) => (
+              <Option key={item.AssetTypeId} value={item.AssetTypeId}>
+                {item.AssetTypeName}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={rowData?.Results}
+          pagination={false}
+          loading={loading}
+          scroll={{ x: 200 }}
+        />
+
+        <Pagination
+          pageSize={pageSize}
+          style={{
+            justifyContent: "center",
+            display: "flex",
+            marginTop: "20px",
+          }}
+          pageSizeOptions={[10, 20, 50, 100, 200]}
+          onChange={(page, pageSize) => {
+            setPageNumber(page);
+            setPageSize(pageSize);
+          }}
+          total={
+            rowData && rowData?.PageCount
+              ? rowData?.PageCount * rowData?.PageSize
+              : 1
+          }
+          current={pageNumber}
+        />
+      </div>
+
+      {openFormModel && (
+        <Modal
+          width={"52%"}
+          open={openFormModel}
+          title={toEdit ? "تعديل الموديل" : "اضافة الموديل"}
+          footer={false}
+          onCancel={handleCloseFormModel}
+          onOk={handleCloseFormModel}
+        >
+          <ModelsForm />
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+export default ModelsPage;

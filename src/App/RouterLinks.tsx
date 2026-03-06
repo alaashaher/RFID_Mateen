@@ -4,6 +4,7 @@ const RouterLinks = {
   logIn: "/login",
   Buildings: "/Buildings",
   category: "/assetType",
+  models: "/models",
   CategoryNew:"/category-list",
   CategoryTypes: '/CategoryTypes',
   Rooms: "/Rooms",

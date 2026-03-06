@@ -16,12 +16,12 @@ import CategoryContext from "../../contexts/pages-context/CategoryProvider";
 import UserContext from "../../contexts/user-context/UserProvider";
 
 import BasicInformationContext from "../../contexts/pages-context/BasicInformationProvider";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import CategoryForm from "./CategoryForm";
+import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import CategoryForm from "./AssetsTypeForm";
 import { Store } from "react-notifications-component";
 const { Option } = Select;
 
-const CategoryPage = () => {
+const AssetsTypePage = () => {
 
   const [categoryType, setcategoryType] = useState([]);
   const [selectedCatType, setSelectedCatTypeId] = useState("");
@@ -161,7 +161,11 @@ const CategoryPage = () => {
     { title: "نوع الأصل", dataIndex: "AssetTypeName", key: "AssetTypeName" },
     { title: "كود نوع الأصل", dataIndex: "AssetTypeCode", key: "AssetTypeCode" },
     { title: "تصنيف الأصل(المحور)", dataIndex: "CategoryName", key: "CategoryName" },
-    { title: "له موديلات", dataIndex: "HasModels", key: "HasModels" },
+    { title: "له موديلات", dataIndex: "HasModels", key: "HasModels",
+      render: (_,value) => {
+        return value.HasModels ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+      }
+     },
     { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
@@ -326,4 +330,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default AssetsTypePage;
