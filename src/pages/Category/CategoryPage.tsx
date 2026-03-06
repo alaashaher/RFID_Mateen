@@ -161,6 +161,7 @@ const CategoryPage = () => {
     { title: "نوع الأصل", dataIndex: "AssetTypeName", key: "AssetTypeName" },
     { title: "كود نوع الأصل", dataIndex: "AssetTypeCode", key: "AssetTypeCode" },
     { title: "تصنيف الأصل(المحور)", dataIndex: "CategoryName", key: "CategoryName" },
+    { title: "له موديلات", dataIndex: "HasModels", key: "HasModels" },
     { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
