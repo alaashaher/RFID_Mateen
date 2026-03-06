@@ -161,7 +161,7 @@ const CategoryPage = () => {
     { title: "نوع الأصل", dataIndex: "AssetTypeName", key: "AssetTypeName" },
     { title: "كود نوع الأصل", dataIndex: "AssetTypeCode", key: "AssetTypeCode" },
     { title: "تصنيف الأصل(المحور)", dataIndex: "CategoryName", key: "CategoryName" },
-    { title: "اسم الجامعه ", dataIndex: "UniversityName", key: "UniversityName" },
+    { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -222,7 +222,7 @@ const CategoryPage = () => {
 
       <div className="sub-table">
         <h5 style={{ justifySelf: "center", marginBottom: "20px" }}>
-          تصنيف الاصول
+          أصناف الاصول
         </h5>
 
         <div className="sp-btwn">

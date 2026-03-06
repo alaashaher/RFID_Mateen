@@ -224,17 +224,28 @@ const UniversityAssetsPage = () => {
       width: 30,
     },
     {
-      title: "الاسم",
+      title: "الأصل",
       dataIndex: "UniversityAssetName",
       key: "UniversityAssetName",
     },
     {
-      title: " الصنف ",
-      dataIndex: "ProductName",
-      key: "ProductName",
+      title: "نوع الأصل",
+      dataIndex: "AssetTypeName",
+      key: "AssetTypeName",
     },
     {
-      title: " وصف الاصل ",
+      title: "نوع مبنى الأصول",
+      dataIndex: "BuildingTypeName",
+      key: "BuildingTypeName",
+    },
+    
+    {
+      title: "المبنى",
+      dataIndex: "BuildingName",
+      key: "BuildingName",
+    },
+    {
+      title: " تصنيف الاصل ",
       dataIndex: "CategoryName",
       key: "CategoryName",
     },
@@ -244,15 +255,14 @@ const UniversityAssetsPage = () => {
       key: "AssetBarcode",
 
     },
-    { title: "اسم الغرفه", dataIndex: "RoomName", key: "RoomName" },
+    { title: " الغرفه", dataIndex: "RoomName", key: "RoomName" },
     {
       title: "كود الغرفة",
       dataIndex: "RoomCode",
       key: "RoomCode",
     },
 
-    { title: "اسم الدور ", dataIndex: "UniversityFloorName", key: "UniversityFloorName" },
-    { title: "اسم المبني ", dataIndex: "BuildingName", key: "BuildingName" },
+    { title: " الدور ", dataIndex: "UniversityFloorName", key: "UniversityFloorName" },
     {
       title: "عدد مرات الطباعه",
       dataIndex: "PrintedNumber",
