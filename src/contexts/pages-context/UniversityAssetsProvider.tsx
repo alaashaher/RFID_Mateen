@@ -14,6 +14,7 @@ export const UniversityAssetsProvider: React.FC<any> = ({ children }) => {
   const [toEdit, setToEdit] = useState<object | null>();
   const [detectChanges, setdetectChanges] = useState(1);
   const [isActive, setIsActive] = useState<boolean>(true);
+  const [openFormModelAddingModel, setOpenFormModelAddingModel] = useState<boolean>(false);
   return (
     <UniversityAssetsContext.Provider
       value={{
@@ -21,6 +22,8 @@ export const UniversityAssetsProvider: React.FC<any> = ({ children }) => {
         setRowData,
         openFormModel,
         setOpenFormModel,
+        openFormModelAddingModel,
+        setOpenFormModelAddingModel,
         pageSize,
         setPageSize,
         pageNumber,

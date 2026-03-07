@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Store } from "react-notifications-component";
-import { EditOutlined, DeleteOutlined, PrinterOutlined } from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, PrinterOutlined, SettingFilled } from "@ant-design/icons";
 import { deleteFromApi, getFromApi, postToApi } from "../../apis/apis";
 import {
   Button,
@@ -19,6 +19,7 @@ import UniversityAssetsScannedContext from "../../contexts/pages-context/Univers
 import UniversityAssetsContext from "../../contexts/pages-context/UniversityAssetsProvider";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import UniversityModelForm from "./UniversityModelForm";
 const UniversityAssetsPage = () => {
   const {
     rowData,
@@ -37,6 +38,8 @@ const UniversityAssetsPage = () => {
     setdetectChanges,
     openFormModel,
     setOpenFormModel,
+    openFormModelAddingModel,
+    setOpenFormModelAddingModel,
     isActive,
   } = useContext(UniversityAssetsContext);
   const { user } = useContext(UserContext);
@@ -117,7 +120,19 @@ const UniversityAssetsPage = () => {
       //console.log(error);
     }
   };
-
+  const handleModelPopUp = async (TableId) => {
+    try {
+      const response = await getFromApi(
+        `UniversityAsset/get-universityAsset-by-id?universityAssetId=${TableId}`
+      );
+      if (response) {
+        setToEdit(response);
+        setOpenFormModelAddingModel(true);
+      }
+    } catch (error) {
+      //console.log(error);
+    }
+  };
   const handleDelete = async (TableId) => {
     try {
       setLoading(true);
@@ -167,54 +182,54 @@ const UniversityAssetsPage = () => {
       }
       );
       if (response != null) {
-              setdetectChanges((prevState) => prevState + 1);
-              Store.addNotification({
-                title: "",
-                message: response.Item2,
-                type: !response.Item1 ? "danger" : "success",
-                insert: "top",
-                container: "top-right",
-                animationIn: ["animate__animated", "animate__fadeIn"],
-                animationOut: ["animate__animated", "animate__fadeOut"],
-                dismiss: {
-                  duration: 2000,
-                  onScreen: true,
-                },
-              });
-              setLoading(false);
-            } else {
-              Store.addNotification({
-                title: "",
-                message: "Try again",
-                type: "danger",
-                insert: "top",
-                container: "top-right",
-                animationIn: ["animate__animated", "animate__fadeIn"],
-                animationOut: ["animate__animated", "animate__fadeOut"],
-                dismiss: {
-                  duration: 2000,
-                  onScreen: true,
-                },
-              });
-              setLoading(false);
-            }
-          } catch (error) {
-            setLoading(false);
-            Store.addNotification({
-              title: "",
-              message: "Try again",
-              type: "danger",
-              insert: "top",
-              container: "top-right",
-              animationIn: ["animate__animated", "animate__fadeIn"],
-              animationOut: ["animate__animated", "animate__fadeOut"],
-              dismiss: {
-                duration: 2000,
-                onScreen: true,
-              },
-            });
-            //console.log(error);
-          }
+        setdetectChanges((prevState) => prevState + 1);
+        Store.addNotification({
+          title: "",
+          message: response.Item2,
+          type: !response.Item1 ? "danger" : "success",
+          insert: "top",
+          container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: {
+            duration: 2000,
+            onScreen: true,
+          },
+        });
+        setLoading(false);
+      } else {
+        Store.addNotification({
+          title: "",
+          message: "Try again",
+          type: "danger",
+          insert: "top",
+          container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: {
+            duration: 2000,
+            onScreen: true,
+          },
+        });
+        setLoading(false);
+      }
+    } catch (error) {
+      setLoading(false);
+      Store.addNotification({
+        title: "",
+        message: "Try again",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: {
+          duration: 2000,
+          onScreen: true,
+        },
+      });
+      //console.log(error);
+    }
   };
   const columns = [
     {
@@ -238,7 +253,7 @@ const UniversityAssetsPage = () => {
       dataIndex: "BuildingTypeName",
       key: "BuildingTypeName",
     },
-    
+
     {
       title: "المبنى",
       dataIndex: "BuildingName",
@@ -287,6 +302,17 @@ const UniversityAssetsPage = () => {
                 />
               </Tooltip>
             )}
+            {user.user.Permissions.includes("EditUniversityAssets") && (
+              <Tooltip title="أضافه موديل">
+                <Button
+                  onClick={() => {
+                    handleModelPopUp(record.UniversityAssetId);
+                  }}
+                  icon={<SettingFilled />}
+                  shape="circle"
+                />
+              </Tooltip>
+            )}
             {user.user.Permissions.includes("PrintRFIDUniversityAssets") && (
               <Tooltip title="طباعه الباركود">
                 <Button
@@ -297,7 +323,7 @@ const UniversityAssetsPage = () => {
                   shape="circle"
                 />
               </Tooltip>)}
-         
+
           </div>
         );
       },
@@ -318,9 +344,9 @@ const UniversityAssetsPage = () => {
     setPageSize(e);
     //console.log(pageSize);
   }
-    const exportToExcel = () => {
-      // Convert table data to worksheet
-      const selectedColumns = columns.slice(1, -1); // exclude first and last
+  const exportToExcel = () => {
+    // Convert table data to worksheet
+    const selectedColumns = columns.slice(1, -1); // exclude first and last
     const newResult = []
     rowData?.Results.forEach((element, index) => {
       let newObject = {};
@@ -330,23 +356,23 @@ const UniversityAssetsPage = () => {
       newResult.push(newObject)
     });
     const worksheet = XLSX.utils.json_to_sheet(newResult);
-  
-      // Create a new workbook and append the worksheet
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-  
-      // Generate buffer
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  
-      // Save the file
-      const fileName = 'Assets.xlsx';
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-      saveAs(blob, fileName);
-    };
-    const exportToCSV = () => {
-      // Prepare header row
-      const selectedColumns = columns.slice(1, -1); // exclude first and last
-  
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+    // Generate buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    // Save the file
+    const fileName = 'Assets.xlsx';
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, fileName);
+  };
+  const exportToCSV = () => {
+    // Prepare header row
+    const selectedColumns = columns.slice(1, -1); // exclude first and last
+
     // Create header row with Arabic titles
     const csvHeader = selectedColumns
       .map(col => `"${col.title.replace(/"/g, '""')}"`)
@@ -362,23 +388,23 @@ const UniversityAssetsPage = () => {
         })
         .join(',')
     ).join('\n');
-    
-      // Add BOM for UTF-8
-      const BOM = '\uFEFF';
-    
-      const csvContent = BOM + csvHeader + csvRows;
-    
-      // Create a blob with proper encoding
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Assets.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    };
+
+    // Add BOM for UTF-8
+    const BOM = '\uFEFF';
+
+    const csvContent = BOM + csvHeader + csvRows;
+
+    // Create a blob with proper encoding
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Assets.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
-    
+
     <div className="custom-container">
       <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>الاصول </h5>
       <div className="sec-dv  sp-btwn">
@@ -391,7 +417,7 @@ const UniversityAssetsPage = () => {
             + إضافة جديد
           </Button>
         }
-    <div className="sp-btwn">
+        <div className="sp-btwn">
 
           <Button onClick={exportToExcel} style={{ marginBottom: 16 }}>Export to Excel</Button>
           <Button onClick={exportToCSV} style={{ marginBottom: 16 }}>Export to CSV</Button>
@@ -518,6 +544,24 @@ const UniversityAssetsPage = () => {
           <UniversityAssetsForm />
         </Modal>
       )}
+      {openFormModelAddingModel && (
+        <Modal
+          width={"52%"}
+          open={openFormModelAddingModel}
+          title={
+            toEdit
+              ? "اضافه موديل للاصل"
+              : "اضافة موديل للاصل"
+          }
+          footer={false}
+          onCancel={()=>{setOpenFormModelAddingModel(false); setToEdit(null)}}
+          onOk={()=>{setOpenFormModelAddingModel(false); setToEdit(null)}}
+        >
+          <UniversityModelForm />
+        </Modal>
+      )}
+
+
     </div>
   );
 };

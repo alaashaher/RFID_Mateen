@@ -12,53 +12,28 @@ import { Store } from "react-notifications-component";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 import moment from "moment";
 
-const UniversityAssetsForm = () => {
+const UniversityModelForm = () => {
   const {
     setLoading,
     toEdit,
     setToEdit,
     setdetectChanges,
     setOpenFormModel,
+    setOpenFormModelAddingModel,
   } =
     useContext(UniversityAssetsContext);
 
-  const { Option } = Select;
-  const [buildings, setBuildings] = useState([]);
-  const [floors, setFloor] = useState([]);
-  const [cats, setCats] = useState([]);
 
-  const [buildingId, setBuildingId] = useState("");
 
   const [AssetType, setAssetType] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [roomId, setRoomId] = useState("");
 
   const defaultValues = {
-    // IsScanned: toEdit ? toEdit.IsScanned : true,
-    UniversityAssetName: toEdit ? toEdit.UniversityAssetName : "",
-    Currency: toEdit ? toEdit.Currency : "",
-    AssetTypeId: toEdit ? toEdit.AssetTypeId : "",
-    GrossValue: toEdit ? toEdit.GrossValue : "",
-    AssetBarcode: toEdit ? toEdit.AssetBarcode : "",
-    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "1",
-    RoomId: toEdit ? toEdit.RoomId : "",
-    CategoryId: toEdit ? toEdit.CategoryId : "",
-    FloorId: toEdit ? toEdit.FloorId : "",
-    BuildingId: toEdit ? toEdit.BuildingId : ""
+    AssetModelId:  "",
   };
   const schema = Yup.object().shape(
     {
-      // IsScanned: Yup.boolean(),
-      UniversityAssetName: Yup.string().required("ادخل اسم الاصل"),
-      // Currency: Yup.string().required("ادخل العمله"),
-      // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
-      AssetTypeId: Yup.string().required("ادخل نوع صنف الأصل"),
-      AssetBarcode: Yup.string(),
-      BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
-      RoomId: Yup.string(),
-      CategoryId: Yup.string().required("ادخل الصنف"),
-      BuildingId: Yup.string().required("ادخل المبني"),
-      FloorId: Yup.string().required("ادخل الدور"),
+
+      AssetModelId: Yup.string().required("ادخل نوع صنف الأصل"),
     }
   );
   const [form] = Form.useForm();
@@ -66,8 +41,6 @@ const UniversityAssetsForm = () => {
     control,
     handleSubmit,
     setValue,
-    getValues,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues,
@@ -78,10 +51,8 @@ const UniversityAssetsForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const hasmode = true;
         const res = await getFromApi(
-
-          `AssetType/get-assetType-ddl`
+          `AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${toEdit?.AssetTypeId ? toEdit.AssetTypeId : ""}`
         );
         setAssetType(res);
       } catch (error) {
@@ -91,75 +62,26 @@ const UniversityAssetsForm = () => {
     fetchLanguages();
   }, [])
 
-  useEffect(() => {
-
-    const fetchLanguages = async () => {
-      try {
-        const res = await getFromApi(`Building/get-building-ddl`);
-        setBuildings(res);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    fetchLanguages();
-    const fetchCats = async () => {
-      try {
-        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
-        setCats(res);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    fetchCats();
-  }, [getValues("BuildingTypeId")]);
-  useEffect(() => {
-    if (getValues("BuildingId") != "") {
-      const fetchLanguages = async () => {
-        try {
-          const res = await getFromApi(`UniversityFloor/get-universityFloor-ddl?buildingId=${getValues("BuildingId") ? getValues("BuildingId") : ""}`);
-          setFloor(res);
-        } catch (error) {
-          //console.log(error);
-        }
-      };
-      fetchLanguages();
-    }
-  }, [watch("BuildingId")]);
-  useEffect(() => {
-    if (getValues("FloorId") != "") {
-      const getAllData = async () => {
-        try {
-          const resp = await getFromApi(
-            `Room/get-room-ddl?floorId=${getValues("FloorId") ? getValues("FloorId") : ""}`
-          );
-          setRooms(resp);
-        } catch (error) {
-          //console.log(error);
-        }
-      };
-      getAllData();
-    }
-  }, [watch("FloorId")]);
 
 
   const handleCloseModal = () => {
     setToEdit(null);
-    setOpenFormModel(false);
+    setOpenFormModelAddingModel(false);
   };
 
   useEffect(() => {
     if (toEdit) {
-      setValue("BuildingId", String(toEdit.BuildingId))
-      setValue("FloorId", String(toEdit.UniversityFloorId))
-      setValue("UniversityAssetName", toEdit.UniversityAssetName);
-      // setValue("IsScanned", toEdit.IsScanned);
-      setValue("Currency", toEdit.Currency);
-      setValue("AssetTypeId", toEdit.AssetTypeId ? String(toEdit.AssetTypeId) : "");
-      setValue("GrossValue", toEdit.GrossValue);
-      setValue("AssetBarcode", toEdit.AssetBarcode);
-      setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
-      setValue("RoomId", String(toEdit.RoomId))
-      setValue("CategoryId", String(toEdit.CategoryId))
+      // setValue("BuildingId", String(toEdit.BuildingId))
+      // setValue("FloorId", String(toEdit.UniversityFloorId))
+      // setValue("UniversityAssetName", toEdit.UniversityAssetName);
+      // // setValue("IsScanned", toEdit.IsScanned);
+      // setValue("Currency", toEdit.Currency);
+      // setValue("AssetTypeId", toEdit.AssetTypeId ? String(toEdit.AssetTypeId) : "");
+      // setValue("GrossValue", toEdit.GrossValue);
+      // setValue("AssetBarcode", toEdit.AssetBarcode);
+      // setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
+      // setValue("RoomId", String(toEdit.RoomId))
+      // setValue("CategoryId", String(toEdit.CategoryId))
     }
   }, [toEdit, setValue]);
   const onFinish = async (data) => {
@@ -167,29 +89,29 @@ const UniversityAssetsForm = () => {
     let res;
     setLoading(true);
     try {
-      console.log("rooooooooom", data.roomId);
+      // console.log("rooooooooom", data.roomId);
       const payload = {
         UniversityAssetId: toEdit ? toEdit.UniversityAssetId : 0,
-        UniversityAssetName: data.UniversityAssetName,
-        Currency: data.Currency,
-        // UniversityAssetDate: data.UniversityAssetDate,
-        GrossValue: data.GrossValue,
-        AssetBarcode: data.AssetBarcode,
-        BuildingTypeId: data.BuildingTypeId ? parseInt(data.BuildingTypeId) : null,
-        CreationDate: moment(new Date()).format('YYYY-MM-DD'),
-        BuildingId: data.BuildingId,
-        UniversityFloorId: data.FloorId,
-        IsScanned: null,
-        RoomId: (data.RoomId == "" || data.RoomId == null || data.roomId == undefined || data.roomId == "undefined") ? 0 : data.RoomId,
-        CategoryId: data.CategoryId,
+        // UniversityAssetName: data.UniversityAssetName,
+        // Currency: data.Currency,
+        // // UniversityAssetDate: data.UniversityAssetDate,
+        // GrossValue: data.GrossValue,
+        // AssetBarcode: data.AssetBarcode,
+        // BuildingTypeId: data.BuildingTypeId ? parseInt(data.BuildingTypeId) : null,
+        // CreationDate: moment(new Date()).format('YYYY-MM-DD'),
+        // BuildingId: data.BuildingId,
+        // UniversityFloorId: data.FloorId,
+        // IsScanned: null,
+        // RoomId: (data.RoomId == "" || data.RoomId == null || data.roomId == undefined || data.roomId == "undefined") ? 0 : data.RoomId,
+        AssetModelId: data.AssetModelId,
         // AssetTypeId: data.AssetTypeId
       };
-      console.log("payload2____,", payload)
-      if (toEdit) {
-        res = await putToApi(`UniversityAsset/update-UniversityAsset`, payload);
-      } else {
-        res = await postToApi(`UniversityAsset/add-UniversityAsset`, payload);
-      }
+      // console.log("payload2____,", payload)
+      // if (toEdit) {
+        res = await putToApi(`UniversityAsset/update-universityAsset-model`, payload);
+      // } else {
+      //   res = await postToApi(`UniversityAsset/add-UniversityAsset`, payload);
+      // }
 
       if (res) {
         setdetectChanges((prev) => prev + 1);
@@ -245,7 +167,7 @@ const UniversityAssetsForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdTextField
               control={control}
               name={`UniversityAssetName`}
@@ -255,9 +177,9 @@ const UniversityAssetsForm = () => {
               validateStatus={errors?.UniversityAssetName ? "error" : ""}
               type={'text'}
             />
-          </Col>
+          </Col> */}
 
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
 
             <AntdSelectOption
@@ -284,20 +206,20 @@ const UniversityAssetsForm = () => {
               placeholder=" تصنيف الاصل"
               options={cats?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
             />
-          </Col>
+          </Col> */}
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdSelectOption
               control={control}
-              name="AssetTypeId"
+              name="AssetModelId"
               setValue={setValue}
               formClassName="custom-form"
-              errorMsg={errors.AssetTypeId?.message}
+              errorMsg={errors.AssetModelId?.message}
               label={<span> نوع صنف الأصل<span style={{ color: '#252627' }}>*</span></span>}
               placeholder="  نوع صنف الأصل "
               options={AssetType?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
             <AntdSelectOption
               control={control}
@@ -323,8 +245,8 @@ const UniversityAssetsForm = () => {
               placeholder=" الدور"
               options={floors?.map((item) => ({ title: item.UniversityFloorName, value: item.UniversityFloorId }))}
             />
-          </Col>
-          {watch("BuildingTypeId") == 2 &&
+          </Col> */}
+          {/* {watch("BuildingTypeId") == 2 &&
             <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
               <AntdSelectOption
@@ -338,7 +260,7 @@ const UniversityAssetsForm = () => {
                 options={rooms?.map((item) => ({ title: item.RoomName, value: item.RoomId }))}
               />
             </Col>
-          }
+          } */}
           {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdTextField
               control={control}
@@ -397,4 +319,4 @@ const UniversityAssetsForm = () => {
   );
 };
 
-export default UniversityAssetsForm;
+export default UniversityModelForm;
