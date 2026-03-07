@@ -54,8 +54,10 @@ const ModelsForm = () => {
 
     const fetchLanguages = async () => {
       try {
+        const hasmode = true;
         const res = await getFromApi(
-          `AssetType/get-assetType-ddl`
+          
+          `AssetType/get-assetType-ddl?hasModels=${hasmode}`
         );
         setBuildings(res);
       } catch (error) {
@@ -174,12 +176,12 @@ const ModelsForm = () => {
 
             <AntdSelectOption
               control={control}
-              name="AssetTypeId"
+              name="AssetTypeId"  
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.AssetTypeId?.message}
-              label={<span>  تصنيف الأصل(المحور)<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" تصنيف الأصل(المحور) "
+              label={<span> نوع صنف الأصل<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder="  نوع صنف الأصل "
               options={buildings?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
             />
           </Col>
