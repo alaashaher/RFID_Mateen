@@ -81,7 +81,7 @@ const UniversityAssetsForm = () => {
         const hasmode = true;
         const res = await getFromApi(
 
-          `AssetType/get-assetType-ddl`
+          `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${getValues("CategoryId") ? getValues("CategoryId") : ""}&hasModels=${hasmode}`
         );
         setAssetType(res);
       } catch (error) {
@@ -89,7 +89,7 @@ const UniversityAssetsForm = () => {
       }
     };
     fetchLanguages();
-  }, [])
+  }, [watch("CategoryId")])
 
   useEffect(() => {
 
@@ -111,7 +111,7 @@ const UniversityAssetsForm = () => {
       }
     };
     fetchCats();
-  }, [getValues("BuildingTypeId")]);
+  }, [watch("BuildingTypeId")]);
   useEffect(() => {
     if (getValues("BuildingId") != "") {
       const fetchLanguages = async () => {
