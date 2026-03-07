@@ -25,10 +25,10 @@ const UniversityAssetsForm = () => {
   const { Option } = Select;
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloor] = useState([]);
-  const [cats, setCats] = useState([]);
-
+  
   const [buildingId, setBuildingId] = useState("");
-
+  
+  const [cats, setCats] = useState([]);
   const [AssetType, setAssetType] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [roomId, setRoomId] = useState("");

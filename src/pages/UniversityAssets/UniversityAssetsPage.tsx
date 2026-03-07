@@ -52,6 +52,14 @@ const UniversityAssetsPage = () => {
   const [floorId, setFloorId] = useState("");
   const [rooms, setRooms] = useState([]);
   const [roomId, setRoomId] = useState("");
+
+
+  const [cats, setCats] = useState([]);
+  const [AssetType, setAssetType] = useState([]);
+
+  const [CategoryId, setCategoryId] = useState("");
+  const [AssetTypeId, setAssetTypeId] = useState("");
+
   useEffect(() => {
     setkeyword("")
     const fetchLanguages = async () => {
@@ -79,6 +87,36 @@ const UniversityAssetsPage = () => {
       getAllData();
     }
   }, [floorId]);
+
+  useEffect(() => {
+
+    const fetchLanguages = async () => {
+      try {
+        const hasmode = true;
+        const res = await getFromApi(
+
+          `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${CategoryId ? CategoryId : ""}&hasModels=${hasmode}`
+        );
+        setAssetType(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [CategoryId])
+
+  useEffect(() => {
+
+    const fetchCats = async () => {
+      try {
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${buildingId ? buildingId : ""}`);
+        setCats(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchCats();
+  }, [buildingId]);
   useEffect(() => {
     if (buildingId != "") {
       const fetchLanguages = async () => {
@@ -97,7 +135,7 @@ const UniversityAssetsPage = () => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : ""}&floorId=${floorId ? floorId : ""}&roomId=${roomId ? roomId : ""}`
+          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : ""}&AssetTypeId=${AssetTypeId ? AssetTypeId : ""}&CategoryId=${CategoryId ? CategoryId : ""}`
         );
         setRowData(resp);
       } catch (error) {
@@ -105,7 +143,7 @@ const UniversityAssetsPage = () => {
       }
     };
     getAllData();
-  }, [pageNumber, pageSize, keyword, detectChanges, buildingId, floorId, roomId]);
+  }, [pageNumber, pageSize, keyword, detectChanges, buildingId, AssetTypeId, CategoryId]);
 
   const handleEditMod = async (TableId) => {
     try {
@@ -406,7 +444,7 @@ const UniversityAssetsPage = () => {
   return (
 
     <div className="custom-container">
-      <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>الاصول </h5>
+      <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>اصول المستودع </h5>
       <div className="sec-dv  sp-btwn">
         {user.user.Permissions.includes("AddUniversityAssets") &&
           <Button
@@ -444,38 +482,39 @@ const UniversityAssetsPage = () => {
             }}
             style={{ width: 230 }}
           >
-            {buildings.map((client) => (
+            {buildings.filter((res) => res.BuildingTypeId == 1).map((client) => (
               <Option key={client.BuildingId} value={client.BuildingId}>
                 {client.BuildingName} - {client.BuildingCode}
               </Option>
             ))}
           </Select>
+
           <Select
             allowClear
-            placeholder="اختر الدور"
+            placeholder="اختر نوع الاصل"
 
             onChange={(e) => {
 
-              setFloorId(e)
-              setRoomId("")
+              setCategoryId(e)
+              setAssetTypeId("")
             }}
             style={{ width: 230 }}
           >
-            {floors.map((client) => (
-              <Option key={client.UniversityFloorId} value={client.UniversityFloorId}>
-                {client.UniversityFloorName} - {client.UniversityFloorCode}
+            {cats.map((client) => (
+              <Option key={client.CategoryId} value={client.CategoryId}>
+                {client.CategoryName} 
               </Option>
             ))}
           </Select>
           <Select
             allowClear
-            placeholder="اختر الغرفه"
-            onChange={setRoomId}
+            placeholder="اختر تصنيف الاصل"
+            onChange={setAssetTypeId}
             style={{ width: 230 }}
           >
-            {rooms.map((client) => (
-              <Option key={client.RoomId} value={client.RoomId}>
-                {client.RoomName} - {client.RoomCode}
+            {AssetType.map((client) => (
+              <Option key={client.AssetTypeId} value={client.AssetTypeId}>
+                {client.AssetTypeName}
               </Option>
             ))}
           </Select>
@@ -554,8 +593,8 @@ const UniversityAssetsPage = () => {
               : "اضافة موديل للاصل"
           }
           footer={false}
-          onCancel={()=>{setOpenFormModelAddingModel(false); setToEdit(null)}}
-          onOk={()=>{setOpenFormModelAddingModel(false); setToEdit(null)}}
+          onCancel={() => { setOpenFormModelAddingModel(false); setToEdit(null) }}
+          onOk={() => { setOpenFormModelAddingModel(false); setToEdit(null) }}
         >
           <UniversityModelForm />
         </Modal>
