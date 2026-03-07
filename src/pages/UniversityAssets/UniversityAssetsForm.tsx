@@ -149,6 +149,7 @@ const UniversityAssetsForm = () => {
     let res;
     setLoading(true);
     try {
+      console.log("rooooooooom", data.roomId);
       const payload = {
         UniversityAssetId: toEdit ? toEdit.UniversityAssetId : 0,
         UniversityAssetName: data.UniversityAssetName,
@@ -161,7 +162,7 @@ const UniversityAssetsForm = () => {
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
         IsScanned: null,
-        RoomId: (data.RoomId == "" || data.RoomId == null) ? null : data.RoomId,
+        RoomId: (data.RoomId == "" || data.RoomId == null || data.roomId == undefined || data.roomId == "undefined") ? 0 : data.RoomId,
         CategoryId: data.CategoryId
 
       };
