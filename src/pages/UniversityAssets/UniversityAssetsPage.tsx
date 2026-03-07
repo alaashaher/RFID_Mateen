@@ -135,7 +135,7 @@ const UniversityAssetsPage = () => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : ""}&AssetTypeId=${AssetTypeId ? AssetTypeId : ""}&CategoryId=${CategoryId ? CategoryId : ""}`
+          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
         );
         setRowData(resp);
       } catch (error) {
