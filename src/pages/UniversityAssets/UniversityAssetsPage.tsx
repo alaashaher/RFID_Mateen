@@ -534,18 +534,18 @@ const UniversityAssetsPage = () => {
             {AssetType.map((client) => (
               <Option key={client.AssetTypeId} value={client.AssetTypeId}>
                 {client.AssetTypeName}
-              </Option>
+              </Option> 
             ))}
           </Select>
           <Select
             allowClear
             placeholder="اختر موديل الاصل"
             onChange={setModelId}
-            style={{ width: 230 }}
+            style={{ width: 330 }}
           >
             {Models.map((client) => (
               <Option key={client.AssetModelId} value={client.AssetModelId}>
-                {client.ModelName}
+                {client.Brand} - {client.ModelName} - {client.ModelNumber}
               </Option>
             ))}
           </Select>
