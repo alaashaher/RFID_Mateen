@@ -214,9 +214,9 @@ const UniversityModelForm = () => {
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.AssetModelId?.message}
-              label={<span> نوع صنف الأصل<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder="  نوع صنف الأصل "
-              options={AssetType?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
+              label={<span> موديل الأصل<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder="  موديل الأصل "
+              options={AssetType?.map((item) => ({ title: item.ModelName, value: item.AssetModelId }))}
             />
           </Col>
           {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >

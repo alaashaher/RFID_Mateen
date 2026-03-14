@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Store } from "react-notifications-component";
-import { EditOutlined, DeleteOutlined, PrinterOutlined, SettingFilled } from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled,EditOutlined, DeleteOutlined, PrinterOutlined, SettingFilled } from "@ant-design/icons";
 import { deleteFromApi, getFromApi, postToApi } from "../../apis/apis";
 import {
   Button,
@@ -308,12 +308,12 @@ const UniversityAssetsPage = () => {
       key: "AssetBarcode",
 
     },
-    { title: " الغرفه", dataIndex: "RoomName", key: "RoomName" },
-    {
-      title: "كود الغرفة",
-      dataIndex: "RoomCode",
-      key: "RoomCode",
-    },
+    // { title: " الغرفه", dataIndex: "RoomName", key: "RoomName" },
+    // {
+    //   title: "كود الغرفة",
+    //   dataIndex: "RoomCode",
+    //   key: "RoomCode",
+    // },
 
     { title: " الدور ", dataIndex: "UniversityFloorName", key: "UniversityFloorName" },
     {
@@ -322,6 +322,11 @@ const UniversityAssetsPage = () => {
       key: "PrintedNumber",
 
     },
+     { title: "له موديلات", dataIndex: "AssetTypeId", key: "AssetTypeId",
+      render: (_,value) => {
+        return value.AssetModelId != null ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+      }
+     },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -340,7 +345,7 @@ const UniversityAssetsPage = () => {
                 />
               </Tooltip>
             )}
-            {user.user.Permissions.includes("EditUniversityAssets") && (
+            {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
               <Tooltip title="أضافه موديل">
                 <Button
                   onClick={() => {

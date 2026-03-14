@@ -26,18 +26,25 @@ const ModelsForm = () => {
     ModelName: toEdit ? toEdit.ModelName : "",
     ModelNumber: toEdit ? toEdit.ModelNumber : "",
     AssetTypeId: toEdit ? toEdit.AssetTypeId : "",
+    TagType: toEdit ? toEdit.TagType : "",  // ✅ جديد
     Brand: toEdit ? toEdit.Brand : "",
     ModelCode: toEdit ? toEdit.ModelCode : "",
-    Specifications: toEdit ? toEdit.Specifications : ""
+    AssetTotalCount: toEdit ? toEdit.AssetTotalCount : ""
   };
   const schema = Yup.object().shape({
     ModelName: Yup.string().required("ادخل اسم الموديل"),
     ModelCode: Yup.string().required("ادخل كود الموديل"),
     ModelNumber: Yup.string(),
     AssetTypeId: Yup.string().required("ادخل نوع الاصل"),
+    TagType: Yup.string().required("ادخل نوع اللاصق"),  // ✅ جديد
     Brand: Yup.string(),
-    Specifications: Yup.string(),
+    AssetTotalCount: Yup.string(),
   });
+  const tagTypeOptions = [
+  { title: "RFID-DogBone97*27",  value: "RFID-DogBone97*27"  },
+  { title: "RFID-NonMetal50*25", value: "RFID-NonMetal50*25" },
+  { title: "RFID-Metal60*24",    value: "RFID-Metal60*24"    },
+];
   const [form] = Form.useForm();
   const {
     control,
@@ -77,8 +84,9 @@ const ModelsForm = () => {
       setValue("ModelName", toEdit.ModelName);
       setValue("ModelNumber", toEdit.ModelNumber);
       setValue("AssetTypeId", String(toEdit.AssetTypeId))
+      setValue("TagType", toEdit.TagType);  // ✅ جديد
       setValue("Brand", toEdit.Brand);
-      setValue("Specifications", toEdit.Specifications);
+      setValue("AssetTotalCount", toEdit.AssetTotalCount);
       setValue("ModelCode", toEdit.ModelCode)
     }
   }, [toEdit, setValue]);
@@ -93,8 +101,9 @@ const ModelsForm = () => {
         AssetModelId: toEdit ? toEdit.AssetModelId : 0,
         ModelName: data.ModelName,
         ModelNumber: data.ModelNumber,
+        TagType: data.TagType,   
         Brand: data.Brand,
-        Specifications: data.Specifications,
+        AssetTotalCount: data.AssetTotalCount,
         ModelCode: data.ModelCode,
         UniversityName: data.UniversityName,
         "IsActive": true,
@@ -160,19 +169,7 @@ const ModelsForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
-          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
-            <AntdSelectOption
-              control={control}
-              name="BuildingTypeId"
-              formClassName="custom-form"
-              setValue={setValue}
-              errorMsg={errors.BuildingTypeId?.message}
-              label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" نوع المبني"
-              options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
-            />
-          </Col> */}
-          <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
             <AntdSelectOption
               control={control}
@@ -185,6 +182,19 @@ const ModelsForm = () => {
               options={buildings?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
             />
           </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+  <AntdSelectOption
+    control={control}
+    name="TagType"
+    setValue={setValue}
+    formClassName="custom-form"
+    errorMsg={errors.TagType?.message}
+    label={<span>نوع اللاصق<span style={{ color: '#252627' }}>*</span></span>}
+    placeholder="نوع اللاصق"
+    options={tagTypeOptions}
+  />
+</Col>
+          
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
@@ -235,11 +245,11 @@ const ModelsForm = () => {
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
-              name={`Specifications`}
-              placeholder={`الخصائص`}
-              label={`الخصائص`}
-              errorMsg={errors?.[`Specifications`]?.message}
-              validateStatus={errors?.[`Specifications`] ? "error" : ""}
+              name={`AssetTotalCount`}
+              placeholder={`العدد الكلى`}
+              label={`العدد الكلى`}
+              errorMsg={errors?.[`AssetTotalCount`]?.message}
+              validateStatus={errors?.[`AssetTotalCount`] ? "error" : ""}
               type={'text'}
             // disabled={true}
             />

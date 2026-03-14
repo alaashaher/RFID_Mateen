@@ -158,6 +158,8 @@ const ModelsPage = () => {
       render: (item, record, index) => <>{index + 1}</>,
       width: 30,
     },
+    { title: "رقم الموديل", dataIndex: "AssetModelId", key: "AssetModelId" },
+    { title: "كود نوع الصنف", dataIndex: "AssetTypeId", key: "AssetTypeId" },
     { title: "اسم الموديل", dataIndex: "ModelName", key: "ModelName" },
     { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber" },
     { title: "الماركة", dataIndex: "Brand", key: "Brand" },
@@ -166,7 +168,9 @@ const ModelsPage = () => {
     //     return value.HasModels ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
     //   }
     //  },
-    // { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
+    { title: "نوع الصنف ", dataIndex: "AssetTypeName", key: "AssetTypeName" },
+    { title: "كمية الموديل ", dataIndex: "AssetTotalCount", key: "AssetTotalCount" },
+    { title: "نوع اللاصق ", dataIndex: "TagType", key: "TagType" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
