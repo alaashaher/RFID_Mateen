@@ -572,7 +572,7 @@ const UniversityAssetsPage = () => {
           >
             {Models.map((client) => (
               <Option key={client.AssetModelId} value={client.AssetModelId}>
-                {client.Brand} - {client.ModelName} - {client.ModelNumber}
+                {client.Brand} - {client.ModelName} - {client.ModelNumber} - عدد {client.AssetTotalCount} قطعه
               </Option>
             ))}
           </Select>
