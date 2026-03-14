@@ -17,13 +17,15 @@ import CategoryContext from "../../contexts/pages-context/CategoryProvider";
 import UserContext from "../../contexts/user-context/UserProvider";
 
 import BasicInformationContext from "../../contexts/pages-context/BasicInformationProvider";
-import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled, DeleteOutlined, EditOutlined, EyeFilled } from "@ant-design/icons";
 import ModelsForm from "./ModelsForm";
 import { Store } from "react-notifications-component";
+import {  useNavigate } from "react-router-dom";
+import RouterLinks from "../../App/RouterLinks";
 const { Option } = Select;
 
 const ModelsPage = () => {
-
+const navigate = useNavigate();
   const [categoryType, setcategoryType] = useState([]);
   const [selectedCatType, setSelectedCatTypeId] = useState("");
 
@@ -78,6 +80,8 @@ const ModelsPage = () => {
     openFormModel,
     setLoading,
     setdetectChanges,
+    setModelFilter,
+    modelFilter
   } = useContext(CategoryContext);
   const { user } = useContext(UserContext);
 
@@ -190,7 +194,16 @@ const ModelsPage = () => {
                 />
               </Tooltip>
             )}
-
+            <Tooltip title="عرض تفاصيل الاصول">
+              <Button
+                onClick={() => {
+                  setModelFilter(record);
+                  navigate(RouterLinks.UniversityAssets);
+                }}
+                icon={<EyeFilled />}
+                shape="circle"
+              />
+            </Tooltip>
             {user.user.Permissions.includes("DeleteCategory") && (
               <Popconfirm
                 title="هل أنت متأكد من الحذف؟"

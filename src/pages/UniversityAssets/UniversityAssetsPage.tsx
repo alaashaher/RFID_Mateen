@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Store } from "react-notifications-component";
-import { CheckCircleFilled, CloseCircleFilled,EditOutlined, DeleteOutlined, PrinterOutlined, SettingFilled } from "@ant-design/icons";
+import { CheckCircleFilled, CloseCircleFilled, EditOutlined, DeleteOutlined, PrinterOutlined, SettingFilled } from "@ant-design/icons";
 import { deleteFromApi, getFromApi, postToApi } from "../../apis/apis";
 import {
   Button,
@@ -20,6 +20,8 @@ import UniversityAssetsContext from "../../contexts/pages-context/UniversityAsse
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import UniversityModelForm from "./UniversityModelForm";
+import CategoryContext from "../../contexts/pages-context/CategoryProvider";
+import { use } from "i18next";
 const UniversityAssetsPage = () => {
   const {
     rowData,
@@ -42,26 +44,37 @@ const UniversityAssetsPage = () => {
     setOpenFormModelAddingModel,
     isActive,
   } = useContext(UniversityAssetsContext);
+  const {
+    modelFilter
+  } = useContext(CategoryContext);
   const { user } = useContext(UserContext);
 
   const { Option } = Select;
-  const [buildings, setBuildings] = useState([]);
-  const [buildingId, setBuildingId] = useState("");
+  const [buildings, setBuildings] = useState<any>([]);
+  const [buildingId, setBuildingId] = useState<any>("");
 
-  const [floors, setFloor] = useState([]);
-  const [floorId, setFloorId] = useState("");
+  const [floors, setFloor] = useState<any>([]);
+  const [floorId, setFloorId] = useState<any>("");
   const [rooms, setRooms] = useState([]);
-  
-  
+
+
   const [cats, setCats] = useState([]);
   const [AssetType, setAssetType] = useState([]);
-  
-  const [CategoryId, setCategoryId] = useState("");
-  const [AssetTypeId, setAssetTypeId] = useState("");
+
+  const [CategoryId, setCategoryId] = useState<any>("");
+  const [AssetTypeId, setAssetTypeId] = useState<any>("");
 
   const [Models, setModels] = useState([]);
-  const [modelId, setModelId] = useState("");
+  const [modelId, setModelId] = useState<any>("");
 
+  useEffect(() => {
+    if (modelFilter != null) {
+      setAssetTypeId(modelFilter.AssetTypeId)
+      setCategoryId(modelFilter.CategoryId)
+      setBuildingId(1)
+      setModelId(modelFilter.AssetModelId)
+    }
+  }, [modelFilter]);
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
@@ -336,11 +349,12 @@ const UniversityAssetsPage = () => {
       key: "PrintedNumber",
 
     },
-     { title: "له موديلات", dataIndex: "AssetTypeId", key: "AssetTypeId",
-      render: (_,value) => {
-        return value.AssetModelId != null ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+    {
+      title: "له موديلات", dataIndex: "AssetTypeId", key: "AssetTypeId",
+      render: (_, value) => {
+        return value.AssetModelId != null ? <CheckCircleFilled /> : <CloseCircleFilled style={{ color: "red" }} />;
       }
-     },
+    },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -494,10 +508,13 @@ const UniversityAssetsPage = () => {
           <Select
             allowClear
             placeholder="اختر المبني"
+            value={(buildingId)}
             onChange={(e) => {
               setRooms([])
               setBuildingId(e)
-              setFloorId("")
+              setCategoryId("")
+              setAssetTypeId("")
+              setModelId("")
             }}
             style={{ width: 230 }}
           >
@@ -516,19 +533,28 @@ const UniversityAssetsPage = () => {
 
               setCategoryId(e)
               setAssetTypeId("")
+              setModelId("")
+
             }}
+            value={CategoryId}
             style={{ width: 230 }}
           >
             {cats.map((client) => (
               <Option key={client.CategoryId} value={client.CategoryId}>
-                {client.CategoryName} 
+                {client.CategoryName}
               </Option>
             ))}
           </Select>
           <Select
             allowClear
             placeholder="اختر تصنيف الاصل"
-            onChange={setAssetTypeId}
+            value={AssetTypeId}
+            onChange={(e) => {
+
+              setAssetTypeId(e)
+              setModelId("")
+
+            }}
             style={{ width: 230 }}
           >
             {AssetType.map((client) => (
@@ -540,6 +566,7 @@ const UniversityAssetsPage = () => {
           <Select
             allowClear
             placeholder="اختر موديل الاصل"
+            value={modelId}
             onChange={setModelId}
             style={{ width: 330 }}
           >

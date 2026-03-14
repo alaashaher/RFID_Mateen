@@ -36,7 +36,7 @@ export const CategoryProvider: React.FC<any> = ({ children }) => {
   const [CategoryTypeId, setCategoryTypeId] = useState(null);
   const [isSecondModalOpen, setIsSecondModalOpen] = useState(false);
   const [parentId, setParentId] = useState(null);
-
+  const [modelFilter, setModelFilter] = useState(null);
   return (
     <CategoryContext.Provider
       value={{
@@ -82,7 +82,9 @@ export const CategoryProvider: React.FC<any> = ({ children }) => {
         setPageSizeSec,
         pageNumberSec,
         setPageNumberSec,
-        parentId, setParentId
+        parentId, setParentId,
+        setModelFilter,
+        modelFilter
       }}
     >
       {children}
