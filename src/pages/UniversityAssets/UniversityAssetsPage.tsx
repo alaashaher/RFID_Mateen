@@ -51,14 +51,28 @@ const UniversityAssetsPage = () => {
   const [floors, setFloor] = useState([]);
   const [floorId, setFloorId] = useState("");
   const [rooms, setRooms] = useState([]);
-  const [roomId, setRoomId] = useState("");
-
-
+  
+  
   const [cats, setCats] = useState([]);
   const [AssetType, setAssetType] = useState([]);
-
+  
   const [CategoryId, setCategoryId] = useState("");
   const [AssetTypeId, setAssetTypeId] = useState("");
+
+  const [Models, setModels] = useState([]);
+  const [modelId, setModelId] = useState("");
+
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const res = await getFromApi(`AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId ? AssetTypeId : ""}`);
+        setModels(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [AssetTypeId]);
 
   useEffect(() => {
     setkeyword("")
@@ -135,7 +149,7 @@ const UniversityAssetsPage = () => {
     const getAllData = async () => {
       try {
         const resp = await getFromApi(
-          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
+          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&ModelId=${modelId ? modelId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
         );
         setRowData(resp);
       } catch (error) {
@@ -143,7 +157,7 @@ const UniversityAssetsPage = () => {
       }
     };
     getAllData();
-  }, [pageNumber, pageSize, keyword, detectChanges, buildingId, AssetTypeId, CategoryId]);
+  }, [pageNumber, pageSize, keyword, detectChanges, buildingId, AssetTypeId, modelId, CategoryId]);
 
   const handleEditMod = async (TableId) => {
     try {
@@ -520,6 +534,18 @@ const UniversityAssetsPage = () => {
             {AssetType.map((client) => (
               <Option key={client.AssetTypeId} value={client.AssetTypeId}>
                 {client.AssetTypeName}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            allowClear
+            placeholder="اختر موديل الاصل"
+            onChange={setModelId}
+            style={{ width: 230 }}
+          >
+            {Models.map((client) => (
+              <Option key={client.AssetModelId} value={client.AssetModelId}>
+                {client.ModelName}
               </Option>
             ))}
           </Select>

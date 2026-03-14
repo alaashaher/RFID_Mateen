@@ -11,7 +11,8 @@ import {
   Modal,
   Popconfirm,
 } from "antd";
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import CategoryContext from "../../contexts/pages-context/CategoryProvider";
 import UserContext from "../../contexts/user-context/UserProvider";
 
@@ -102,8 +103,8 @@ const ModelsPage = () => {
     //     `AssetModel/get-assetModel-by-id?assetTypeId=${TableId}`
     //   );
     //   if (response) {
-        setToEdit(TableId);
-        setOpenFormModel(true);
+    setToEdit(TableId);
+    setOpenFormModel(true);
     //   }
     // } catch (error) {
     //   //console.log(error);
@@ -215,18 +216,86 @@ const ModelsPage = () => {
     setToEdit(null);
   };
 
+  const exportToExcel = () => {
+    // Convert table data to worksheet
+    const selectedColumns = columns.slice(1, -1); // exclude first and last
+    const newResult = []
+    rowData?.Results.forEach((element, index) => {
+      let newObject = {};
+      selectedColumns.forEach((col) => {
+        newObject[col.title] = element[col.dataIndex]
+      })
+      newResult.push(newObject)
+    });
+    const worksheet = XLSX.utils.json_to_sheet(newResult);
+
+    // Create a new workbook and append the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+    // Generate buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    // Save the file
+    const fileName = 'Models.xlsx';
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, fileName);
+  };
+  const exportToCSV = () => {
+    // Prepare header row
+    const selectedColumns = columns.slice(1, -1); // exclude first and last
+
+    // Create header row with Arabic titles
+    const csvHeader = selectedColumns
+      .map(col => `"${col.title.replace(/"/g, '""')}"`)
+      .join(',') + '\n';
+    // Prepare data rows
+    const csvRows = rowData?.Results.map(row =>
+      selectedColumns
+        .map(col => {
+          const cell = row[col.dataIndex];
+          // Escape double quotes
+          const cellStr = typeof cell === 'string' ? cell.replace(/"/g, '""') : cell;
+          return `"${cellStr}"`;
+        })
+        .join(',')
+    ).join('\n');
+
+    // Add BOM for UTF-8
+    const BOM = '\uFEFF';
+
+    const csvContent = BOM + csvHeader + csvRows;
+
+    // Create a blob with proper encoding
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Models.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
     <div className="custom-container">
-      <div className="sec-dv">
-        {user?.user?.Permissions.includes("AddCategory") && (
-          <Button
-            onClick={() => {
-              setOpenFormModel(true);
-            }}
-          >
-            + إضافة جديد
-          </Button>
-        )}
+      <div className="sec-dv sp-btwn">
+        <div>
+
+          {user?.user?.Permissions.includes("AddCategory") && (
+            <Button
+              onClick={() => {
+                setOpenFormModel(true);
+              }}
+            >
+              + إضافة جديد
+            </Button>
+          )}
+        </div>
+        <div className="sp-btwn">
+
+          <Button onClick={exportToExcel} style={{ marginBottom: 16 }}>Export to Excel</Button>
+          <Button onClick={exportToCSV} style={{ marginBottom: 16 }}>Export to CSV</Button>
+
+        </div>
       </div>
 
       <div className="sub-table">
@@ -279,7 +348,7 @@ const ModelsPage = () => {
               setSelectedCategoryId(value ?? "");
             }}
             style={{ width: 250 }}
-            // disabled={!selectedBuildingTypeId}
+          // disabled={!selectedBuildingTypeId}
           >
             {categories?.map((item) => (
               <Option key={item.AssetTypeId} value={item.AssetTypeId}>

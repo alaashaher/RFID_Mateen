@@ -25,9 +25,9 @@ const UniversityAssetsForm = () => {
   const { Option } = Select;
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloor] = useState([]);
-  
+
   const [buildingId, setBuildingId] = useState("");
-  
+
   const [cats, setCats] = useState([]);
   const [AssetType, setAssetType] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -44,11 +44,12 @@ const UniversityAssetsForm = () => {
     RoomId: toEdit ? toEdit.RoomId : "",
     CategoryId: toEdit ? toEdit.CategoryId : "",
     FloorId: toEdit ? toEdit.FloorId : "",
-    BuildingId: toEdit ? toEdit.BuildingId : ""
+    BuildingId: toEdit ? toEdit.BuildingId : "",
+    AssetModelId: toEdit ? toEdit.AssetModelId : "",
   };
   const schema = Yup.object().shape(
     {
-      // IsScanned: Yup.boolean(),
+      AssetModelId: Yup.string(),
       UniversityAssetName: Yup.string().required("ادخل اسم الاصل"),
       // Currency: Yup.string().required("ادخل العمله"),
       // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
@@ -73,6 +74,21 @@ const UniversityAssetsForm = () => {
     defaultValues,
     resolver: yupResolver(schema),
   });
+
+  const [Models, setModels] = useState([]);
+  const [modelId, setModelId] = useState("");
+
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const res = await getFromApi(`AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${getValues("AssetTypeId") ? getValues("AssetTypeId") : ""}`);
+        setModels(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [watch("AssetTypeId")]);
 
   useEffect(() => {
 
@@ -152,7 +168,7 @@ const UniversityAssetsForm = () => {
       setValue("BuildingId", String(toEdit.BuildingId))
       setValue("FloorId", String(toEdit.UniversityFloorId))
       setValue("UniversityAssetName", toEdit.UniversityAssetName);
-      // setValue("IsScanned", toEdit.IsScanned);
+      setValue("AssetModelId", toEdit.AssetModelId);
       setValue("Currency", toEdit.Currency);
       setValue("AssetTypeId", toEdit.AssetTypeId ? String(toEdit.AssetTypeId) : "");
       setValue("GrossValue", toEdit.GrossValue);
@@ -172,7 +188,7 @@ const UniversityAssetsForm = () => {
         UniversityAssetId: toEdit ? toEdit.UniversityAssetId : 0,
         UniversityAssetName: data.UniversityAssetName,
         Currency: data.Currency,
-        // UniversityAssetDate: data.UniversityAssetDate,
+        AssetModelId: data.AssetModelId,
         GrossValue: data.GrossValue,
         AssetBarcode: data.AssetBarcode,
         BuildingTypeId: data.BuildingTypeId ? parseInt(data.BuildingTypeId) : null,
@@ -295,6 +311,18 @@ const UniversityAssetsForm = () => {
               label={<span> نوع صنف الأصل<span style={{ color: '#252627' }}>*</span></span>}
               placeholder="  نوع صنف الأصل "
               options={AssetType?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+            <AntdSelectOption
+              control={control}
+              name="AssetModelId"
+              setValue={setValue}
+              formClassName="custom-form"
+              errorMsg={errors.AssetModelId?.message}
+              label={<span> نوع موديل الأصل<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder="  نوع موديل الأصل "
+              options={Models?.map((item) => ({ title: item.ModelName, value: item.AssetModelId }))}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
