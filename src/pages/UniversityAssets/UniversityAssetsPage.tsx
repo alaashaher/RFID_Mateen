@@ -45,6 +45,7 @@ const UniversityAssetsPage = () => {
     isActive,
   } = useContext(UniversityAssetsContext);
   const {
+    setModelFilter,
     modelFilter
   } = useContext(CategoryContext);
   const { user } = useContext(UserContext);
@@ -74,8 +75,12 @@ const UniversityAssetsPage = () => {
       setBuildingId(1)
       setModelId(modelFilter.AssetModelId)
     }
+    return () => {
+      setModelFilter(null)
+    }
   }, [modelFilter]);
   useEffect(() => {
+    setModelFilter(null)
     const fetchLanguages = async () => {
       try {
         const res = await getFromApi(`AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId ? AssetTypeId : ""}`);
@@ -100,6 +105,8 @@ const UniversityAssetsPage = () => {
     fetchLanguages();
   }, []);
   useEffect(() => {
+    setModelFilter(null)
+
     if (floorId != "") {
       const getAllData = async () => {
         try {
@@ -116,6 +123,7 @@ const UniversityAssetsPage = () => {
   }, [floorId]);
 
   useEffect(() => {
+    setModelFilter(null)
 
     const fetchLanguages = async () => {
       try {
@@ -133,6 +141,7 @@ const UniversityAssetsPage = () => {
   }, [CategoryId])
 
   useEffect(() => {
+    setModelFilter(null)
 
     const fetchCats = async () => {
       try {
@@ -145,6 +154,8 @@ const UniversityAssetsPage = () => {
     fetchCats();
   }, [buildingId]);
   useEffect(() => {
+    setModelFilter(null)
+
     if (buildingId != "") {
       const fetchLanguages = async () => {
         try {
@@ -158,18 +169,38 @@ const UniversityAssetsPage = () => {
     }
   }, [buildingId]);
 
+
   useEffect(() => {
-    const getAllData = async () => {
-      try {
-        const resp = await getFromApi(
-          `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&ModelId=${modelId ? modelId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
-        );
-        setRowData(resp);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    getAllData();
+    if (modelFilter != null) {
+      const getAllData = async () => {
+        try {
+          const resp = await getFromApi(
+            `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${modelFilter?.buildingId ? modelFilter.buildingId : 0}&AssetTypeId=${modelFilter?.AssetTypeId ? modelFilter.AssetTypeId : 0}&ModelId=${modelFilter?.AssetModelId ? modelFilter.AssetModelId : 0}&CategoryId=${modelFilter?.CategoryId ? modelFilter.CategoryId : 0}`
+          );
+          setRowData(resp);
+        } catch (error) {
+          //console.log(error);
+        }
+      };
+      getAllData();
+    }
+
+  }, [pageNumber, pageSize, keyword, detectChanges]);
+  useEffect(() => {
+    if (modelFilter == null) {
+      const getAllData = async () => {
+        try {
+          const resp = await getFromApi(
+            `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&ModelId=${modelId ? modelId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
+          );
+          setRowData(resp);
+        } catch (error) {
+          //console.log(error);
+        }
+      };
+      getAllData();
+    }
+
   }, [pageNumber, pageSize, keyword, detectChanges, buildingId, AssetTypeId, modelId, CategoryId]);
 
   const handleEditMod = async (TableId) => {
@@ -560,7 +591,7 @@ const UniversityAssetsPage = () => {
             {AssetType.map((client) => (
               <Option key={client.AssetTypeId} value={client.AssetTypeId}>
                 {client.AssetTypeName}
-              </Option> 
+              </Option>
             ))}
           </Select>
           <Select

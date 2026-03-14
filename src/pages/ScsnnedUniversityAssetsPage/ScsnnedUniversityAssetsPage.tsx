@@ -302,12 +302,12 @@ const ScsnnedUniversityAssetsPage = () => {
             dataIndex: "AdjustmentLevel",
             key: "AdjustmentLevel",
             render: (_, record) => {
-                if (record?.AdjustmentLevel == 'RoomLevel') {
-                    return 'مستوي غرفة'
-                } else if (record?.AdjustmentLevel == 'BuildingLevel') {
-                    return 'مستوي مبني'
-                } else if (record?.AdjustmentLevel == 'FloorLevel') {
-                    return 'مستوي دور'
+                if (record?.AdjustmentLevel == 'CategoryLevel') {
+                    return 'مستوي تصنيف الاصل'
+                } else if (record?.AdjustmentLevel == 'AssetTypeLevel') {
+                    return 'مستوي اصناف الاصل'
+                } else if (record?.AdjustmentLevel == "ModelLevel") {
+                    return 'مستوي موديل'
                 }
             }
 
