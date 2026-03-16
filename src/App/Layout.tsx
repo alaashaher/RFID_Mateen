@@ -75,7 +75,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
   const { Header, Content, Sider } = AntdLayout;
 
   const [collapsed, setCollapsed] = useState(true);
-  
+
   const toggleCollapsed = () => {
     setCollapsed((prevState) => !prevState);
     if (!collapsed) {
@@ -111,14 +111,14 @@ const AppLayout: React.FC<any> = ({ children }) => {
       name: "اصناف الاصول",
       icon: <ControlOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
-    }, 
+    },
     {
       key: 101,
       path: routerLinks.models,
       name: "الموديلات",
       icon: <MutedOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
-    }, 
+    },
     {
       key: 2,
       path: routerLinks.Buildings,
@@ -159,8 +159,16 @@ const AppLayout: React.FC<any> = ({ children }) => {
     },
     {
       key: 15,
-      path: routerLinks.ScsnnedUniversityAssets,
+      path: routerLinks.ScsnnedUniversityAssetsPage,
       name: "الجرد",
+      icon: <ScanOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewAdjustmentUniversityAssets")) ? false : true
+
+    },
+    {
+      key: 15,
+      path: routerLinks.WarehouseAdjustmentScsnnedUniversityAssets,
+      name: "جرد المستودعات",
       icon: <ScanOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewAdjustmentUniversityAssets")) ? false : true
 
@@ -442,7 +450,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
             <img
               src="assets/imgs/favicon.png"
               alt="app logo"
-             
+
             />
           </RouterLink>
           <Menu

@@ -5,13 +5,13 @@ const RouterLinks = {
   Buildings: "/Buildings",
   category: "/assetType",
   models: "/models",
-  CategoryNew:"/category-list",
+  CategoryNew: "/category-list",
   CategoryTypes: '/CategoryTypes',
   Rooms: "/Rooms",
   UniversityAssets: "/UniversityAssets",
   UniversityAssetsPrinted: "/UniversityAssetsPrinted",
-  ScsnnedUniversityAssets: "/AdjustmentUniversityAssets",
-
+  WarehouseAdjustmentScsnnedUniversityAssets: "/WarehouseAdjustmentScsnnedUniversityAssets",
+  ScsnnedUniversityAssetsPage: "/ScsnnedUniversityAssetsPage",
   UniversityAssetsRelocation: "/UniversityAssetsRelocation",
 
   UniversityAssetsScanned: "/UniversityAssetsScanned",
@@ -21,7 +21,7 @@ const RouterLinks = {
 
   UniversityFloors: "/UniversityFloors",
 
-  
+
 
 
 

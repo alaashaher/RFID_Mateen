@@ -23,10 +23,11 @@ import UniversityAssetsPage from "../pages/UniversityAssetsScsnned/UniversityAss
 import UniversityAssetsPageRelocation from "../pages/UniversityAssetsRelocation/UniversityAssetsPageRelocation";
 import CategoryListPage from "../pages/Category-list/CategoryListPage";
 import UniversityAssetsPrintedPage from "../pages/UniversityAssetsPrinted/UniversityAssetsPrintedPage";
-import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 import UniversityAssetsAdjustmentInfo from "../pages/UniversityAssetsScsnned/UniversityAssetsAdjustmentInfo";
 import AssetsTypePage from "../pages/AssetsType/AssetsTypePage";
 import ModelsPage from "../pages/Models/ModelsPage";
+import WarehouseAdjustmentPage from "../pages/WarehouseAdjustmentScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
+import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 
 
 
@@ -74,7 +75,12 @@ const Routess = () => {
         </ProtectedRoute>}>
       </Route>
 
-      <Route path={routerLinks.ScsnnedUniversityAssets} element={
+      <Route path={routerLinks.WarehouseAdjustmentScsnnedUniversityAssets} element={
+        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+          <WarehouseAdjustmentPage />
+        </ProtectedRoute>}>
+      </Route>
+      <Route path={routerLinks.ScsnnedUniversityAssetsPage} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <ScsnnedUniversityAssetsPage />
         </ProtectedRoute>}>

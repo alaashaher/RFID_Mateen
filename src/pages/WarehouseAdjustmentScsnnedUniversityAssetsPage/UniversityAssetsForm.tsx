@@ -47,9 +47,12 @@ const UniversityAssetsForm = () => {
     AdjustmentLevel: toEdit ? toEdit.AdjustmentLevel : "",
 
     UserIds: toEdit ? toEdit.UserIds : [],
-    RoomId: toEdit ? toEdit.RoomId : [],
-    FloorId: toEdit ? toEdit.FloorId : [],
-    BuildingId: toEdit ? toEdit.BuildingId : ""
+    // RoomId: toEdit ? toEdit.RoomId : [],
+    // FloorId: toEdit ? toEdit.FloorId : [],
+    BuildingId: toEdit ? toEdit.BuildingId : "",
+    AssetTypeId: toEdit ? toEdit.AssetTypeId : "",
+    CategoryId: toEdit ? toEdit.CategoryId : "",
+    AssetModelId: toEdit ? toEdit.AssetModelId : "",
   };
   const schema = Yup.object().shape(
     {
@@ -59,17 +62,33 @@ const UniversityAssetsForm = () => {
       // UniversityAssetDate: Yup.string().required("ادخل اسم الاصل"),
       AdjustmentLevel: Yup.string().required("ادخل المستوي"),
       UserIds: Yup.array().required("ادخل المستخدمين"),
-      RoomId: Yup.array().when('AdjustmentLevel', {
-        is: (value: any) => value === 'RoomLevel',
+      // RoomId: Yup.array().when('AdjustmentLevel', {
+      //   is: (value: any) => value === 'RoomLevel',
+      //   then: (schema) => schema.required('This field is required'),
+      //   otherwise: (schema) => schema.notRequired(),
+      // radio1 == "CategoryLevel" || radio1 == "AssetTypeLevel" || radio1 == "ModelLevel")
+      // }),
+      AssetModelId: Yup.string().when('AdjustmentLevel', {
+        is: (value: any) => value === 'ModelLevel',
+        then: (schema) => schema.required('This field is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      AssetTypeId: Yup.string().when('AdjustmentLevel', {
+        is: (value: any) => value === 'ModelLevel' || value === 'AssetTypeLevel',
+        then: (schema) => schema.required('This field is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      CategoryId: Yup.string().when('AdjustmentLevel', {
+        is: (value: any) => value === 'CategoryLevel' || value === 'AssetTypeLevel' || value === 'ModelLevel',
         then: (schema) => schema.required('This field is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       BuildingId: Yup.string().required("ادخل المبني"),
-      FloorId: Yup.array().when('AdjustmentLevel', {
-        is: (value: any) => value === 'RoomLevel' || value === 'FloorLevel',
-        then: (schema) => schema.required('This field is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
+      // FloorId: Yup.array().when('AdjustmentLevel', {
+      //   is: (value: any) => value === 'RoomLevel' || value === 'FloorLevel',
+      //   then: (schema) => schema.required('This field is required'),
+      //   otherwise: (schema) => schema.notRequired(),
+      // }),
     }
   );
   const [form] = Form.useForm();
@@ -84,6 +103,49 @@ const UniversityAssetsForm = () => {
     defaultValues,
     resolver: yupResolver(schema),
   });
+
+  const [Models, setModels] = useState([]);
+  const [modelId, setModelId] = useState("");
+  const [AssetType, setAssetType] = useState([]);
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const res = await getFromApi(`AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${getValues("AssetTypeId") ? getValues("AssetTypeId") : ""}`);
+        setModels(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [watch("AssetTypeId")]);
+
+  useEffect(() => {
+
+    const fetchLanguages = async () => {
+      try {
+        const hasmode = true;
+        const res = await getFromApi(
+
+          `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${getValues("CategoryId") ? getValues("CategoryId") : ""}&hasModels=${hasmode}`
+        );
+        setAssetType(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchLanguages();
+  }, [watch("CategoryId")])
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingId") ? getValues("BuildingId") : ""}`);
+        setCats(res);
+      } catch (error) {
+        //console.log(error);
+      }
+    };
+    fetchCats();
+  }, [watch("BuildingId")]);
   useEffect(() => {
     setValue("AdjustmentLevel", "BuildingLevel");
     const fetchLanguages = async () => {
@@ -106,8 +168,8 @@ const UniversityAssetsForm = () => {
     fetchCats();
   }, []);
   useEffect(() => {
-    setValue("FloorId", []);
-    setValue("RoomId", []);
+    // setValue("FloorId", []);
+    // setValue("RoomId", []);
 
     if (getValues("BuildingId") != "") {
       const fetchLanguages = async () => {
@@ -121,25 +183,25 @@ const UniversityAssetsForm = () => {
       fetchLanguages();
     }
   }, [watch("BuildingId")]);
-  useEffect(() => {
-    // setValue("RoomId", []);
+  // useEffect(() => {
+  //   // setValue("RoomId", []);
 
-    if (getValues("FloorId").length > 0) {
+  //   if (getValues("FloorId").length > 0) {
 
-      const getAllData = async () => {
-        try {
-          const query = getValues("FloorId").map((item) => `floorIds=${item.value}`)
-          // console.log("🚀 ~ getAllData ~ query:", query)
-          const resp = await getFromApi(
-            `Room/get-roomsddl-by-floor-id?${query.join("&")}`);
-          setRooms(resp?.map((item) => ({ title: `${item.RoomCode} - ${item.RoomName} - ${item.UniversityFloorName}`, value: item.RoomId })));
-        } catch (error) {
-          //console.log(error);
-        }
-      };
-      getAllData();
-    }
-  }, [watch("FloorId")]);
+  //     const getAllData = async () => {
+  //       try {
+  //         const query = getValues("FloorId").map((item) => `floorIds=${item.value}`)
+  //         // console.log("🚀 ~ getAllData ~ query:", query)
+  //         const resp = await getFromApi(
+  //           `Room/get-roomsddl-by-floor-id?${query.join("&")}`);
+  //         setRooms(resp?.map((item) => ({ title: `${item.RoomCode} - ${item.RoomName} - ${item.UniversityFloorName}`, value: item.RoomId })));
+  //       } catch (error) {
+  //         //console.log(error);
+  //       }
+  //     };
+  //     getAllData();
+  //   }
+  // }, [watch("FloorId")]);
 
 
   const handleCloseModal = () => {
@@ -150,16 +212,19 @@ const UniversityAssetsForm = () => {
   useEffect(() => {
     if (toEdit) {
       setValue("BuildingId", String(toEdit.BuildingId))
-      setValue("FloorId", (toEdit.UniversityFloorId))
-      setValue("RoomId", (toEdit.RoomId))
+      // setValue("FloorId", (toEdit.UniversityFloorId))
+      // setValue("RoomId", (toEdit.RoomId))
 
 
       setValue("AdjustmentName", toEdit.AdjustmentName);
-      // setValue("IsScanned", toEdit.IsScanned);
+      setValue("CategoryId", String(toEdit.CategoryId));
+      setValue("AssetTypeId", String(toEdit.AssetTypeId));
+      // setValue("CategoryId", String(toEdit.CategoryId));
+
       setValue("AdjustmentDesc", toEdit.AdjustmentDesc);
 
 
-      // setValue("UniversityAssetDate", toEdit.UniversityAssetDate);
+      setValue("AssetModelId", String(toEdit.AssetModelId));
       setValue("AdjustmentLevel", toEdit.AdjustmentLevel);
 
 
@@ -178,21 +243,23 @@ const UniversityAssetsForm = () => {
         AdjustmentDesc: data.AdjustmentDesc,
 
 
-        // UniversityAssetDate: data.UniversityAssetDate,
+        CategoryId: data.CategoryId,
+        AssetTypeId: data.AssetTypeId,
+        AssetModelId: data.AssetModelId,
         AdjustmentLevel: data.AdjustmentLevel,
 
         UserIds: data.UserIds.map((item) => item.value),
-        FloorsIds: data.AdjustmentLevel === "RoomLevel" || data.AdjustmentLevel === "FloorLevel" ? data.FloorId.map((item) => item.value) : [],
+        // FloorsIds: data.AdjustmentLevel === "RoomLevel" || data.AdjustmentLevel === "FloorLevel" ? data.FloorId.map((item) => item.value) : [],
         BuildingId: data.BuildingId,
 
-        RoomsIds: data.AdjustmentLevel === "RoomLevel" ? data.RoomId.map((item) => item.value) : [],
+        // RoomsIds: data.AdjustmentLevel === "RoomLevel" ? data.RoomId.map((item) => item.value) : [],
 
 
       };
       if (toEdit) {
-        res = await putToApi(`Adjustment/update-adjustment`, payload);
+        res = await putToApi(`WarehouseAdjustment/update-warehouseAdjustmentes`, payload);
       } else {
-        res = await postToApi(`Adjustment/add-adjustment`, payload);
+        res = await postToApi(`WarehouseAdjustment/add-warehouseAdjustmentes`, payload);
       }
       if (res) {
         setdetectChanges((prev) => prev + 1);
@@ -248,7 +315,7 @@ const UniversityAssetsForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="multi custom-form">
         <Row style={{ display: "flex" }}>
-          <div className="radio-div" style={{margin: "auto"}}>
+          <div className="radio-div" style={{ margin: "auto" }}>
             <div className={`single-item active`}>
 
               {moment(new Date()).year()}
@@ -276,7 +343,46 @@ const UniversityAssetsForm = () => {
                   مبني
                 </div>
               </div>
-              <div className={`single-item ${radio1 == "FloorLevel" ? "active" : ""}`} onClick={() => {
+
+              <div className={`single-item ${radio1 == "CategoryLevel" ? "active" : ""}`} onClick={() => {
+                setRadio1("CategoryLevel")
+                setValue("AdjustmentLevel", "CategoryLevel")
+              }}>
+                <div className="circle">
+                  <div className="small">
+                  </div>
+                </div>
+                <div>
+                  تصنيف الاصل
+                </div>
+              </div>
+
+              <div className={`single-item ${radio1 == "AssetTypeLevel" ? "active" : ""}`} onClick={() => {
+                setRadio1("AssetTypeLevel")
+                setValue("AdjustmentLevel", "AssetTypeLevel")
+              }}>
+                <div className="circle">
+                  <div className="small">
+                  </div>
+                </div>
+                <div>
+                  اصناف الاصول
+                </div>
+              </div>
+
+              <div className={`single-item ${radio1 == "ModelLevel" ? "active" : ""}`} onClick={() => {
+                setRadio1("ModelLevel")
+                setValue("AdjustmentLevel", "ModelLevel")
+              }}>
+                <div className="circle">
+                  <div className="small">
+                  </div>
+                </div>
+                <div>
+                  موديل الاصل
+                </div>
+              </div>
+              {/* <div className={`single-item ${radio1 == "FloorLevel" ? "active" : ""}`} onClick={() => {
                 setRadio1("FloorLevel")
                 setValue("AdjustmentLevel", "FloorLevel")
               }}>
@@ -299,7 +405,7 @@ const UniversityAssetsForm = () => {
                 <div>
                   غرف
                 </div>
-              </div>
+              </div> */}
             </div>
           </Col>
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
@@ -312,10 +418,50 @@ const UniversityAssetsForm = () => {
               errorMsg={errors.BuildingId?.message}
               label={<span>  المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" المبني"
-              options={buildings?.map((item) => ({ title: `${item.BuildingName} - ${item.BuildingCode}`, value: item.BuildingId }))}
+              options={buildings?.filter((item) => item.BuildingTypeId == 1)?.map((item) => ({ title: `${item.BuildingName} - ${item.BuildingCode}`, value: item.BuildingId }))}
             />
           </Col>
-          {(radio1 == "RoomLevel" || radio1 == "FloorLevel") && <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+          {(radio1 == "CategoryLevel" || radio1 == "AssetTypeLevel" || radio1 == "ModelLevel") &&
+            <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+              <AntdSelectOption
+                control={control}
+                name="CategoryId"
+                formClassName="custom-form"
+                setValue={setValue}
+                errorMsg={errors.CategoryId?.message}
+                label={<span>  تصنيف الاصل<span style={{ color: '#252627' }}>*</span></span>}
+                placeholder=" تصنيف الاصل"
+                options={cats?.map((item) => ({ title: item.CategoryName, value: item.CategoryId }))}
+              />
+            </Col>}
+          {(radio1 == "AssetTypeLevel" || radio1 == "ModelLevel") &&
+            <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+              <AntdSelectOption
+                control={control}
+                name="AssetTypeId"
+                setValue={setValue}
+                formClassName="custom-form"
+                errorMsg={errors.AssetTypeId?.message}
+                label={<span> نوع صنف الأصل<span style={{ color: '#252627' }}>*</span></span>}
+                placeholder="  نوع صنف الأصل "
+                options={AssetType?.map((item) => ({ title: item.AssetTypeName, value: item.AssetTypeId }))}
+              />
+            </Col>}
+          {(radio1 == "ModelLevel") &&
+            <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
+              <AntdSelectOption
+                control={control}
+                name="AssetModelId"
+                setValue={setValue}
+                formClassName="custom-form"
+                errorMsg={errors.AssetModelId?.message}
+                label={<span> نوع موديل الأصل<span style={{ color: '#252627' }}>*</span></span>}
+                placeholder="  نوع موديل الأصل "
+                options={Models?.map((item) => ({ title: item.ModelName, value: item.AssetModelId }))}
+              />
+            </Col>
+          }
+          {/* {(radio1 == "RoomLevel" || radio1 == "FloorLevel") && <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24}>
             {floors &&
               <AntdSelectOptionMulti
                 control={control}
@@ -330,9 +476,9 @@ const UniversityAssetsForm = () => {
               />
             }
 
-          </Col>}
+          </Col>} */}
 
-          {(radio1 == "RoomLevel") &&
+          {/* {(radio1 == "RoomLevel") &&
             <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
               {rooms &&
                 <AntdSelectOptionMulti
@@ -347,7 +493,7 @@ const UniversityAssetsForm = () => {
                   errorMsg={errors.RoomId?.message}
                 />
               }
-            </Col>}
+            </Col>} */}
 
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
             <AntdTextField

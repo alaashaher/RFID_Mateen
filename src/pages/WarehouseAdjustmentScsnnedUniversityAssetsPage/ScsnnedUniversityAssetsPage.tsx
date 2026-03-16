@@ -25,7 +25,7 @@ import RouterLinks from "../../App/RouterLinks";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-const ScsnnedUniversityAssetsPage = () => {
+const WarehouseAdjustmentPage = () => {
     const {
         rowData,
         setRowData,
@@ -47,7 +47,7 @@ const ScsnnedUniversityAssetsPage = () => {
         popupType, setPopupType
     } = useContext(ScsnnedUniversityAssetsContext);
     const { user } = useContext(UserContext);
-    // console.log("🚀 ~ ScsnnedUniversityAssetsPage ~ user:", user)
+    // console.log("🚀 ~ WarehouseAdjustmentPage ~ user:", user)
     const navigate = useNavigate();
     const { Option } = Select;
     const [buildings, setBuildings] = useState([]);
@@ -62,7 +62,7 @@ const ScsnnedUniversityAssetsPage = () => {
     // const [yearCount, setyearCount] = useState((moment(new Date()).year() - 2025))
     const [yearOpation, setyearOpation] = useState([])
 
-    // console.log("🚀 ~ ScsnnedUniversityAssetsPage ~ yearCount:", yearCount)
+    // console.log("🚀 ~ WarehouseAdjustmentPage ~ yearCount:", yearCount)
     const [year, setyear] = useState(moment(new Date()).year())
     useEffect(() => {
         setkeyword("")
@@ -124,7 +124,7 @@ const ScsnnedUniversityAssetsPage = () => {
         const getAllData = async () => {
             try {
                 const resp = await getFromApi(
-                    `Adjustment/get-all-adjustmentes-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&year=${year}`
+                    `WarehouseAdjustment/get-all-warehouseAdjustmentes-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&year=${year}`
                 );
                 setRowData(resp);
             } catch (error) {
@@ -137,7 +137,7 @@ const ScsnnedUniversityAssetsPage = () => {
     const handleEditMod = async (TableId) => {
         try {
             const response = await getFromApi(
-                `UniversityAsset/get-universityAsset-by-id?universityAssetId=${TableId}`
+                `WarehouseAdjustment/get-warehouseAdjustmentes-by-id?universityAssetId=${TableId}`
             );
             if (response) {
                 setToEdit(response);
@@ -152,7 +152,7 @@ const ScsnnedUniversityAssetsPage = () => {
         try {
             setLoading(true);
             await deleteFromApi(
-                `UniversityAsset/delete-universityAsset?universityAssetId=${TableId}`
+                `WarehouseAdjustment/delete-warehouseAdjustmentes?universityAssetId=${TableId}`
             );
             setdetectChanges((prevState) => prevState + 1);
             Store.addNotification({
@@ -236,7 +236,7 @@ const ScsnnedUniversityAssetsPage = () => {
     const sendAssetAdjustmentToOdoo = async (adjustmentId) => {
         try {
             const response = await getFromApi(
-                `UniversityAsset/send-asset-adjustment-to-odoo?adjustmentId=${adjustmentId}`
+                `WarehouseAdjustment/send-asset-warehouseAdjustmentes-to-odoo?adjustmentId=${adjustmentId}`
             );
             if (response) {
                 setdetectChanges((prevState) => prevState + 1);
@@ -302,12 +302,12 @@ const ScsnnedUniversityAssetsPage = () => {
             dataIndex: "AdjustmentLevel",
             key: "AdjustmentLevel",
             render: (_, record) => {
-                if (record?.AdjustmentLevel == 'RoomLevel') {
-                    return 'مستوي غرفة'
-                } else if (record?.AdjustmentLevel == 'BuildingLevel') {
-                    return 'مستوي مبني'
-                } else if (record?.AdjustmentLevel == 'FloorLevel') {
-                    return 'مستوي دور'
+                if (record?.AdjustmentLevel == 'CategoryLevel') {
+                    return 'مستوي تصنيف الاصل'
+                } else if (record?.AdjustmentLevel == 'AssetTypeLevel') {
+                    return 'مستوي اصناف الاصل'
+                } else if (record?.AdjustmentLevel == "ModelLevel") {
+                    return 'مستوي موديل'
                 }
             }
 
@@ -418,15 +418,15 @@ const ScsnnedUniversityAssetsPage = () => {
     const exportToExcel = () => {
         // Convert table data to worksheet
         const selectedColumns = columns.slice(1, -1); // exclude first and last
-    const newResult = []
-    rowData?.Results.forEach((element, index) => {
-      let newObject = {};
-      selectedColumns.forEach((col) => {
-        newObject[col.title] = element[col.dataIndex]
-      })
-      newResult.push(newObject)
-    });
-    const worksheet = XLSX.utils.json_to_sheet(newResult);
+        const newResult = []
+        rowData?.Results.forEach((element, index) => {
+            let newObject = {};
+            selectedColumns.forEach((col) => {
+                newObject[col.title] = element[col.dataIndex]
+            })
+            newResult.push(newObject)
+        });
+        const worksheet = XLSX.utils.json_to_sheet(newResult);
 
         // Create a new workbook and append the worksheet
         const workbook = XLSX.utils.book_new();
@@ -476,7 +476,7 @@ const ScsnnedUniversityAssetsPage = () => {
     };
     return (
         <div className="custom-container">
-            <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>الجرد </h5>
+            <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>جرد المستودعات </h5>
             <div className="sec-dv sp-btwn">
                 {user.user.Permissions.includes("AddAdjustmentUniversityAssets") &&
                     <Button
@@ -634,4 +634,4 @@ const ScsnnedUniversityAssetsPage = () => {
     )
 }
 
-export default ScsnnedUniversityAssetsPage
+export default WarehouseAdjustmentPage
