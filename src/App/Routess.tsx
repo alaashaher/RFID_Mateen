@@ -28,6 +28,7 @@ import AssetsTypePage from "../pages/AssetsType/AssetsTypePage";
 import ModelsPage from "../pages/Models/ModelsPage";
 import WarehouseAdjustmentPage from "../pages/WarehouseAdjustmentScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
+import OutOrders from "../pages/out-orders/OutOrders";
 
 
 
@@ -87,6 +88,11 @@ const Routess = () => {
       </Route>
 
 
+        <Route path={routerLinks.OutOrders} element={
+        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+          <OutOrders />
+        </ProtectedRoute>}>
+      </Route>
       <Route path={routerLinks.UniversityAssetsAdjustment} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <UniversityAssetsAdjustmentInfo />

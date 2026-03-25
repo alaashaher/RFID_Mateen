@@ -34,6 +34,7 @@ import {
   BarChartOutlined,
   ScanOutlined,
   MutedOutlined,
+  CiOutlined,
 
 } from "@ant-design/icons";
 // import ReactNotification from 'react-notifications-component';
@@ -96,6 +97,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       path: routerLinks.CategoryNew,
       name: " تصنيف الاصول",
       icon: <BranchesOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+    },
+      {
+      key: 110,
+      path: routerLinks.OutOrders,
+      name: " أمر الخروج",
+      icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
     // {
