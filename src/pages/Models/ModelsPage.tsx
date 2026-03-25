@@ -168,13 +168,19 @@ const navigate = useNavigate();
     { title: "اسم الموديل", dataIndex: "ModelName", key: "ModelName" },
     { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber" },
     { title: "الماركة", dataIndex: "Brand", key: "Brand" },
-    // { title: "له موديلات", dataIndex: "HasModels", key: "HasModels",
-    //   render: (_,value) => {
-    //     return value.HasModels ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
-    //   }
-    //  },
+    
     { title: "نوع الصنف ", dataIndex: "AssetTypeName", key: "AssetTypeName" },
     { title: "كمية الموديل ", dataIndex: "AssetTotalCount", key: "AssetTotalCount" },
+    { title: "هل له أصول؟", dataIndex: "HasAssets", key: "HasAssets",
+      render: (_,value) => {
+        return value.HasAssets ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+      }
+     },
+     { title: "نفس عدد الاصول؟", dataIndex: "HasSameCount", key: "HasSameCount",
+      render: (_,value) => {
+        return value.HasSameCount ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
+      }
+     },
     { title: "نوع اللاصق ", dataIndex: "TagType", key: "TagType" },
     {
       title: "إجراءات",
