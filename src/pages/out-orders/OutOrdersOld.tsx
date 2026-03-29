@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 // ─────────────────────────────────────────────
 // API LAYER  (swap BASE_URL for your real backend)
 // ─────────────────────────────────────────────
-const BASE_URL = "/api";
+const BASE_URL = "http://localhost:7228/api";
 
 const api = {
   // ── Dispatch Orders ──────────────────────────
@@ -784,7 +784,7 @@ const ScanScreen = ({ phase, orders }) => {
 // ─────────────────────────────────────────────
 // APP ROOT
 // ─────────────────────────────────────────────
-export default function OutOrders() {
+export default function OutOrdersOld() {
   const [tab, setTab] = useState("orders");           // orders | scanLoad | scanReceive
   const [orders, setOrders] = useState(MOCK_ORDERS);
   const [assetTypes] = useState(MOCK_ASSET_TYPES);
