@@ -13,6 +13,7 @@ import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
   HomeOutlined,
+  BankOutlined,
   AppstoreAddOutlined,
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -35,6 +36,7 @@ import {
   ScanOutlined,
   MutedOutlined,
   CiOutlined,
+  EnvironmentOutlined,
 
 } from "@ant-design/icons";
 // import ReactNotification from 'react-notifications-component';
@@ -110,7 +112,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
       key: 111,
       path: routerLinks.CampsManagement,
       name: " المخيمات",
-      icon: <CiOutlined />,
+      icon: <BankOutlined  />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
     // {

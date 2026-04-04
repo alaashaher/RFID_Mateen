@@ -131,7 +131,7 @@ const CampManagerForm = ({ initial, onSave, onCancel }) => {
 // CAMP FORM (Modal)
 // ─────────────────────────────────────────────
 const CampForm = ({ initial, campManagers, onSave, onCancel }) => {
-  const [form, setForm] = useState(initial || { CampNumber: "", CampName: "", Destination: "منى", Zone: "", Capacity: "", CampManagerId: "", Notes: "" });
+  const [form, setForm] = useState(initial || { CampNumber: "", CampName: "", Destination: "", Zone: "", Capacity: "", CampManagerId: "", Notes: "" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -139,7 +139,7 @@ const CampForm = ({ initial, campManagers, onSave, onCancel }) => {
   const handleSave = async () => {
     if (!form.CampName) { setError("اسم المخيم مطلوب"); return; }
     if (!form.CampNumber) { setError("رقم المخيم مطلوب"); return; }
-    if (!form.Destination) { setError("الوجهة مطلوبة"); return; }
+    // if (!form.Destination) { setError("الوجهة مطلوبة"); return; }
     setError(null); setSaving(true);
     try {
       const payload = {
@@ -164,7 +164,8 @@ const CampForm = ({ initial, campManagers, onSave, onCancel }) => {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
         <Input label="رقم المخيم" value={form.CampNumber} onChange={v => setField("CampNumber", v)} required placeholder="مثال: 01" />
         <Input label="اسم المخيم" value={form.CampName} onChange={v => setField("CampName", v)} required />
-        <Select label="الوجهة" value={form.Destination} onChange={v => setField("Destination", v)} options={DESTINATIONS.map(d => ({ value: d, label: d }))} required />
+        {/* <Select label="الوجهة" value={form.Destination} onChange={v => setField("Destination", v)} options={DESTINATIONS.map(d => ({ value: d, label: d }))} required /> */}
+        <Select label="الوجهة (اختياري)" value={form.Destination} onChange={v => setField("Destination", v)} options={DESTINATIONS.map(d => ({ value: d, label: d }))} placeholder="كل الوجهات" />
         <Input label="المنطقة / القطاع" value={form.Zone} onChange={v => setField("Zone", v)} />
         <Input label="السعة (عدد الحجاج)" value={form.Capacity} onChange={v => setField("Capacity", v)} type="number" />
         <Select label="المسئول" value={form.CampManagerId} onChange={v => setField("CampManagerId", v)}
