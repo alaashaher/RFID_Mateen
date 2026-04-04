@@ -129,8 +129,7 @@ const TableComp = ({ cols, rows, onRowClick }) => (
 // ORDER FORM (Create / Edit) — DYNAMIC API
 // ─────────────────────────────────────────────
 const emptyItem = () => ({ _id: Math.random(), AssetTypeId: "", AssetModelId: "", RequestedQuantity: 1, notes: "" });
-const emptyForm = () => ({ DispatchDate: new Date().toISOString().slice(0, 10), Destination: "", campIds: [], CampManagerId: "", VehiclePlateNumber: "", DriverName: "", notes: "", Items: [emptyItem()] });
-
+const emptyForm = () => ({ DispatchDate: new Date().toISOString().slice(0, 10), Destination: "", campIds: [], CampManagerId: "", VehiclePlateNumber: "", DriverName: "", Notes: "", Items: [emptyItem()], ForAllCamps: false, IsGeneralServices: false });
 const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave, onCancel }) => {
   const [form, setForm] = useState(initial ? { ...initial, campIds: initial.campIds || [], CampManagerId: initial.CampManagerId || "", Items: (initial.Items || []).map(it => ({ _id: Math.random(), AssetTypeId: it.AssetTypeId || "", AssetModelId: it.AssetModelId || "", RequestedQuantity: it.RequestedQuantity || 1, notes: it.notes || "" })) } : emptyForm());
   const [modelMap, setModelMap] = useState({});
@@ -153,7 +152,7 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
   const validate = () => {
     if (!form.Destination) return "الوجهة مطلوبة";
     // if (!form.receiverName) return "اسم المستلم مطلوب";
-    if (form.campIds.length === 0) return "اختر مخيم واحد على الأقل";
+if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخيم واحد على الأقل أو خدمات عامة";
     if (!form.CampManagerId) return "المسئول مطلوب";
     for (let i = 0; i < form.Items.length; i++) { const it = form.Items[i]; if (!it.AssetTypeId) return `السطر ${i + 1}: نوع الأصل مطلوب`; if (!it.RequestedQuantity || it.RequestedQuantity < 1) return `السطر ${i + 1}: الكمية مطلوبة`; const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); }
     return null;
@@ -163,7 +162,7 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
     const err = validate(); if (err) { setError(err); return; }
     setError(null); setSaving(true);
     try {
-      const payload = { DispatchDate: form.DispatchDate, Destination: form.Destination, campIds: form.campIds, CampManagerId: Number(form.CampManagerId), VehiclePlateNumber: form.VehiclePlateNumber || null, DriverName: form.DriverName || null, Notes: form.Notes || null, Items: form.Items.map(it => ({ AssetTypeId: Number(it.AssetTypeId), AssetModelId: it.AssetModelId ? Number(it.AssetModelId) : null, RequestedQuantity: Number(it.RequestedQuantity), notes: it.notes || null })) };
+      const payload = { DispatchDate: form.DispatchDate, Destination: form.Destination, campIds: form.IsGeneralServices ? [] : form.campIds, ForAllCamps: form.ForAllCamps, IsGeneralServices: form.IsGeneralServices, Destination: form.Destination, campIds: form.campIds, CampManagerId: Number(form.CampManagerId), VehiclePlateNumber: form.VehiclePlateNumber || null, DriverName: form.DriverName || null, Notes: form.Notes || null, Items: form.Items.map(it => ({ AssetTypeId: Number(it.AssetTypeId), AssetModelId: it.AssetModelId ? Number(it.AssetModelId) : null, RequestedQuantity: Number(it.RequestedQuantity), notes: it.notes || null })) };
       let result;
       if (initial?.DispatchOrderId) { result = await api.updateDispatchOrder(initial.DispatchOrderId, payload); }
       else { result = await api.createDispatchOrder(payload); }
@@ -213,8 +212,10 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
   onClick={() => {
     if (form.campIds.length === camps.length) {
       setField("campIds", []);
+      setField("ForAllCamps", false);
     } else {
       setField("campIds", camps.map(c => c.CampId));
+      setField("ForAllCamps", true);
     }
   }}
   style={{
@@ -226,13 +227,31 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
 >
   {form.campIds.length === camps.length ? "✕ إلغاء الكل" : "✓ الكل"}
 </button>
-              <select
+<button
+  onClick={() => {
+    setField("campIds", []);
+    setField("ForAllCamps", false);
+    setField("IsGeneralServices", !form.IsGeneralServices);
+  }}
+  style={{
+    background: form.IsGeneralServices ? "#8E44AD" : "#f0f0f0",
+    color: form.IsGeneralServices ? "#fff" : "#555",
+    border: form.IsGeneralServices ? "none" : "1px solid #ccc",
+    borderRadius: 16, padding: "3px 12px", fontSize: 11,
+    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+  }}
+>
+  {form.IsGeneralServices ? "✕ خدمات عامة" : "🏗 خدمات عامة للمخيمات"}
+</button>
+{!form.IsGeneralServices && form.campIds.length !== camps.length && <select
                 value=""
                 onChange={e => {
                   const val = Number(e.target.value);
                   if (val && !form.campIds.includes(val)) {
                     const newIds = [...form.campIds, val];
                     setField("campIds", newIds);
+                    setField("ForAllCamps", false);
+                    setField("IsGeneralServices", false);
                     // Auto-fill manager from first camp that has one
                     if (!form.CampManagerId) {
                       const campWithMgr = camps.find(c => newIds.includes(c.CampId) && c.CampManagerId);
@@ -252,10 +271,14 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
                       {c.CampName} — {c.Destination}
                     </option>
                   ))}
-              </select>
+              </select>}
             </div>
           </div>
-
+{form.IsGeneralServices && (
+  <div style={{ background: "#F5EEF8", border: "1px solid #D2B4DE", borderRadius: 8, padding: "8px 14px", marginBottom: 14, fontSize: 13, color: "#6C3483", direction: "rtl" }}>
+    🏗 أمر خروج لخدمات عامة — غير مرتبط بمخيم محدد (كهربا, سباكة, إلخ)
+  </div>
+)}
           {/* المسئول — Single select */}
           <Select
             label="المسئول (المستلم)"
@@ -726,7 +749,8 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
             { key: "DispatchOrderNumber", label: "رقم الأمر" },
             { key: "DispatchDate", label: "التاريخ", render: v => v?.slice(0, 10) },
             { key: "Destination", label: "الوجهة" },
-            { key: "CampNames", label: "المخيمات" },
+            // { key: "CampNames", label: "المخيمات" },
+            { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralServices ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🏗 خدمات عامة للمخيمات</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },           
             { key: "ManagerName", label: "المستلم" },
             { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
             { key: "ItemCount", label: "الأصناف" },

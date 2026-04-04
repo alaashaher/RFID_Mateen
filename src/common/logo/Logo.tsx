@@ -8,9 +8,10 @@ const Logo = ({ className }) => {
   return (
     <Link className={className} to={RouterLinks.homePage}>
       <img
-        src="assets/imgs/logo/nauulogo.png"
+        src="assets/imgs/logo/rajhilogo.png"
         alt="app logo"
         width={"100px"}
+        
       />
     </Link>
   );
