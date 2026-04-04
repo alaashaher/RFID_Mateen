@@ -530,7 +530,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
             <Breadcrumb></Breadcrumb>
             <div
               className="site-layout-background"
-              style={{ padding: 24, minHeight: 360 }}
+              style={{  minHeight: 360 }}
             >
               {children}
             </div>

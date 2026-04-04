@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import "./OutOrdersGem.module.scss";
 
 // ─────────────────────────────────────────────
 // API LAYER
@@ -75,12 +76,12 @@ const api = {
 // CONSTANTS & SHARED COMPONENTS
 // ─────────────────────────────────────────────
 const STATUS_CONFIG = {
-  Draft:           { label: "مسودة",       color: "#95A5A6", bg: "#F4F6F6" },
-  Approved:        { label: "معتمد",       color: "#2E86C1", bg: "#EBF5FB" },
-  Loaded:          { label: "تم التحميل", color: "#E67E22", bg: "#FEF9E7" },
-  InTransit:       { label: "في الطريق",  color: "#D4AC0D", bg: "#FDFEFE" },
-  Received:        { label: "تم الاستلام",color: "#27AE60", bg: "#EAFAF1" },
-  PartialReceived: { label: "استلام جزئي",color: "#E74C3C", bg: "#FDEDEC" },
+  Draft: { label: "مسودة", color: "#95A5A6", bg: "#F4F6F6" },
+  Approved: { label: "معتمد", color: "#2E86C1", bg: "#EBF5FB" },
+  Loaded: { label: "تم التحميل", color: "#E67E22", bg: "#FEF9E7" },
+  InTransit: { label: "في الطريق", color: "#D4AC0D", bg: "#FDFEFE" },
+  Received: { label: "تم الاستلام", color: "#27AE60", bg: "#EAFAF1" },
+  PartialReceived: { label: "استلام جزئي", color: "#E74C3C", bg: "#FDEDEC" },
 };
 const DESTINATIONS = ["منى", "عرفة", "مزدلفة"];
 
@@ -102,12 +103,12 @@ const Btn = ({ children, onClick, variant = "primary", disabled, style = {}, sma
     fontWeight: 600, transition: "all .15s", opacity: disabled ? .5 : 1, ...style,
   };
   const variants = {
-    primary:  { background: "#1a56db", color: "#fff" },
-    success:  { background: "#27AE60", color: "#fff" },
-    danger:   { background: "#E74C3C", color: "#fff" },
-    outline:  { background: "#fff", color: "#1a56db", border: "1.5px solid #1a56db" },
-    ghost:    { background: "transparent", color: "#555", border: "1px solid #ddd" },
-    warning:  { background: "#E67E22", color: "#fff" },
+    primary: { background: "#1a56db", color: "#fff" },
+    success: { background: "#27AE60", color: "#fff" },
+    danger: { background: "#E74C3C", color: "#fff" },
+    outline: { background: "#fff", color: "#1a56db", border: "1.5px solid #1a56db" },
+    ghost: { background: "transparent", color: "#555", border: "1px solid #ddd" },
+    warning: { background: "#E67E22", color: "#fff" },
   };
   return (
     <button onClick={disabled ? undefined : onClick} style={{ ...base, ...variants[variant] }}>
@@ -148,7 +149,7 @@ const Select = ({ label, value, onChange, options = [], required, placeholder = 
 );
 
 const Table = ({ cols, rows, onRowClick }) => (
-  <div style={{ overflowX: "auto" }}>
+  <div className={"outOrdersGem-tableWrapper"}>
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, direction: "rtl" }}>
       <thead>
         <tr style={{ background: "#F7F8FA" }}>
@@ -222,9 +223,9 @@ const OrderForm = ({ initial, assetTypes, onSave, onCancel }) => {
     setForm(f => {
       const items = [...f.items];
       items[idx] = { ...items[idx], [k]: v };
-      if (k === "assetTypeId") { 
-        items[idx].assetModelId = ""; 
-        fetchModels(v); 
+      if (k === "assetTypeId") {
+        items[idx].assetModelId = "";
+        fetchModels(v);
       }
       return { ...f, items };
     });
@@ -256,9 +257,9 @@ const OrderForm = ({ initial, assetTypes, onSave, onCancel }) => {
     <div>
       <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h4 style={{ margin: "0 0 14px", fontSize: 15, color: "#1a1a2e" }}>📋 معلومات الأمر</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+        <div className={"outOrdersGem-formGrid"}>
           <Input label="رقم الأمر" value={form.dispatchOrderNumber || "(تلقائي)"} readOnly />
-          <Input label="تاريخ الخروج" value={form.dispatchDate?.slice(0,10)} onChange={v => setField("dispatchDate", v)} type="date" required />
+          <Input label="تاريخ الخروج" value={form.dispatchDate?.slice(0, 10)} onChange={v => setField("dispatchDate", v)} type="date" required />
           <Select label="الوجهة" value={form.destination} onChange={v => setField("destination", v)} options={DESTINATIONS.map(d => ({ value: d, label: d }))} required />
           <Input label="رقم المخيم" value={form.campNumber} onChange={v => setField("campNumber", v)} />
           <Input label="اسم المخيم" value={form.campName} onChange={v => setField("campName", v)} />
@@ -332,7 +333,7 @@ const OrderForm = ({ initial, assetTypes, onSave, onCancel }) => {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+      <div className={"outOrdersGem-btnGroup"}>
         <Btn variant="ghost" onClick={onCancel}>إلغاء</Btn>
         <Btn variant="outline" onClick={() => handleSave("Draft")} disabled={saving}>💾 حفظ كمسودة</Btn>
         {/* If user clicks approve directly from new form, we might need a 2-step process in backend, handled in onSave */}
@@ -372,7 +373,7 @@ const OrderDetail = ({ orderId, onBack, onEdit, onApprove, onDelete }) => {
 
   const infoRows = [
     ["رقم الأمر", order.dispatchOrderNumber],
-    ["التاريخ", order.dispatchDate?.slice(0,10)],
+    ["التاريخ", order.dispatchDate?.slice(0, 10)],
     ["الوجهة", order.destination],
     ["رقم المخيم", order.campNumber],
     ["اسم المخيم", order.campName],
@@ -436,7 +437,7 @@ const OrderDetail = ({ orderId, onBack, onEdit, onApprove, onDelete }) => {
         </>
       )}
 
-      <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
+      <div className={"outOrdersGem-btnGroup"} style={{ marginTop: 24 }}>
         {status === "Draft" && (
           <>
             <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>
@@ -540,7 +541,7 @@ const ScanScreen = ({ phase, orders, onComplete }) => {
     if (!scanning || !orderDetail) return;
     const interval = setInterval(() => {
       // هنا نفترض أن القارئ يعطينا UniversityAssetId، سنقوم بمحاكاتها
-      const mockAssetId = Math.floor(Math.random() * 1000) + 1; 
+      const mockAssetId = Math.floor(Math.random() * 1000) + 1;
       setScannedAssetIds(prev => {
         if (prev.includes(mockAssetId)) return prev;
         return [mockAssetId, ...prev];
@@ -672,7 +673,7 @@ export default function OutOrdersGem() {
         const res = await api.createDispatchOrder(formData);
         createdId = res.dispatchOrderId;
       }
-      
+
       // إذا اختار المستخدم "حفظ واعتماد" مباشرة (2 steps)
       if (expectedStatus === "Approved" && createdId) {
         await api.approveDispatchOrder(createdId);
@@ -710,13 +711,13 @@ export default function OutOrdersGem() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f2f7", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
+    <div className={"outOrdersGem-container"}>
       {/* يمكن تفعيل القائمة العلوية هنا للتنقل بين التابات */}
-      <div style={{ padding: "28px 20px", maxWidth: 1200, margin: "0 auto" }}>
-        
+      <div className={"outOrdersGem-content"}>
+
         {/* أزرار التنقل السريعة (مؤقتة للتجربة) */}
         <div style={{ display: "flex", gap: 10, marginBottom: 20, direction: "rtl" }}>
-          <Btn variant={tab === "orders" ? "primary" : "outline"} onClick={() => {setTab("orders"); setView("list");}}>أوامر الخروج 📋</Btn>
+          <Btn variant={tab === "orders" ? "primary" : "outline"} onClick={() => { setTab("orders"); setView("list"); }}>أوامر الخروج 📋</Btn>
           <Btn variant={tab === "scanLoad" ? "primary" : "outline"} onClick={() => setTab("scanLoad")}>سكان التحميل 🚚</Btn>
           <Btn variant={tab === "scanReceive" ? "primary" : "outline"} onClick={() => setTab("scanReceive")}>سكان الاستلام 📦</Btn>
         </div>
@@ -724,7 +725,7 @@ export default function OutOrdersGem() {
         {tab === "orders" && (
           <>
             {(showForm || editOrderData) ? (
-              <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
+              <div className={"outOrdersGem-card"}>
                 <h3 style={{ direction: "rtl", marginTop: 0 }}>{editOrderData ? "تعديل أمر الخروج" : "إنشاء أمر خروج جديد"}</h3>
                 <OrderForm
                   initial={editOrderData}
@@ -734,7 +735,7 @@ export default function OutOrdersGem() {
                 />
               </div>
             ) : view === "detail" && selectedOrderId ? (
-              <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
+              <div className={"outOrdersGem-card"}>
                 <OrderDetail
                   orderId={selectedOrderId}
                   onBack={() => { setView("list"); setSelectedOrderId(null); }}
@@ -744,7 +745,7 @@ export default function OutOrdersGem() {
                 />
               </div>
             ) : (
-              <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
+              <div className={"outOrdersGem-card"}>
                 <h2 style={{ margin: "0 0 20px", fontSize: 22, direction: "rtl" }}>أوامر الخروج</h2>
                 <OrdersList
                   orders={orders}
@@ -758,13 +759,13 @@ export default function OutOrdersGem() {
         )}
 
         {tab === "scanLoad" && (
-          <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
+          <div className={"outOrdersGem-card"}>
             <ScanScreen phase="Loaded" orders={orders} onComplete={loadOrders} />
           </div>
         )}
 
         {tab === "scanReceive" && (
-          <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
+          <div className={"outOrdersGem-card"}>
             <ScanScreen phase="Received" orders={orders} onComplete={loadOrders} />
           </div>
         )}
