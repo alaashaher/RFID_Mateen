@@ -209,6 +209,23 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
                   </span>
                 );
               })}
+              <button
+  onClick={() => {
+    if (form.campIds.length === camps.length) {
+      setField("campIds", []);
+    } else {
+      setField("campIds", camps.map(c => c.CampId));
+    }
+  }}
+  style={{
+    background: form.campIds.length === camps.length ? "#E74C3C" : "#27AE60",
+    color: "#fff", border: "none", borderRadius: 16,
+    padding: "3px 12px", fontSize: 11, fontWeight: 700,
+    cursor: "pointer", whiteSpace: "nowrap",
+  }}
+>
+  {form.campIds.length === camps.length ? "✕ إلغاء الكل" : "✓ الكل"}
+</button>
               <select
                 value=""
                 onChange={e => {
