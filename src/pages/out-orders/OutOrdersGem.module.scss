@@ -1,0 +1,72 @@
+.outOrdersGem-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #f0f2f7;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.outOrdersGem-content {
+  padding: 28px 2vw;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.outOrdersGem-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 5vw 3vw 3vw 3vw;
+  box-shadow: 0 2px 16px rgba(0,0,0,.07);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .outOrdersGem-content {
+    padding: 18px 1vw;
+  }
+  .outOrdersGem-card {
+    padding: 6vw 2vw 2vw 2vw;
+  }
+}
+
+@media (max-width: 600px) {
+  .outOrdersGem-content {
+    padding: 8px 0.5vw;
+  }
+  .outOrdersGem-card {
+    padding: 8vw 1vw 1vw 1vw;
+    border-radius: 8px;
+  }
+}
+
+/* Responsive grid for forms */
+.outOrdersGem-formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+@media (max-width: 700px) {
+  .outOrdersGem-formGrid {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+}
+
+/* Responsive table wrapper */
+.outOrdersGem-tableWrapper {
+  overflow-x: auto;
+}
+
+/* Responsive button group */
+.outOrdersGem-btnGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 600px) {
+  .outOrdersGem-btnGroup {
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+}
