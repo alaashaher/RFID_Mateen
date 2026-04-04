@@ -115,7 +115,8 @@ const TableComp = ({ cols, rows, onRowClick }) => (
             style={{ borderBottom: "1px solid #f0f0f0", cursor: onRowClick ? "pointer" : "default", background: i % 2 === 0 ? "#fff" : "#fafafa", transition: "background .1s" }}
             onMouseEnter={e => onRowClick && (e.currentTarget.style.background = "#EBF5FB")}
             onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "#fff" : "#fafafa")}>
-            {cols.map(c => <td key={c.key} style={{ padding: "10px 14px", verticalAlign: "middle" }}>{c.render ? c.render(row[c.key], row) : (row[c.key] ?? "—")}</td>)}
+            {/* {cols.map(c => <td key={c.key} style={{ padding: "10px 14px", verticalAlign: "middle" }}>{c.render ? c.render(row[c.key], row) : (row[c.key] ?? "—")}</td>)} */}
+            {cols.map(c => <td key={c.key} style={{ padding: "10px 14px", verticalAlign: "middle" }}>{c.render ? c.render(row[c.key], row, i) : (row[c.key] ?? "—")}</td>)}
           </tr>
         ))}
       </tbody>
@@ -142,8 +143,8 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
     catch { setModelMap(prev => ({ ...prev, [typeId]: [] })); }
   }, [modelMap]);
 
-  useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) { const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); if (t?.hasModels) fetchModels(it.AssetTypeId); } }); }, []); // eslint-disable-line
-
+  // useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) { const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); if (t?.hasModels) fetchModels(it.AssetTypeId); } }); }, []); // eslint-disable-line
+  useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) fetchModels(it.AssetTypeId); }); }, []); // eslint-disable-line
   const updateItem = (idx, k, v) => { setForm(f => { const Items = [...f.Items]; Items[idx] = { ...Items[idx], [k]: v }; if (k === "AssetTypeId") { Items[idx].AssetModelId = ""; if (v) fetchModels(v); } return { ...f, Items }; }); };
   const addItem = () => setForm(f => ({ ...f, Items: [...f.Items, emptyItem()] }));
   const removeItem = (idx) => setForm(f => ({ ...f, Items: f.Items.filter((_, i) => i !== idx) }));
@@ -165,7 +166,7 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
       let result;
       if (initial?.DispatchOrderId) { result = await api.updateDispatchOrder(initial.DispatchOrderId, payload); }
       else { result = await api.createDispatchOrder(payload); }
-      if (result.success) { if (Status === "Approved" && result.DispatchOrderId) await api.approveDispatchOrder(result.DispatchOrderId, 1); onSave(result); }
+      if (result.success) { if (Status === "Approved" && result.dispatchOrderId) await api.approveDispatchOrder(result.dispatchOrderId, 1); onSave(result); }
       else setError(result.message || "فشل الحفظ");
     } catch (e) { setError(e.message || "فشل الاتصال"); } finally { setSaving(false); }
   };
@@ -633,6 +634,26 @@ return (
           <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>
         </>
       )}
+      {/* زرار نسخ الأمر — يظهر دائماً ما عدا Draft */}
+    {Status !== "Draft" && (
+     <Btn variant="outline" onClick={() => 
+    onEdit({
+  ...order,
+  DispatchOrderId: undefined,
+  DispatchOrderNumber: undefined,
+  Status: undefined,
+  DispatchDate: order.DispatchDate?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+  campIds: order.Camps?.map(c => c.CampId) || [],
+  Items: order.Items?.map(it => ({
+    AssetTypeId: it.AssetTypeId,
+    AssetModelId: it.AssetModelId || "",
+    RequestedQuantity: it.RequestedQuantity,
+    Notes: it.Notes || "",
+  })) || [],
+  _isCopy: true,
+})
+  }>📋 نسخ أمر خروج مشابه</Btn>
+   )}
       {isReceiving && (
         <Btn variant="success" onClick={handleConfirmReceiving} disabled={checkedItems.length === 0 || loadingConfirm}>
           {loadingConfirm ? "جارٍ الحفظ..." : `📦 تأكيد الاستلام (${checkedItems.length}/${Items.length})`}
@@ -675,6 +696,7 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
       {loading ? <Loader /> : error ? <ErrorMsg msg={error} onRetry={loadOrders} /> : (<>
       <TableComp
   cols={[
+    { key: "_seq", label: "#", render: (_, row, idx) => idx + 1 },
     { key: "DispatchOrderNumber", label: "رقم الأمر" },
     { key: "DispatchDate", label: "التاريخ", render: v => v?.slice(0, 10) },
     { key: "Destination", label: "الوجهة" },
@@ -683,6 +705,7 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
     { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
     { key: "ItemCount", label: "الأصناف" },
     { key: "TotalRequested", label: "المطلوب" },
+    { key: "Notes", label: "ملاحظات" },
     { key: "_actions", label: "الإجراءات", render: (_, row) => 
       row.Status === "Loaded" ? (
         <Btn variant="warning" small onClick={async (e) => {
@@ -795,7 +818,16 @@ useEffect(() => {
 }, []);
   const triggerRefresh = () => setRefreshKey(k => k + 1);
   const handleSaveOrder = () => { setShowForm(false); setEditOrder(null); setView("list"); setSelectedOrderId(null); triggerRefresh(); };
-  const handleEdit = (order) => { setEditOrder(order); setShowForm(true); };
+  // const handleEdit = (order) => { setEditOrder(order); setShowForm(true); };
+  const handleEdit = (order) => {
+  if (order._isCopy) {
+    // نسخ: يفتح كإنشاء جديد مع نفس البيانات
+    setEditOrder({ ...order, DispatchOrderId: undefined });
+  } else {
+    setEditOrder(order);
+  }
+  setShowForm(true);
+};
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f2f7", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
@@ -803,7 +835,10 @@ useEffect(() => {
         {tab === "orders" && (<>
           {(showForm || editOrder) ? (
             <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
-              <h3 style={{ direction: "rtl", marginTop: 0 }}>{editOrder ? "تعديل أمر الخروج" : "إنشاء أمر خروج جديد"}</h3>
+              {/* <h3 style={{ direction: "rtl", marginTop: 0 }}>{editOrder ? "تعديل أمر الخروج" : "إنشاء أمر خروج جديد"}</h3> */}
+              <h3 style={{ direction: "rtl", marginTop: 0 }}>
+  {editOrder?.DispatchOrderId ? "تعديل أمر الخروج" : editOrder?._isCopy ? "نسخ أمر خروج مشابه" : "إنشاء أمر خروج جديد"}
+</h3>
               <OrderForm initial={editOrder} assetTypes={assetTypes}  camps={camps} campManagers={campManagers} onSave={handleSaveOrder} onCancel={() => { setShowForm(false); setEditOrder(null); setView(selectedOrderId ? "detail" : "list"); }} />
                
             </div>

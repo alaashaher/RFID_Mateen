@@ -61,10 +61,10 @@ const ModelsForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const hasmode = true;
+        const hasmode = false;
         const res = await getFromApi(
           
-          `AssetType/get-assetType-ddl?hasModels=${hasmode}`
+          `AssetType/get-assetType-ddl`
         );
         setBuildings(res);
       } catch (error) {

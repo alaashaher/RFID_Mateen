@@ -15,6 +15,7 @@ const RouterLinks = {
   UniversityAssetsRelocation: "/UniversityAssetsRelocation",
 
   OutOrders:'/OutOrders',
+  CampsManagement:'/CampsManagement',
   UniversityAssetsScanned: "/UniversityAssetsScanned",
 
 
