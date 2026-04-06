@@ -108,11 +108,19 @@ const AppLayout: React.FC<any> = ({ children }) => {
       icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
+   
     {
       key: 111,
       path: routerLinks.CampsManagement,
       name: " المخيمات",
       icon: <BankOutlined  />,
+      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+    },
+     {
+      key: 112,
+      path: routerLinks.CampOrdersPage,
+      name: " طلبات المخيمات",
+      icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
     // {

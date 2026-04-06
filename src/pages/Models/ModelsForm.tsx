@@ -29,7 +29,8 @@ const ModelsForm = () => {
     TagType: toEdit ? toEdit.TagType : "",  // ✅ جديد
     Brand: toEdit ? toEdit.Brand : "",
     ModelCode: toEdit ? toEdit.ModelCode : "",
-    AssetTotalCount: toEdit ? toEdit.AssetTotalCount : ""
+    AssetTotalCount: toEdit ? toEdit.AssetTotalCount : "",
+    RemainingCountNow: toEdit ? toEdit.RemainingCountNow : ""
   };
   const schema = Yup.object().shape({
     ModelName: Yup.string().required("ادخل اسم الموديل"),
@@ -39,6 +40,8 @@ const ModelsForm = () => {
     TagType: Yup.string().required("ادخل نوع اللاصق"),  // ✅ جديد
     Brand: Yup.string(),
     AssetTotalCount: Yup.string(),
+    RemainingCountNow: Yup.string().nullable(),
+
   });
   const tagTypeOptions = [
   { title: "RFID-DogBone97*27",  value: "RFID-DogBone97*27"  },
@@ -87,6 +90,7 @@ const ModelsForm = () => {
       setValue("TagType", toEdit.TagType);  // ✅ جديد
       setValue("Brand", toEdit.Brand);
       setValue("AssetTotalCount", toEdit.AssetTotalCount);
+      setValue("RemainingCountNow", toEdit.RemainingCountNow);
       setValue("ModelCode", toEdit.ModelCode)
     }
   }, [toEdit, setValue]);
@@ -104,7 +108,7 @@ const ModelsForm = () => {
         TagType: data.TagType,   
         Brand: data.Brand,
         AssetTotalCount: data.AssetTotalCount,
-        ModelCode: data.ModelCode,
+        RemainingCountNow: data.RemainingCountNow === "" ? null : data.RemainingCountNow, 
         UniversityName: data.UniversityName,
         "IsActive": true,
         "IsDeleted": false
@@ -250,6 +254,18 @@ const ModelsForm = () => {
               label={`العدد الكلى`}
               errorMsg={errors?.[`AssetTotalCount`]?.message}
               validateStatus={errors?.[`AssetTotalCount`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
+            />
+          </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`RemainingCountNow`}
+              placeholder={`العدد المتبقى فى المستودع`}
+              label={`العدد المتبقى فى المستودع`}
+              errorMsg={errors?.[`RemainingCountNow`]?.message}
+              validateStatus={errors?.[`RemainingCountNow`] ? "error" : ""}
               type={'text'}
             // disabled={true}
             />

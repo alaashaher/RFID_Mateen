@@ -29,6 +29,7 @@ import ModelsPage from "../pages/Models/ModelsPage";
 import WarehouseAdjustmentPage from "../pages/WarehouseAdjustmentScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
 import OutOrders from "../pages/out-orders/OutOrders";
+import CampOrdersPage from "../pages/CampOrdersPage/CampOrdersPage";
 import CampsManagement from "../pages/CampsManagement/CampsManagement";
 
 
@@ -92,6 +93,11 @@ const Routess = () => {
         <Route path={routerLinks.OutOrders} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <OutOrders />
+        </ProtectedRoute>}>
+      </Route>
+       <Route path={routerLinks.CampOrdersPage} element={
+        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+          <CampOrdersPage />
         </ProtectedRoute>}>
       </Route>
        <Route path={routerLinks.CampsManagement} element={

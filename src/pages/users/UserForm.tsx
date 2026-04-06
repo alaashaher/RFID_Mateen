@@ -12,6 +12,7 @@ const { Option } = Select;
 interface ClassificationItem {
   label: string;
   value: string;
+  IsCampSupervisor: boolean;
 }
 
 const UserForm = () => {
@@ -26,44 +27,76 @@ const UserForm = () => {
     setViewRSTData
   } = useContext(UserContext);
   const [classificationList, setClassificationList] = useState<ClassificationItem[]>([]);
-  const [roleName, setRoleName] = useState("")
+  const [roleName, setRoleName] = useState("");
+  const [campManagerList, setCampManagerList] = useState<{label: string; value: number}[]>([]);
+const [showCampManager, setShowCampManager] = useState(false);
   const getAllClassifications = async () => {
     try {
       const allClassifications = await getFromApi('Roles/get-roles-ddl');
-      setClassificationList(allClassifications.map((ele: any) => ({ label: ele.Name, value: ele.Id })));
+      setClassificationList(allClassifications.map((ele: any) => ({ 
+        label: ele.Name, 
+        value: ele.Id,
+        IsCampSupervisor: ele.IsCampSupervisor 
+      })));
     } catch (error) {
       console.error("Error fetching classifications:", error);
     }
   };
-
+const getCampManagers = async () => {
+    try {
+      const managers = await getFromApi('DispatchOrder/get-camp-managers');
+      setCampManagerList(managers.map((m: any) => ({ label: m.ManagerName, value: m.CampManagerId })));
+    } catch (error) {
+      console.error("Error fetching camp managers:", error);
+    }
+  };
   const [form] = Form.useForm();
 
-  useEffect(() => {
+ useEffect(() => {
     if (toEdit) {
-      setRoleName(toEdit.RoleName)
-      form.setFieldsValue({ UserId: toEdit.User.UserId, OdooJobNumber: toEdit.User.OdooJobNumber,UserName: toEdit.User.UserName, Email: toEdit.User.Email, PhoneNumber: toEdit.User.PhoneNumber, RoleId: toEdit.RoleId });
+      setRoleName(toEdit.RoleName);
+      form.setFieldsValue({ 
+        UserId: toEdit.User.UserId, 
+        OdooJobNumber: toEdit.User.OdooJobNumber,
+        UserName: toEdit.User.UserName, 
+        Email: toEdit.User.Email, 
+        PhoneNumber: toEdit.User.PhoneNumber, 
+        RoleId: toEdit.RoleId,
+        CampManagerId: toEdit.User.CampManagerId || undefined
+      });
+      // check if role has IsCampSupervisor after classifications load
+      setShowCampManager(!!toEdit.User.CampManagerId);
     }
 
     if (viewRSTData) {
-      const { UserId, UserName, OdooJobNumber, Email, RoleId, Password, PhoneNumber } = viewRSTData;
-      form.setFieldsValue({ UserId: viewRSTData.User.UserId, OdooJobNumber: viewRSTData.User.OdooJobNumber, UserName: viewRSTData.User.UserName, Email: viewRSTData.User.Email, RoleId: viewRSTData.RoleId, Password, PhoneNumber: viewRSTData.User.PhoneNumber });
+      form.setFieldsValue({ 
+        UserId: viewRSTData.User.UserId, 
+        OdooJobNumber: viewRSTData.User.OdooJobNumber, 
+        UserName: viewRSTData.User.UserName, 
+        Email: viewRSTData.User.Email, 
+        RoleId: viewRSTData.RoleId, 
+        PhoneNumber: viewRSTData.User.PhoneNumber,
+        CampManagerId: viewRSTData.User.CampManagerId || undefined
+      });
+      setShowCampManager(!!viewRSTData.User.CampManagerId);
     }
 
     getAllClassifications();
+    getCampManagers();
   }, [toEdit, viewRSTData]);
 
   const onFinish = async (values: any) => {
     //console.log('Form Values:', values, toEdit); 
     const payload = {
-      UserId: (toEdit != null && toEdit.User.UserId) ? toEdit.User.UserId.toString() : undefined,
-      UserName: values.UserName,
-      OdooJobNumber: values.OdooJobNumber,
-      Email: values.Email,
-      RoleId: values.RoleId,
-      // Password: values.Password ? values.Password : "",
-      PhoneNumber: values.PhoneNumber,
-      RoleName: roleName
-    };
+  UserId: (toEdit != null && toEdit.User.UserId) ? toEdit.User.UserId.toString() : undefined,
+  UserName: values.UserName,
+  OdooJobNumber: values.OdooJobNumber,
+  Email: values.Email,
+  RoleId: values.RoleId,
+  PhoneNumber: values.PhoneNumber,
+  RoleName: roleName,
+  CampManagerId: values.CampManagerId || null
+};
     if (values.Password) {
       payload.Password = values.Password
     }
@@ -160,9 +193,15 @@ const UserForm = () => {
           <Select
             showSearch
             onChange={(value) => {
-              form.setFieldsValue({ RoleId: value });
-              setRoleName(classificationList.filter((item) => item.value == value)[0].label)
-            }}
+  form.setFieldsValue({ RoleId: value });
+  const selectedRole = classificationList.find((item) => item.value == value);
+  setRoleName(selectedRole?.label || "");
+  const isCamp = selectedRole?.IsCampSupervisor || false;
+  setShowCampManager(isCamp);
+  if (!isCamp) {
+    form.setFieldsValue({ CampManagerId: undefined });
+  }
+}}
             filterOption={false}
             placeholder={"الصلاحية"}
             size="large"
@@ -176,6 +215,30 @@ const UserForm = () => {
             ))}
           </Select>
         </Form.Item>
+        {showCampManager && (
+  <Form.Item
+    label="اختار مشرف"
+    name="CampManagerId"
+    rules={[{ required: true, message: 'الرجاء اختيار المشرف' }]}
+  >
+    <Select
+      showSearch
+      placeholder="اختار مشرف المخيم"
+      size="large"
+      allowClear
+      disabled={viewRSTData ? true : false}
+      filterOption={(input, option) =>
+        (option?.children as unknown as string)?.includes(input)
+      }
+    >
+      {campManagerList.map((m) => (
+        <Option key={m.value} value={m.value}>
+          {m.label}
+        </Option>
+      ))}
+    </Select>
+  </Form.Item>
+)}
         <Form.Item
           label="اسم المستخدم"
           name="UserName"

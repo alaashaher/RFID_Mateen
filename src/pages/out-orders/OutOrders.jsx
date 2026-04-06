@@ -323,52 +323,6 @@ if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخ�
     </div>
   );
 };
-
-// ─────────────────────────────────────────────
-// ORDER DETAIL — DYNAMIC API
-// ─────────────────────────────────────────────
-// const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
-//   const [order, setOrder] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   const loadOrder = useCallback(async () => { setLoading(true); setError(null); try { setOrder(await api.getDispatchOrder(orderId)); } catch (e) { setError(e.message); } finally { setLoading(false); } }, [orderId]);
-//   useEffect(() => { loadOrder(); }, [loadOrder]);
-
-//   if (loading) return <Loader text="جارٍ تحميل تفاصيل الأمر..." />;
-//   if (error) return <ErrorMsg msg={error} onRetry={loadOrder} />;
-//   if (!order) return <ErrorMsg msg="أمر الخروج غير موجود" />;
-
-//   const { Status, Items = [], scannedAssets = [] } = order;
-//   console.log("------scannedAssets-----", scannedAssets)
-//   const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
-//    ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"], ["المستلم", order.ManagerName],
-//    ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber], ["السائق", order.DriverName], ["ملاحظات", order.notes]];
-
-//   const handleApprove = async () => { try { const r = await api.approveDispatchOrder(order.DispatchOrderId, 1); if (r.success) { loadOrder(); onRefresh?.(); } else alert(r.message); } catch (e) { alert(e.message); } };
-//   const handleDelete = async () => { if (!window.confirm("هل أنت متأكد من حذف هذا الأمر؟")) return; try { const r = await api.deleteDispatchOrder(order.DispatchOrderId); if (r.success) { onRefresh?.(); onBack(); } else alert(r.message); } catch (e) { alert(e.message); } };
-
-//   return (
-//     <div style={{ direction: "rtl" }}>
-//       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-//         <button onClick={onBack} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#1a56db" }}>← رجوع</button>
-//         <h2 style={{ margin: 0, fontSize: 20 }}>تفاصيل أمر الخروج — {order.DispatchOrderNumber}</h2>
-//         <StatusBadge Status={Status} />
-//       </div>
-//       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 0", background: "#F7F8FA", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-//         {infoRows.map(([k, v]) => v ? <div key={k} style={{ padding: "4px 0", display: "flex", gap: 8 }}><span style={{ fontWeight: 600, color: "#555", minWidth: 110, fontSize: 13 }}>{k}:</span><span style={{ fontSize: 13 }}>{v}</span></div> : null)}
-//       </div>
-//       <h4 style={{ marginBottom: 10 }}>مقارنة الكميات</h4>
-//       <TableComp cols={[{ key: "AssetTypeName", label: "نوع الأصل" }, { key: "ModelName", label: "الموديل" }, { key: "RequestedQuantity", label: "المطلوب" }, { key: "LoadedQuantity", label: "المحمّل" }, { key: "ReceivedQuantity", label: "المستلَم" }, { key: "_diff", label: "الفرق", render: (_, row) => { const d = (row.RequestedQuantity||0) - (row.ReceivedQuantity||0); return <span style={{ color: d > 0 ? "#E74C3C" : d < 0 ? "#E67E22" : "#27AE60", fontWeight: 700 }}>{d > 0 ? `-${d}` : d < 0 ? `+${Math.abs(d)}` : "✓"}</span>; } }]} rows={Items} />
-//       {scannedAssets.length > 0 && (<><h4 style={{ marginTop: 20, marginBottom: 10 }}>الأصول الفعلية (RFID)</h4><TableComp cols={[{ key: "assetBarcode", label: "الباركود" }, { key: "rfidCode", label: "RFID" }, { key: "AssetName", label: "الأصل" }, { key: "ScanPhase", label: "المرحلة", render: v => v === "Loaded" ? "🚚 تحميل" : "📦 استلام" }, { key: "ScannedDate", label: "التاريخ", render: v => v?.slice(0, 16).replace("T", " ") }]} rows={scannedAssets} /></>)}
-//       <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-//         {Status === "Draft" && (<><Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn><Btn variant="success" onClick={handleApprove}>✅ اعتماد</Btn><Btn variant="danger" onClick={handleDelete}>🗑 حذف</Btn></>)}
-//         {Status === "Approved" && <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>}
-//         {Status === "Received" && <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة تقرير الاستلام</Btn>}
-//       </div>
-//     </div>
-//   );
-// };
 const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -452,10 +406,12 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
     } catch (e) { alert(e.message); } finally { setLoadingConfirm(false); }
   };
 
-  const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
-  ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"], ["المستلم", order.ManagerName],
-  ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber], ["السائق", order.DriverName], ["ملاحظات", order.Notes]];
-
+  // const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
+  // ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"], ["المستلم", order.ManagerName],
+  // ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber], ["السائق", order.DriverName], ["ملاحظات", order.Notes]];
+const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
+  ["المستلم", order.ManagerName], ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber],
+  ["السائق", order.DriverName], ["ملاحظات", order.Notes], ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"]];
   const handleApprove = async () => { try { const r = await api.approveDispatchOrder(order.DispatchOrderId, 1); if (r.success) { loadOrder(); onRefresh?.(); } else alert(r.message); } catch (e) { alert(e.message); } };
   const handleDelete = async () => { if (!window.confirm("هل أنت متأكد من حذف هذا الأمر؟")) return; try { const r = await api.deleteDispatchOrder(order.DispatchOrderId); if (r.success) { onRefresh?.(); onBack(); } else alert(r.message); } catch (e) { alert(e.message); } };
   const handleSetInTransit = async () => {
@@ -466,82 +422,8 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
       if (r.success) { loadOrder(); onRefresh?.(); } else alert(r.message || "فشل التحديث");
     } catch (e) { alert(e.message); } finally { setLoadingConfirm(false); }
   };
-  //   return (
-  //     <div style={{ direction: "rtl" }}>
-  //       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-  //         <button onClick={onBack} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#1a56db" }}>← رجوع</button>
-  //         <h2 style={{ margin: 0, fontSize: 20 }}>تفاصيل أمر الخروج — {order.DispatchOrderNumber}</h2>
-  //         <StatusBadge Status={Status} />
-  //       </div>
-  //       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 0", background: "#F7F8FA", borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-  //         {infoRows.map(([k, v]) => v ? <div key={k} style={{ padding: "4px 0", display: "flex", gap: 8 }}><span style={{ fontWeight: 600, color: "#555", minWidth: 110, fontSize: 13 }}>{k}:</span><span style={{ fontSize: 13 }}>{v}</span></div> : null)}
-  //       </div>
-
-  //       <h4 style={{ marginBottom: 10 }}>
-  //         {isApproved ? "📦 تحديد البنود للتحميل" : isReceiving ? "📋 تحديد البنود للاستلام" : "مقارنة الكميات"}
-  //       </h4>
-
-  //       <TableComp
-  //         cols={[
-  //           ...(showCheckbox ? [{
-  //             key: "_check",
-  //             label: <input type="checkbox" checked={allChecked} onChange={toggleAll} style={{ width: 18, height: 18, cursor: "pointer" }} />,
-  //             render: (_, row) => <input type="checkbox" checked={checkedItems.includes(row.DispatchOrderItemId)} onChange={() => toggleItem(row.DispatchOrderItemId)} style={{ width: 18, height: 18, cursor: "pointer" }} />
-  //           }] : []),
-  //           { key: "AssetTypeName", label: "نوع الأصل" },
-  //           { key: "ModelName", label: "الموديل" },
-  //           { key: "RequestedQuantity", label: "المطلوب" },
-  //           { key: "LoadedQuantity", label: "المحمّل" },
-  //           ...(isReceiving ? [{
-  //             key: "_receivedInput", label: "الكمية المستلمة",
-  //             render: (_, row) => checkedItems.includes(row.DispatchOrderItemId) ? (
-  //               <input type="number" min={0} max={row.LoadedQuantity || row.RequestedQuantity}
-  //                 value={receivedQty[row.DispatchOrderItemId] ?? row.LoadedQuantity ?? 0}
-  //                 onChange={e => updateReceivedQty(row.DispatchOrderItemId, e.target.value)}
-  //                 style={{ width: 70, padding: "4px 6px", borderRadius: 6, border: "1.5px solid #2E86C1", fontSize: 14, textAlign: "center", fontWeight: 700 }} />
-  //             ) : <span style={{ color: "#aaa" }}>—</span>
-  //           }] : [
-  //             { key: "ReceivedQuantity", label: "المستلَم" }
-  //           ]),
-  //           { key: "_diff", label: "الفرق", render: (_, row) => {
-  //             const d = (row.RequestedQuantity||0) - (row.ReceivedQuantity||0);
-  //             return <span style={{ color: d > 0 ? "#E74C3C" : d < 0 ? "#E67E22" : "#27AE60", fontWeight: 700 }}>{d > 0 ? `-${d}` : d < 0 ? `+${Math.abs(d)}` : "✓"}</span>;
-  //           }},
-  //         ]}
-  //         rows={Items}
-  //       />
-
-  //       {ScannedAssets?.length > 0 && (<><h4 style={{ marginTop: 20, marginBottom: 10 }}>الأصول الفعلية (RFID)</h4><TableComp cols={[{ key: "AssetBarcode", label: "الباركود" }, { key: "RfidCode", label: "RFID" }, { key: "AssetName", label: "الأصل" }, { key: "ScanPhase", label: "المرحلة", render: v => v === "Loaded" ? "🚚 تحميل" : "📦 استلام" }, { key: "ScannedDate", label: "التاريخ", render: v => v?.slice(0, 16).replace("T", " ") }]} rows={ScannedAssets} /></>)}
-  //         <div style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-  //   {Status === "Draft" && (<><Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn><Btn variant="success" onClick={handleApprove}>✅ اعتماد</Btn><Btn variant="danger" onClick={handleDelete}>🗑 حذف</Btn></>)}
-  //   {isApproved && (
-  //     <>
-  //       <Btn variant="warning" onClick={handleConfirmLoading} disabled={checkedItems.length !== Items.length || loadingConfirm}>
-  //         {loadingConfirm ? "جارٍ التحميل..." : checkedItems.length === Items.length ? `🚚 تحميل فى السيارة ✓` : `🚚 حدد كل البنود أولاً (${checkedItems.length}/${Items.length})`}
-  //       </Btn>
-  //       <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>
-  //     </>
-  //   )}
-  //   {Status === "Loaded" && (
-  //     <>
-  //       <Btn variant="primary" onClick={handleSetInTransit} disabled={loadingConfirm}>
-  //         {loadingConfirm ? "جارٍ التحديث..." : "🚛 تم خروج السيارة — فى الطريق"}
-  //       </Btn>
-  //       <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>
-  //     </>
-  //   )}
-  //   {isReceiving && (
-  //     <Btn variant="success" onClick={handleConfirmReceiving} disabled={checkedItems.length === 0 || loadingConfirm}>
-  //       {loadingConfirm ? "جارٍ الحفظ..." : `📦 تأكيد الاستلام (${checkedItems.length}/${Items.length})`}
-  //     </Btn>
-  //   )}
-  //   {(Status === "Received" || Status === "PartialReceived") && <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة تقرير الاستلام</Btn>}
-  // </div>
-  //     </div>
-  //   );
   return (
     <div className="outOrders-container">
-      {/* ===== CSS للطباعة — يوضع هنا داخل الـ JSX ===== */}
       <style>{`
       @media print {
         body * { visibility: hidden !important; }
@@ -564,6 +446,19 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
         .print-header > div { display: block !important; }
         .print-signatures { display: block !important; }
         .print-signatures > div { display: grid !important; }
+       #print-area .row-data {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 4px 40px !important;
+  padding: 10px 30px !important;
+}
+#print-area .row-data > div {
+  padding: 2px 0 !important;
+}
+#print-area .row-data > div > span:first-child {
+  min-width: unset !important;
+  margin-left: 8px !important;
+}
         @page { size: A4 portrait; margin: 15mm; }
       }
     `}</style>

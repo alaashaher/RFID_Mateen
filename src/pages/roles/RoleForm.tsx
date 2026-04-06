@@ -24,14 +24,16 @@ const RoleForm = () => {
 
   useEffect(() => {
     if (toEdit) {
-      const { Name } = toEdit;
-      form.setFieldValue('Name', Name);
-    }
+  const { Name, IsCampSupervisor } = toEdit;
+  form.setFieldValue('Name', Name);
+  form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+}
 
-    if (viewRSTData) {
-      const { Name } = viewRSTData;
-      form.setFieldValue('Name', Name);
-    }
+if (viewRSTData) {
+  const { Name, IsCampSupervisor } = viewRSTData;
+  form.setFieldValue('Name', Name);
+  form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+}
 
   }, [toEdit, viewRSTData])
 
@@ -150,7 +152,14 @@ const RoleForm = () => {
         >
           <Input disabled={viewRSTData ? true : false} />
         </Form.Item>
-        
+        <Form.Item
+  name="IsCampSupervisor"
+  valuePropName="checked"
+>
+  <Checkbox disabled={viewRSTData ? true : false}>
+    صلاحية لمشرف مخيم
+  </Checkbox>
+</Form.Item>
         <Form.Item  >
           <Flex gap="small" justify='end'>
             {!viewRSTData && <Button type="primary" htmlType="submit">

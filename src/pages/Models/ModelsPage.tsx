@@ -182,6 +182,7 @@ const navigate = useNavigate();
       }
      },
     { title: "نوع اللاصق ", dataIndex: "TagType", key: "TagType" },
+    { title: "العدد المتبقى فى المستودع", dataIndex: "RemainingCountNow", key: "RemainingCountNow" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
