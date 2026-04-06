@@ -91,17 +91,18 @@ const Routess = () => {
 
 
         <Route path={routerLinks.OutOrders} element={
-        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+        <ProtectedRoute requiredPermission=
+"ViewDispatchOrders">
           <OutOrders />
         </ProtectedRoute>}>
       </Route>
        <Route path={routerLinks.CampOrdersPage} element={
-        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+        <ProtectedRoute requiredPermission="ViewCampOrders">
           <CampOrdersPage />
         </ProtectedRoute>}>
       </Route>
        <Route path={routerLinks.CampsManagement} element={
-        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+        <ProtectedRoute requiredPermission="ViewCampManagers">
           <CampsManagement />
         </ProtectedRoute>}>
       </Route>

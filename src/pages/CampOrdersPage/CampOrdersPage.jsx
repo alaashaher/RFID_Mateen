@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { getFromApi, postToApi, deleteFromApi } from "../../apis/apis";
+import UesrContext from "../../contexts/user-context/UserProvider";
 
 //const BASE_URL = "http://localhost:7228";
 const BASE_URL = "https://rfidrajhiapi.sirumaps.net";
@@ -43,6 +44,7 @@ const OrderCard = ({ order, onDone, onDelete, imagesBaseUrl }) => {
   const [showDone, setShowDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const isPending = order.Status === "Pending";
+  const { user } = useContext(UesrContext);
 
   const handleDone = async () => {
     setLoading(true);
@@ -146,9 +148,12 @@ const OrderCard = ({ order, onDone, onDelete, imagesBaseUrl }) => {
           ) : (
             <>
               <Btn variant="success" small onClick={() => setShowDone(true)}>✅ تم التعامل</Btn>
-              <Btn variant="danger" small onClick={() => {
-                if (window.confirm("حذف هذا الطلب؟")) onDelete(order.CampOrderId);
-              }}>🗑</Btn>
+              {user?.user?.Permissions?.includes(
+                "DeleteCampOrders") &&
+                <Btn variant="danger" small onClick={() => {
+                  if (window.confirm("حذف هذا الطلب؟")) onDelete(order.CampOrderId);
+                }}>🗑</Btn>
+              }
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import "./OutOrder.scss";
 import { getFromApi, postToApi, putToApi, deleteFromApi } from "../../apis/apis";
+import { UserProvider } from "../../contexts/user-context/UserProvider";
 
 // ─────────────────────────────────────────────
 // API LAYER
@@ -152,7 +153,7 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
   const validate = () => {
     if (!form.Destination) return "الوجهة مطلوبة";
     // if (!form.receiverName) return "اسم المستلم مطلوب";
-if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخيم واحد على الأقل أو خدمات عامة";
+    if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخيم واحد على الأقل أو خدمات عامة";
     if (!form.CampManagerId) return "المسئول مطلوب";
     for (let i = 0; i < form.Items.length; i++) { const it = form.Items[i]; if (!it.AssetTypeId) return `السطر ${i + 1}: نوع الأصل مطلوب`; if (!it.RequestedQuantity || it.RequestedQuantity < 1) return `السطر ${i + 1}: الكمية مطلوبة`; const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); }
     return null;
@@ -209,41 +210,41 @@ if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخ�
                 );
               })}
               <button
-  onClick={() => {
-    if (form.campIds.length === camps.length) {
-      setField("campIds", []);
-      setField("ForAllCamps", false);
-    } else {
-      setField("campIds", camps.map(c => c.CampId));
-      setField("ForAllCamps", true);
-    }
-  }}
-  style={{
-    background: form.campIds.length === camps.length ? "#E74C3C" : "#27AE60",
-    color: "#fff", border: "none", borderRadius: 16,
-    padding: "3px 12px", fontSize: 11, fontWeight: 700,
-    cursor: "pointer", whiteSpace: "nowrap",
-  }}
->
-  {form.campIds.length === camps.length ? "✕ إلغاء الكل" : "✓ الكل"}
-</button>
-<button
-  onClick={() => {
-    setField("campIds", []);
-    setField("ForAllCamps", false);
-    setField("IsGeneralServices", !form.IsGeneralServices);
-  }}
-  style={{
-    background: form.IsGeneralServices ? "#8E44AD" : "#f0f0f0",
-    color: form.IsGeneralServices ? "#fff" : "#555",
-    border: form.IsGeneralServices ? "none" : "1px solid #ccc",
-    borderRadius: 16, padding: "3px 12px", fontSize: 11,
-    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-  }}
->
-  {form.IsGeneralServices ? "✕ خدمات عامة" : "🏗 خدمات عامة للمخيمات"}
-</button>
-{!form.IsGeneralServices && form.campIds.length !== camps.length && <select
+                onClick={() => {
+                  if (form.campIds.length === camps.length) {
+                    setField("campIds", []);
+                    setField("ForAllCamps", false);
+                  } else {
+                    setField("campIds", camps.map(c => c.CampId));
+                    setField("ForAllCamps", true);
+                  }
+                }}
+                style={{
+                  background: form.campIds.length === camps.length ? "#E74C3C" : "#27AE60",
+                  color: "#fff", border: "none", borderRadius: 16,
+                  padding: "3px 12px", fontSize: 11, fontWeight: 700,
+                  cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                {form.campIds.length === camps.length ? "✕ إلغاء الكل" : "✓ الكل"}
+              </button>
+              <button
+                onClick={() => {
+                  setField("campIds", []);
+                  setField("ForAllCamps", false);
+                  setField("IsGeneralServices", !form.IsGeneralServices);
+                }}
+                style={{
+                  background: form.IsGeneralServices ? "#8E44AD" : "#f0f0f0",
+                  color: form.IsGeneralServices ? "#fff" : "#555",
+                  border: form.IsGeneralServices ? "none" : "1px solid #ccc",
+                  borderRadius: 16, padding: "3px 12px", fontSize: 11,
+                  fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                {form.IsGeneralServices ? "✕ خدمات عامة" : "🏗 خدمات عامة للمخيمات"}
+              </button>
+              {!form.IsGeneralServices && form.campIds.length !== camps.length && <select
                 value=""
                 onChange={e => {
                   const val = Number(e.target.value);
@@ -274,11 +275,11 @@ if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخ�
               </select>}
             </div>
           </div>
-{form.IsGeneralServices && (
-  <div style={{ background: "#F5EEF8", border: "1px solid #D2B4DE", borderRadius: 8, padding: "8px 14px", marginBottom: 14, fontSize: 13, color: "#6C3483", direction: "rtl" }}>
-    🏗 أمر خروج لخدمات عامة — غير مرتبط بمخيم محدد (كهربا, سباكة, إلخ)
-  </div>
-)}
+          {form.IsGeneralServices && (
+            <div style={{ background: "#F5EEF8", border: "1px solid #D2B4DE", borderRadius: 8, padding: "8px 14px", marginBottom: 14, fontSize: 13, color: "#6C3483", direction: "rtl" }}>
+              🏗 أمر خروج لخدمات عامة — غير مرتبط بمخيم محدد (كهربا, سباكة, إلخ)
+            </div>
+          )}
           {/* المسئول — Single select */}
           <Select
             label="المسئول (المستلم)"
@@ -409,7 +410,7 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
   // const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
   // ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"], ["المستلم", order.ManagerName],
   // ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber], ["السائق", order.DriverName], ["ملاحظات", order.Notes]];
-const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
+  const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
   ["المستلم", order.ManagerName], ["هاتف المستلم", order.ManagerPhone], ["لوحة السيارة", order.VehiclePlateNumber],
   ["السائق", order.DriverName], ["ملاحظات", order.Notes], ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"]];
   const handleApprove = async () => { try { const r = await api.approveDispatchOrder(order.DispatchOrderId, 1); if (r.success) { loadOrder(); onRefresh?.(); } else alert(r.message); } catch (e) { alert(e.message); } };
@@ -645,7 +646,7 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
             { key: "DispatchDate", label: "التاريخ", render: v => v?.slice(0, 10) },
             { key: "Destination", label: "الوجهة" },
             // { key: "CampNames", label: "المخيمات" },
-            { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralServices ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🏗 خدمات عامة للمخيمات</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },           
+            { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralServices ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🏗 خدمات عامة للمخيمات</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },
             { key: "ManagerName", label: "المستلم" },
             { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
             { key: "ItemCount", label: "الأصناف" },
@@ -678,6 +679,7 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
 // SCAN SCREEN — DYNAMIC API
 // ─────────────────────────────────────────────
 const ScanScreen = ({ phase }) => {
+  const {user} = useContext(UserProvider);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -730,7 +732,10 @@ const ScanScreen = ({ phase }) => {
           {scannedAssets.length > 0 && <div style={{ maxHeight: 150, overflow: "auto", background: "#1a1a2e", borderRadius: 10, padding: 10, marginBottom: 14, fontFamily: "monospace", fontSize: 11, color: "#7effa0" }}>{scannedAssets.slice(0, 20).map(a => <div key={a.UniversityAssetId}>▶ {a.rfidCode} — {a.AssetTypeName} — {a.scannedAt?.slice(11, 19)}</div>)}</div>}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {!scanning ? <Btn variant={phase === "Loaded" ? "warning" : "success"} onClick={() => setScanning(true)}>📡 بدء القراءة</Btn> : <Btn variant="danger" onClick={() => setScanning(false)}>⏹ إيقاف</Btn>}
-            <Btn variant="primary" onClick={handleConfirm} disabled={scannedAssets.length === 0 || confirming}>{confirming ? "جارٍ الحفظ..." : `✅ ${phase === "Loaded" ? "تأكيد التحميل" : "تأكيد الاستلام"}`}</Btn>
+            {user?.user?.Permissions?.includes(
+              "ReceiveDispatchOrders") &&
+              <Btn variant="primary" onClick={handleConfirm} disabled={scannedAssets.length === 0 || confirming}>{confirming ? "جارٍ الحفظ..." : `✅ ${phase === "Loaded" ? "تأكيد التحميل" : "تأكيد الاستلام"}`}</Btn>
+            }
             <Btn variant="ghost" onClick={reset} small>إعادة تعيين</Btn>
           </div>
         </>)}

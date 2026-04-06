@@ -70,7 +70,7 @@ function getItem(
 
 const AppLayout: React.FC<any> = ({ children }) => {
   const { user, removeCurrentUser } = useContext(UesrContext);
-  // ////console.log("🚀 ~ user:", user)
+  console.log("🚀 ~ user:", user)
 
   const { pathname } = useLocation();
   const { i18n } = useTranslation();
@@ -101,27 +101,28 @@ const AppLayout: React.FC<any> = ({ children }) => {
       icon: <BranchesOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
     },
-      {
+    {
       key: 110,
       path: routerLinks.OutOrders,
       name: " أمر الخروج",
       icon: <CiOutlined />,
-      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+      hidden: (user?.user?.Permissions?.includes(
+        "ViewDispatchOrders")) ? false : true
     },
-   
+
     {
       key: 111,
       path: routerLinks.CampsManagement,
       name: " المخيمات",
-      icon: <BankOutlined  />,
-      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+      icon: <BankOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewCampManagers")) ? false : true
     },
-     {
+    {
       key: 112,
       path: routerLinks.CampOrdersPage,
       name: " طلبات المخيمات",
       icon: <CiOutlined />,
-      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+      hidden: (user?.user?.Permissions?.includes("ViewCampOrders")) ? false : true
     },
     // {
     //   key: 111,
@@ -540,7 +541,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
             <Breadcrumb></Breadcrumb>
             <div
               className="site-layout-background"
-              style={{  minHeight: 360 }}
+              style={{ minHeight: 360 }}
             >
               {children}
             </div>

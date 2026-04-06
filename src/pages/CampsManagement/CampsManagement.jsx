@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { getFromApi, postToApi, putToApi, deleteFromApi } from "../../apis/apis";
+import UesrContext from "../../contexts/user-context/UserProvider";
 
 // ─────────────────────────────────────────────
 // API LAYER
@@ -185,6 +186,7 @@ const CampForm = ({ initial, campManagers, onSave, onCancel }) => {
 // MAIN PAGE
 // ─────────────────────────────────────────────
 export default function CampsManagement() {
+  const {user} = useContext(UesrContext)
   const [tab, setTab] = useState("camps"); // camps | managers
   const [camps, setCamps] = useState([]);
   const [campManagers, setCampManagers] = useState([]);
@@ -253,8 +255,11 @@ export default function CampsManagement() {
   );
 
   const TABS = [
-    { id: "camps", label: `🏕 المخيمات (${camps.length})` },
-    { id: "managers", label: `👤 المسئولين (${campManagers.length})` },
+    user?.user?.Permissions?.includes(
+      "ViewCamps") ?
+      { id: "camps", label: `🏕 المخيمات (${camps.length})` } : null,
+    user?.user?.Permissions?.includes(
+      "ViewCampManagers") ? { id: "managers", label: `👤 المسئولين (${campManagers.length})` } : null,
   ];
 
   return (
@@ -291,10 +296,11 @@ export default function CampsManagement() {
               onChange={e => setFilter(e.target.value)}
               style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", fontSize: 14, direction: "rtl", boxSizing: "border-box" }}
             />
-            {tab === "camps" && (
-              <Btn variant="primary" onClick={() => { setEditCamp(null); setShowCampModal(true); }}>+ إضافة مخيم</Btn>
-            )}
-            {tab === "managers" && (
+            {tab === "camps" && user?.user?.Permissions?.includes(
+              "AddCamps") && (
+                <Btn variant="primary" onClick={() => { setEditCamp(null); setShowCampModal(true); }}>+ إضافة مخيم</Btn>
+              )}
+            {tab === "managers" && user?.user?.Permissions?.includes("AddCampManagers") && (
               <Btn variant="primary" onClick={() => { setEditManager(null); setShowManagerModal(true); }}>+ إضافة مسئول</Btn>
             )}
           </div>
@@ -303,7 +309,7 @@ export default function CampsManagement() {
           {loading ? <Loader /> : (
             <>
               {/* ── Camps Tab ── */}
-              {tab === "camps" && (
+              {tab === "camps" && user?.user?.Permissions?.includes("ViewCamps") && (
                 <TableComp
                   cols={[
                     { key: "_seq", label: "#", render: (_, r, i) => i + 1 },
@@ -318,8 +324,13 @@ export default function CampsManagement() {
                       key: "_actions", label: "الإجراءات",
                       render: (_, row) => (
                         <div style={{ display: "flex", gap: 6 }}>
-                          <Btn variant="outline" small onClick={(e) => handleEditCamp(row, e)}>✏️</Btn>
-                          <Btn variant="danger" small onClick={(e) => handleDeleteCamp(row, e)}>🗑</Btn>
+                          {user?.user?.Permissions?.includes("EditCamps") &&
+
+                            <Btn variant="outline" small onClick={(e) => handleEditCamp(row, e)}>✏️</Btn>
+                          }
+                          {user?.user?.Permissions?.includes("DeleteCamps") && (
+                            <Btn variant="danger" small onClick={(e) => handleDeleteCamp(row, e)}>🗑</Btn>
+                          )}
                         </div>
                       )
                     },
@@ -329,7 +340,7 @@ export default function CampsManagement() {
               )}
 
               {/* ── Managers Tab ── */}
-              {tab === "managers" && (
+              {tab === "managers" && user?.user?.Permissions?.includes("ViewCampManagers") && (
                 <TableComp
                   cols={[
                     { key: "_seq", label: "#", render: (_, r, i) => i + 1 },
