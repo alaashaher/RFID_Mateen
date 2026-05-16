@@ -18,13 +18,16 @@ const RoomsForm = () => {
     setToEdit,
     setdetectChanges,
     setOpenFormModel,
-  } =
-    useContext(RoomsContext);
+  } = useContext(RoomsContext);
+
   const [buildings, setBuildings] = useState([]);
   const [floors, setFloor] = useState([]);
-  useEffect(() => {
+  // ✅ جديد: state للأجنحة
+  const [suites, setSuites] = useState([]);
 
-    const fetchLanguages = async () => {
+  // جلب المباني
+  useEffect(() => {
+    const fetchBuildings = async () => {
       try {
         const res = await getFromApi(`Building/get-building-ddl`);
         setBuildings(res);
@@ -32,61 +35,107 @@ const RoomsForm = () => {
         //console.log(error);
       }
     };
-    fetchLanguages();
-
+    fetchBuildings();
   }, []);
 
   const defaultValues = {
     FloorId: toEdit ? toEdit.FloorId : "",
     BuildingId: toEdit ? toEdit.BuildingId : "",
+    SuiteId: toEdit ? toEdit.SuiteId : "",          // ✅ جديد
     RoomName: toEdit ? toEdit.RoomName : "",
     RoomCode: toEdit ? toEdit.RoomCode : "",
   };
-  const schema = Yup.object().shape(
-    {
-      BuildingId: Yup.string().required("ادخل المبني"),
-      FloorId: Yup.string().required("ادخل الدور"),
-      RoomName: Yup.string().required("ادخل اسم الطابق"),
-      RoomCode: Yup.string(),
-    });
+
+  const schema = Yup.object().shape({
+    BuildingId: Yup.string().required("ادخل المبني"),
+    FloorId: Yup.string().required("ادخل الدور"),
+    SuiteId: Yup.string().nullable(),               // ✅ جديد - اختياري
+    RoomName: Yup.string().required("ادخل اسم الطابق"),
+    RoomCode: Yup.string(),
+  });
+
   const handleCloseModal = () => {
     setToEdit(null);
     setOpenFormModel(false);
   };
+
   const [form] = Form.useForm();
   const {
     control,
     handleSubmit,
-    setValue, getValues,
+    setValue,
+    getValues,
     watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues,
     resolver: yupResolver(schema),
   });
+
+  // جلب الأدوار حسب المبنى
   useEffect(() => {
     if (getValues("BuildingId") != "") {
-      const fetchLanguages = async () => {
+      const fetchFloors = async () => {
         try {
-          const res = await getFromApi(`UniversityFloor/get-universityFloor-ddl?buildingId=${getValues("BuildingId") ? getValues("BuildingId") : ""}`);
+          const res = await getFromApi(
+            `UniversityFloor/get-universityFloor-ddl?buildingId=${getValues("BuildingId") ? getValues("BuildingId") : ""}`
+          );
           setFloor(res);
         } catch (error) {
           //console.log(error);
         }
       };
-      fetchLanguages();
+      fetchFloors();
+
+      // ✅ عند تغيير المبنى، نمسح الدور والجناح
+      if (!toEdit) {
+        setValue("FloorId", "");
+        setValue("SuiteId", "");
+        setSuites([]);
+      }
     }
   }, [watch("BuildingId")]);
+
+  // ✅ جديد: جلب الأجنحة حسب الدور
+  useEffect(() => {
+    const currentFloorId = getValues("FloorId");
+    if (currentFloorId && currentFloorId !== "") {
+      const fetchSuites = async () => {
+        try {
+          const res = await getFromApi(`Suite/get-suite-ddl?floorId=${currentFloorId}`);
+          // الـ response ممكن يكون { Success, Data: [...] } أو array مباشرة
+          const suitesData = res?.Data || res?.data || res || [];
+          setSuites(Array.isArray(suitesData) ? suitesData : []);
+        } catch (error) {
+          //console.log(error);
+          setSuites([]);
+        }
+      };
+      fetchSuites();
+
+      // ✅ لو مش في وضع التعديل، نمسح الجناح
+      if (!toEdit) {
+        setValue("SuiteId", "");
+      }
+    } else {
+      setSuites([]);
+      setValue("SuiteId", "");
+    }
+  }, [watch("FloorId")]);
+
+  // تعبئة بيانات التعديل
   useEffect(() => {
     if (toEdit) {
-      setValue("BuildingId", String(toEdit.BuildingId))
-      setValue("FloorId", String(toEdit.UniversityFloorId))
+      setValue("BuildingId", String(toEdit.BuildingId));
+      setValue("FloorId", String(toEdit.UniversityFloorId));
+      // ✅ جديد: تعبئة الجناح لو موجود
+      setValue("SuiteId", toEdit.SuiteId ? String(toEdit.SuiteId) : "");
       setValue("RoomName", toEdit.RoomName);
       setValue("RoomCode", toEdit.RoomCode);
     }
   }, [toEdit, setValue]);
+
   const onFinish = async (data) => {
-    //console.log("Form submitted:", data);
     let res;
     setLoading(true);
     try {
@@ -94,15 +143,18 @@ const RoomsForm = () => {
         RoomId: toEdit ? toEdit.RoomId : 0,
         BuildingId: data.BuildingId,
         UniversityFloorId: data.FloorId,
+        // ✅ جديد: نرسل الجناح لو موجود، null لو فاضي
+        SuiteId: data.SuiteId && data.SuiteId !== "" ? data.SuiteId : null,
         RoomName: data.RoomName,
         RoomCode: data.RoomCode
-
       };
+
       if (toEdit) {
         res = await putToApi(`Room/update-room`, payload);
       } else {
         res = await postToApi(`Room/add-room`, payload);
       }
+
       if (res) {
         setdetectChanges((prev) => prev + 1);
         Store.addNotification({
@@ -153,37 +205,56 @@ const RoomsForm = () => {
       });
     }
   };
+
   return (
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
-
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdSelectOption
               control={control}
               name="BuildingId"
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.BuildingId?.message}
-              label={<span>  المبني<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" المبني"
-              options={buildings?.filter((item)=> item.BuildingTypeId != 1).map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
+              label={<span>المبني<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder="المبني"
+              options={buildings?.filter((item) => item.BuildingTypeId != 1).map((item) => ({ title: item.BuildingName, value: item.BuildingId }))}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
-
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdSelectOption
               control={control}
               name="FloorId"
               formClassName="custom-form"
               setValue={setValue}
               errorMsg={errors.FloorId?.message}
-              label={<span>  الدور<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" الدور"
+              label={<span>الدور<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder="الدور"
               options={floors?.map((item) => ({ title: item.UniversityFloorName, value: item.UniversityFloorId }))}
             />
           </Col>
+
+          {/* ✅ جديد: حقل الجناح - يظهر فقط لو الدور المختار فيه أجنحة */}
+          {suites.length > 0 && (
+            <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+              <AntdSelectOption
+                control={control}
+                name="SuiteId"
+                formClassName="custom-form"
+                setValue={setValue}
+                errorMsg={errors.SuiteId?.message}
+                label={<span>الجناح <span style={{ color: '#888', fontSize: '12px' }}>(اختياري)</span></span>}
+                placeholder="اختر الجناح"
+                options={suites?.map((item) => ({
+                  title: `${item.SuiteNameAr} - ${item.SuiteCode}`,
+                  value: item.SuiteId
+                }))}
+              />
+            </Col>
+          )}
+
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
@@ -195,21 +266,8 @@ const RoomsForm = () => {
               type={'text'}
             />
           </Col>
-
-          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
-            <AntdTextField
-              control={control}
-              name={`RoomCode`}
-              placeholder={`كود الغرفه`}
-              label={`كود الغرفه`}
-              errorMsg={errors?.[`RoomCode`]?.message}
-              validateStatus={errors?.[`RoomCode`] ? "error" : ""}
-              type={'text'}
-            />
-          </Col> */}
-
-
         </Row>
+
         <div className="footer-form">
           <Button type="primary" htmlType="submit" loading={isSubmitting} disabled={isSubmitting}>
             حفظ

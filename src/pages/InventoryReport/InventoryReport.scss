@@ -1,0 +1,135 @@
+// =====================================================================
+// 🎨 InventoryReport.scss
+// =====================================================================
+
+.inventory-report-page {
+  width: 100%;
+  max-width: 100%;
+  padding: 16px 24px;
+  background: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  // ⭐⭐⭐ الإصلاح الحاسم ⭐⭐⭐
+  // فى المشروع يوجد قاعدة عامة `.ant-row { display: grid; }` تكسر Ant Grid
+  // نُعيد .ant-row لسلوكه الطبيعى (flex) داخل هذه الصفحة فقط
+  .ant-row {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    text-align: start;
+  }
+
+  // الـ Columns يجب أن تتصف ك flex items
+  .ant-col {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #fff 0%, #f0f5ff 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  // ─── KPI Cards ───
+  .kpi-card {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    width: 100%;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .ant-card-body {
+      transition: all 0.3s;
+    }
+  }
+
+  .ant-card {
+    border-radius: 8px;
+    width: 100%;
+  }
+
+  .ant-statistic-title {
+    margin-bottom: 4px !important;
+  }
+
+  // ─── الصف الذى به مشكلة ───
+  .row-with-issue {
+    background-color: #fff7e6 !important;
+
+    &:hover > td {
+      background-color: #ffe7ba !important;
+    }
+  }
+
+  // ─── الجدول الرئيسى ───
+  .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    font-size: 12px;
+  }
+
+  .ant-table-expanded-row > td {
+    padding: 0 !important;
+    background: #fafafa;
+  }
+
+  // ─── Recharts ───
+  .recharts-wrapper {
+    direction: ltr;
+  }
+
+  .recharts-default-tooltip {
+    direction: rtl;
+  }
+}
+
+// =====================================================================
+// 🖨 Print styles
+// =====================================================================
+@media print {
+  .no-print-buttons {
+    display: none !important;
+  }
+
+  .ant-layout-sider,
+  .navbar,
+  .sidebar {
+    display: none !important;
+  }
+
+  .inventory-report-page {
+    padding: 0;
+    background: white;
+  }
+
+  .ant-card {
+    box-shadow: none !important;
+    border: 1px solid #d9d9d9 !important;
+    page-break-inside: avoid;
+  }
+
+  .ant-table-row {
+    page-break-inside: avoid;
+  }
+
+  body,
+  .ant-typography {
+    color: #000 !important;
+  }
+
+  .kpi-card {
+    box-shadow: none !important;
+    border: 1px solid #d9d9d9 !important;
+  }
+}

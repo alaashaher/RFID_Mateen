@@ -84,7 +84,7 @@ const CategoryForm = () => {
         CategoryId: toEdit ? toEdit.CategoryId : 0,
         CategoryName: data.CategoryName,
         CategoryCode: data.CategoryCode,
-        "BuildingTypeId": data.ParentCategoryName,
+       // "BuildingTypeId": data.ParentCategoryName,
         UniversityName: data.UniversityName
       };
       if (toEdit) {
@@ -194,7 +194,7 @@ const CategoryForm = () => {
 
             />
           </Col> */}
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
 
             <AntdSelectOption
               control={control}
@@ -206,7 +206,7 @@ const CategoryForm = () => {
               placeholder={`تصنيف رئيسي`}
               options={buildings?.map((item) => ({ title: item.BuildingTypeName, value: item.BuildingTypeId }))}
             />
-          </Col>
+          </Col> */}
           {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}

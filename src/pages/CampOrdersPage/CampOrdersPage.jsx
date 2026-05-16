@@ -147,9 +147,8 @@ const OrderCard = ({ order, onDone, onDelete, imagesBaseUrl }) => {
             </>
           ) : (
             <>
-              <Btn variant="success" small onClick={() => setShowDone(true)}>✅ تم التعامل</Btn>
-              {user?.user?.Permissions?.includes(
-                "DeleteCampOrders") &&
+              {user?.user?.Permissions?.includes("DoneCampOrders") && <Btn variant="success" small onClick={() => setShowDone(true)}>✅ تم التعامل</Btn>}
+              {user?.user?.Permissions?.includes("DeleteCampOrders") &&
                 <Btn variant="danger" small onClick={() => {
                   if (window.confirm("حذف هذا الطلب؟")) onDelete(order.CampOrderId);
                 }}>🗑</Btn>

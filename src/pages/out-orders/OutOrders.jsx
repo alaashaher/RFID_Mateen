@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useContext } from "react";
 import "./OutOrder.scss";
 import { getFromApi, postToApi, putToApi, deleteFromApi } from "../../apis/apis";
-import { UserProvider } from "../../contexts/user-context/UserProvider";
+import UserContext from "../../contexts/user-context/UserProvider";
+import { Select as AntSelect } from "antd";
+import SearchModelDistributionModal from "../shared/SearchModelDistributionModal";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 // ─────────────────────────────────────────────
 // API LAYER
@@ -18,6 +22,8 @@ const api = {
     postToApi(`DispatchOrder/add-dispatchOrder`, body),
   updateDispatchOrder: (id, body) =>
     putToApi(`DispatchOrder/update-dispatchOrder`, { ...body, DispatchOrderId: id }),
+  updateDispatchOrderModels: (body) =>
+  putToApi(`DispatchOrder/update-dispatchOrder-models`, body),
   deleteDispatchOrder: (id) =>
     deleteFromApi(`DispatchOrder/delete-dispatchOrder?id=${id}`),
   approveDispatchOrder: (DispatchOrderId, approverId) =>
@@ -35,10 +41,19 @@ const api = {
     getFromApi(`DispatchOrder/get-asset-types`),
   getAssetModels: (AssetTypeId) =>
     getFromApi(`DispatchOrder/get-asset-models?AssetTypeId=${AssetTypeId}`),
+  getModelStockQuantity: (assetModelId) =>
+  getFromApi(`AssetModel/get-model-stockQuantity?assetModelId=${assetModelId}`),
   getCamps: () =>
     getFromApi(`DispatchOrder/get-camps`),
   getCampManagers: () =>
     getFromApi(`DispatchOrder/get-camp-managers`),
+  getModelDistribution: (assetTypeId, assetModelId, destination) => {
+  const params = new URLSearchParams();
+  params.append("assetTypeId", assetTypeId);
+  if (assetModelId) params.append("assetModelId", assetModelId);
+  if (destination) params.append("destination", destination);
+  return getFromApi(`DispatchOrder/get-model-distribution?${params.toString()}`);
+},
 };
 
 // ─────────────────────────────────────────────
@@ -132,21 +147,49 @@ const TableComp = ({ cols, rows, onRowClick }) => (
 const emptyItem = () => ({ _id: Math.random(), AssetTypeId: "", AssetModelId: "", RequestedQuantity: 1, notes: "" });
 const emptyForm = () => ({ DispatchDate: new Date().toISOString().slice(0, 10), Destination: "", campIds: [], CampManagerId: "", VehiclePlateNumber: "", DriverName: "", Notes: "", Items: [emptyItem()], ForAllCamps: false, IsGeneralServices: false });
 const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave, onCancel }) => {
-  const [form, setForm] = useState(initial ? { ...initial, campIds: initial.campIds || [], CampManagerId: initial.CampManagerId || "", Items: (initial.Items || []).map(it => ({ _id: Math.random(), AssetTypeId: it.AssetTypeId || "", AssetModelId: it.AssetModelId || "", RequestedQuantity: it.RequestedQuantity || 1, notes: it.notes || "" })) } : emptyForm());
+  // const [form, setForm] = useState(initial ? { ...initial, campIds: initial.campIds || [], CampManagerId: initial.CampManagerId || "", Items: (initial.Items || []).map(it => ({ _id: Math.random(), AssetTypeId: it.AssetTypeId || "", AssetModelId: it.AssetModelId || "", RequestedQuantity: it.RequestedQuantity || 1, notes: it.notes || "" })) } : emptyForm());
+  const [form, setForm] = useState(initial ? {
+  ...initial,
+  DispatchDate: (initial.DispatchDate || "").slice(0, 10),
+  campIds: initial.campIds || initial.Camps?.map(c => c.CampId) || [],
+  ForAllCamps: initial.ForAllCamps || false,
+  IsGeneralServices: initial.IsGeneralServices || false,
+  CampManagerId: initial.CampManagerId || "",
+  Items: (initial.Items || []).map(it => ({
+    _id: Math.random(),
+    AssetTypeId: it.AssetTypeId || "",
+    AssetModelId: it.AssetModelId || "",
+    RequestedQuantity: it.RequestedQuantity || 1,
+    notes: it.notes || it.Notes || ""
+  }))
+} : emptyForm());
   const [modelMap, setModelMap] = useState({});
+    const [stockMap, setStockMap] = useState({});  // { assetModelId: quantity }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
   const fetchModels = useCallback(async (typeId) => {
     if (!typeId || modelMap[typeId]) return;
     try { const m = await api.getAssetModels(typeId); setModelMap(prev => ({ ...prev, [typeId]: m || [] })); }
     catch { setModelMap(prev => ({ ...prev, [typeId]: [] })); }
   }, [modelMap]);
+  const fetchStock = useCallback(async (modelId) => {
+  // if (!modelId || stockMap[modelId] !== undefined) return;
+     if (!modelId) return;  //remove this later, update with before it
 
-  // useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) { const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); if (t?.hasModels) fetchModels(it.AssetTypeId); } }); }, []); // eslint-disable-line
-  useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) fetchModels(it.AssetTypeId); }); }, []); // eslint-disable-line
-  const updateItem = (idx, k, v) => { setForm(f => { const Items = [...f.Items]; Items[idx] = { ...Items[idx], [k]: v }; if (k === "AssetTypeId") { Items[idx].AssetModelId = ""; if (v) fetchModels(v); } return { ...f, Items }; }); };
+  try {
+    const result = await api.getModelStockQuantity(modelId);
+    setStockMap(prev => ({ ...prev, [modelId]: result?.stockQuantity ?? result?.StockQuantity ?? result ?? 0 }));
+  } catch {
+    setStockMap(prev => ({ ...prev, [modelId]: 0 }));
+  }
+  }, []); //remove this later, update with after it
+// }, [stockMap]);   
+
+  // useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) fetchModels(it.AssetTypeId); }); }, []); // eslint-disable-line
+  useEffect(() => { if (initial?.Items) initial.Items.forEach(it => { if (it.AssetTypeId) fetchModels(it.AssetTypeId); if (it.AssetModelId) fetchStock(it.AssetModelId); }); }, []); // eslint-disable-line
+  // const updateItem = (idx, k, v) => { setForm(f => { const Items = [...f.Items]; Items[idx] = { ...Items[idx], [k]: v }; if (k === "AssetTypeId") { Items[idx].AssetModelId = ""; if (v) fetchModels(v); } return { ...f, Items }; }); };
+  const updateItem = (idx, k, v) => { setForm(f => { const Items = [...f.Items]; Items[idx] = { ...Items[idx], [k]: v }; if (k === "AssetTypeId") { Items[idx].AssetModelId = ""; if (v) fetchModels(v); } if (k === "AssetModelId" && v) { fetchStock(v); } return { ...f, Items }; }); };
   const addItem = () => setForm(f => ({ ...f, Items: [...f.Items, emptyItem()] }));
   const removeItem = (idx) => setForm(f => ({ ...f, Items: f.Items.filter((_, i) => i !== idx) }));
 
@@ -155,7 +198,8 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
     // if (!form.receiverName) return "اسم المستلم مطلوب";
     if (form.campIds.length === 0 && !form.IsGeneralServices) return "اختر مخيم واحد على الأقل أو خدمات عامة";
     if (!form.CampManagerId) return "المسئول مطلوب";
-    for (let i = 0; i < form.Items.length; i++) { const it = form.Items[i]; if (!it.AssetTypeId) return `السطر ${i + 1}: نوع الأصل مطلوب`; if (!it.RequestedQuantity || it.RequestedQuantity < 1) return `السطر ${i + 1}: الكمية مطلوبة`; const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); }
+    // for (let i = 0; i < form.Items.length; i++) { const it = form.Items[i]; if (!it.AssetTypeId) return `السطر ${i + 1}: نوع الأصل مطلوب`; if (!it.RequestedQuantity || it.RequestedQuantity < 1) return `السطر ${i + 1}: الكمية مطلوبة`; const t = assetTypes.find(x => String(x.AssetTypeId) === String(it.AssetTypeId)); }
+    for (let i = 0; i < form.Items.length; i++) { const it = form.Items[i]; if (!it.AssetTypeId) return `السطر ${i + 1}: نوع الأصل مطلوب`; if (!it.AssetModelId) return `السطر ${i + 1}: الموديل مطلوب`; if (!it.RequestedQuantity || it.RequestedQuantity < 1) return `السطر ${i + 1}: الكمية مطلوبة`; const stock = stockMap[it.AssetModelId]; if (stock !== undefined && it.RequestedQuantity > stock) return `السطر ${i + 1}: الكمية المطلوبة (${it.RequestedQuantity}) أكبر من المتوفر (${stock})`; }
     return null;
   };
 
@@ -298,15 +342,59 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
           <textarea value={form.Notes} onChange={e => setField("Notes", e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #dde1e7", fontSize: 14, direction: "rtl", boxSizing: "border-box", resize: "vertical", minHeight: 60 }} /></div>
       </div>
       <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-        <h4 style={{ margin: "0 0 14px", fontSize: 15, color: "#1a1a2e" }}>📦 بنود الأصناف</h4>
+        <h4 style={{ margin: "0 0 14px", fontSize: 15, color: "#1a1a2e" }}>📦 بيان الأصناف</h4>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, direction: "rtl" }}>
-            <thead><tr style={{ background: "#e8edf3" }}>{["نوع الأصل *", "الموديل", "الكمية *", "ملاحظات", ""].map(h => <th key={h} style={{ padding: "8px 10px", textAlign: "right", fontWeight: 600, color: "#555" }}>{h}</th>)}</tr></thead>
+            <thead><tr style={{ background: "#e8edf3" }}>{["نوع الأصل *", "الموديل *", "الكمية المتوفرة", "الكمية *", "ملاحظات", ""].map(h => <th key={h} style={{ padding: "8px 10px", textAlign: "right", fontWeight: 600, color: "#555" }}>{h}</th>)}</tr></thead>
             <tbody>{form.Items.map((item, idx) => {
               const typeObj = assetTypes.find(t => String(t.AssetTypeId) === String(item.AssetTypeId)); const hasModels = typeObj?.hasModels; const models = modelMap[item.AssetTypeId] || [];
               return (<tr key={item._id} style={{ borderBottom: "1px solid #e0e0e0" }}>
-                <td style={{ padding: "6px 8px", minWidth: 140 }}><select value={item.AssetTypeId} onChange={e => updateItem(idx, "AssetTypeId", e.target.value)} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", direction: "rtl", fontSize: 13 }}><option value="">اختر...</option>{typeOpts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
-                <td style={{ padding: "6px 8px", minWidth: 130 }}><select value={item.AssetModelId} onChange={e => updateItem(idx, "AssetModelId", e.target.value)} disabled={!item.AssetTypeId || models.length === 0} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", direction: "rtl", fontSize: 13, opacity: (!item.AssetTypeId || models.length === 0) ? 0.5 : 1 }}><option value="">بدون موديل</option>{models.map(m => <option key={m.AssetModelId} value={m.AssetModelId}>{m.ModelName} - {m.Brand} - {m.ModelNumber}</option>)}</select></td>
+                {/* <td style={{ padding: "6px 8px", minWidth: 140 }}><select value={item.AssetTypeId} onChange={e => updateItem(idx, "AssetTypeId", e.target.value)} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", direction: "rtl", fontSize: 13 }}><option value="">اختر...</option>{typeOpts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td> */}
+                <td style={{ padding: "6px 8px", minWidth: 180 }}>
+  <AntSelect
+    showSearch
+    value={item.AssetTypeId || undefined}
+    onChange={v => updateItem(idx, "AssetTypeId", v)}
+    placeholder="اختر نوع الأصل..."
+    optionFilterProp="label"
+    style={{ width: "100%", direction: "rtl" }}
+    options={typeOpts.map(o => ({ value: o.value, label: o.label }))}
+    allowClear
+    onClear={() => updateItem(idx, "AssetTypeId", "")}
+  />
+</td>
+                {/* <td style={{ padding: "6px 8px", minWidth: 130 }}><select value={item.AssetModelId} onChange={e => updateItem(idx, "AssetModelId", e.target.value)} disabled={!item.AssetTypeId || models.length === 0} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", direction: "rtl", fontSize: 13, opacity: (!item.AssetTypeId || models.length === 0) ? 0.5 : 1 }}><option value="">بدون موديل</option>{models.map(m => <option key={m.AssetModelId} value={m.AssetModelId}>{m.ModelName} - {m.Brand} - {m.ModelNumber}</option>)}</select></td> */}
+                <td style={{ padding: "6px 8px", minWidth: 180 }}>
+  <AntSelect
+    showSearch
+    value={item.AssetModelId || undefined}
+    onChange={v => updateItem(idx, "AssetModelId", v)}
+    placeholder="اختر الموديل..."
+    optionFilterProp="label"
+    style={{ width: "100%", direction: "rtl" }}
+    disabled={!item.AssetTypeId || models.length === 0}
+    options={models.map(m => ({ value: m.AssetModelId, label: `${m.ModelName} - ${m.Brand} - ${m.ModelNumber}` }))}
+    allowClear
+    onClear={() => updateItem(idx, "AssetModelId", "")}
+  />
+</td>
+                <td style={{ padding: "6px 8px", minWidth: 100, textAlign: "center" }}>
+  {item.AssetModelId ? (
+    stockMap[item.AssetModelId] !== undefined ? (
+      <span style={{
+        fontWeight: 700,
+        fontSize: 14,
+        color: stockMap[item.AssetModelId] > 0 ? "#27AE60" : "#E74C3C",
+        background: stockMap[item.AssetModelId] > 0 ? "#EAFAF1" : "#FDEDEC",
+        padding: "4px 12px",
+        borderRadius: 6,
+        display: "inline-block"
+      }}>
+        {stockMap[item.AssetModelId]}
+      </span>
+    ) : <span style={{ color: "#aaa", fontSize: 12 }}>جارٍ التحميل...</span>
+  ) : <span style={{ color: "#ccc" }}>—</span>}
+</td>
                 <td style={{ padding: "6px 8px", minWidth: 100 }}><input type="number" min={1} value={item.RequestedQuantity} onChange={e => updateItem(idx, "RequestedQuantity", Number(e.target.value))} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: 13, textAlign: "center" }} /></td>
                 <td style={{ padding: "6px 8px", minWidth: 130 }}><input value={item.Notes || ""} onChange={e => updateItem(idx, "Notes", e.target.value)} style={{ width: "100%", padding: "6px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: 13 }} /></td>
                 <td style={{ padding: "6px 8px" }}><button onClick={() => removeItem(idx)} disabled={form.Items.length === 1} style={{ background: "none", border: "none", color: "#E74C3C", cursor: "pointer", fontSize: 18 }}>🗑</button></td>
@@ -324,10 +412,12 @@ const OrderForm = ({ initial, assetTypes, camps = [], campManagers = [], onSave,
     </div>
   );
 };
-const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
+const OrderDetail = ({ orderId, onBack, onEdit, onRefresh, onUpdateModels  }) => {
+  const {user} = useContext(UserContext);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [stockMap, setStockMap] = useState({});  // { assetModelId: quantity }
   const [checkedItems, setCheckedItems] = useState([]);
   const [receivedQty, setReceivedQty] = useState({});  // { itemId: qty }
   const [loadingConfirm, setLoadingConfirm] = useState(false);
@@ -406,6 +496,137 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
       if (r.success) { loadOrder(); onRefresh?.(); } else alert(r.message || "فشل الاستلام");
     } catch (e) { alert(e.message); } finally { setLoadingConfirm(false); }
   };
+const handleSharePDF = async () => {
+  const element = document.getElementById("print-area");
+  if (!element) return;
+
+  // 1. خزّن الأنماط الأصلية للعناصر اللي هنعدلها
+  const printHeader = element.querySelector(".print-header");
+  const printSigs = element.querySelector(".print-signatures");
+  
+  const originalStyles = {
+    header: printHeader?.style.display,
+    sigs: printSigs?.style.display,
+    elementWidth: element.style.width,
+    elementMaxWidth: element.style.maxWidth,
+  };
+
+  // 2. اعمل قائمة بكل الـ scrollable containers و رجّعها لـ overflow visible
+  const scrollables = element.querySelectorAll('[class*="tableWrapper"], div');
+  const scrollableOriginals = [];
+  
+  scrollables.forEach(el => {
+    const computed = window.getComputedStyle(el);
+    if (computed.overflowX === "auto" || computed.overflowX === "scroll" ||
+        computed.overflowY === "auto" || computed.overflowY === "scroll" ||
+        computed.overflow === "auto" || computed.overflow === "scroll") {
+      scrollableOriginals.push({
+        el,
+        overflow: el.style.overflow,
+        overflowX: el.style.overflowX,
+        overflowY: el.style.overflowY,
+        maxHeight: el.style.maxHeight,
+        height: el.style.height,
+      });
+      el.style.overflow = "visible";
+      el.style.overflowX = "visible";
+      el.style.overflowY = "visible";
+      el.style.maxHeight = "none";
+      el.style.height = "auto";
+    }
+  });
+
+  // 3. أظهر عناصر الطباعة المخفية
+  if (printHeader) printHeader.style.display = "block";
+  if (printSigs) printSigs.style.display = "block";
+
+  // 4. وسّع الـ element ليأخذ عرضه الفعلي
+  element.style.width = "auto";
+  element.style.maxWidth = "none";
+
+  // 5. انتظر شوية عشان الـ DOM يحدّث نفسه
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  try {
+    // 6. خد scrollWidth و scrollHeight (المقاسات الحقيقية بالـ scroll)
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      width: element.scrollWidth,
+      height: element.scrollHeight,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    
+    // 7. PDF بحجم يتناسب مع المحتوى (لو طويل، يتقسم على صفحات)
+    // const pdf = new jsPDF("p", "mm", "a4");
+    const pdf = new jsPDF({
+  orientation: canvas.width > canvas.height ? "l" : "p",
+  unit: "mm",
+  format: "a4",
+});
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // الصفحة الأولى
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    // باقي الصفحات لو المحتوى طويل
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+    }
+
+    const fileName = `إذن_خروج_${order.DispatchOrderNumber}.pdf`;
+
+    // 8. مشاركة أو تحميل
+    if (navigator.share && navigator.canShare) {
+      const pdfBlob = pdf.output("blob");
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `إذن خروج ${order.DispatchOrderNumber}`,
+          text: `إذن خروج رقم ${order.DispatchOrderNumber} — ${order.Destination}`,
+          files: [file],
+        });
+        return;
+      }
+    }
+
+    pdf.save(fileName);
+  } catch (e) {
+    console.error(e);
+    alert("فشلت المشاركة: " + e.message);
+  } finally {
+    // 9. رجّع كل الأنماط الأصلية
+    if (printHeader) printHeader.style.display = originalStyles.header || "none";
+    if (printSigs) printSigs.style.display = originalStyles.sigs || "none";
+    element.style.width = originalStyles.elementWidth || "";
+    element.style.maxWidth = originalStyles.elementMaxWidth || "";
+    
+    scrollableOriginals.forEach(({ el, overflow, overflowX, overflowY, maxHeight, height }) => {
+      el.style.overflow = overflow || "";
+      el.style.overflowX = overflowX || "";
+      el.style.overflowY = overflowY || "";
+      el.style.maxHeight = maxHeight || "";
+      el.style.height = height || "";
+    });
+  }
+};
 
   // const infoRows = [["رقم الأمر", order.DispatchOrderNumber], ["التاريخ", order.DispatchDate?.slice(0, 10)], ["الوجهة", order.Destination],
   // ["المخيمات", order.Camps?.map(c => c.CampName).join(" ، ") || "—"], ["المستلم", order.ManagerName],
@@ -491,7 +712,7 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
 
         {/* عنوان الجدول */}
         <h4 style={{ marginBottom: 10 }}>
-          {isApproved ? "📦 تحديد البنود للتحميل" : isReceiving ? "📋 تحديد البنود للاستلام" : "بنود الأصناف"}
+          {isApproved ? "📦 تحديد البنود للتحميل" : isReceiving ? "📋 تحديد البنود للاستلام" : "بيان الأصناف"}
         </h4>
 
         {/* جدول البنود — نفس TableComp الموجود عندك بالضبط */}
@@ -562,16 +783,27 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
 
       {/* ===== الأزرار — تختفي عند الطباعة ===== */}
       <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-        {Status === "Draft" && (<><Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn><Btn variant="success" onClick={handleApprove}>✅ اعتماد</Btn><Btn variant="danger" onClick={handleDelete}>🗑 حذف</Btn></>)}
+         {user?.user?.Permissions?.includes("UpdateModelsDispatchOrders") &&<Btn variant="primary" onClick={() => onUpdateModels(order)} style={{ background: "#8E44AD" }}>
+    📋 تحديث الموديلات
+  </Btn>}
+  {user?.user?.Permissions?.includes("EditDispatchOrders") && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>}
+        {Status === "Draft" && (<>
+            {/* {user?.user?.Permissions?.includes("EditDispatchOrders") && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>} */}
+  {user?.user?.Permissions?.includes("ApproveDispatchOrders") && <Btn variant="success" onClick={handleApprove}>✅ اعتماد</Btn>}
+  {user?.user?.Permissions?.includes("DeleteDispatchOrders") && <Btn variant="danger" onClick={handleDelete}>🗑 حذف</Btn>}
+</>)}
         {isApproved && (
-          <>
-            <Btn variant="warning" onClick={handleConfirmLoading} disabled={checkedItems.length !== Items.length || loadingConfirm}>
-              {loadingConfirm ? "جارٍ التحميل..." : checkedItems.length === Items.length ? `🚚 تحميل فى السيارة ✓` : `🚚 حدد كل البنود أولاً (${checkedItems.length}/${Items.length})`}
-            </Btn>
-            <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>
-          </>
-        )}
-        {Status === "Loaded" && (
+  <>
+    {/* {user?.user?.Permissions?.includes("EditDispatchOrders") && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>} */}
+    {user?.user?.Permissions?.includes("LoadDispatchOrders") && <Btn variant="warning" onClick={handleConfirmLoading} disabled={checkedItems.length !== Items.length || loadingConfirm}>
+      {loadingConfirm ? "جارٍ التحميل..." : checkedItems.length === Items.length ? `🚚 تحميل فى السيارة ✓` : `🚚 حدد كل البنود أولاً (${checkedItems.length}/${Items.length})`}
+    </Btn>}
+    {user?.user?.Permissions?.includes("PrintDispatchOrders") && 
+    <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة إذن الخروج</Btn>
+    }
+  </>
+)}
+        {Status === "Loaded" && user?.user?.Permissions?.includes("LoadDispatchOrders") && (
           <>
             <Btn variant="primary" onClick={handleSetInTransit} disabled={loadingConfirm}>
               {loadingConfirm ? "جارٍ التحديث..." : "🚛 تم خروج السيارة — فى الطريق"}
@@ -580,7 +812,7 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
           </>
         )}
         {/* زرار نسخ الأمر — يظهر دائماً ما عدا Draft */}
-        {Status !== "Draft" && (
+        {Status !== "Draft" && user?.user?.Permissions?.includes("CopyDispatchOrders") && (
           <Btn variant="outline" onClick={() =>
             onEdit({
               ...order,
@@ -599,78 +831,305 @@ const OrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
             })
           }>📋 نسخ أمر خروج مشابه</Btn>
         )}
-        {isReceiving && (
+        {isReceiving && user?.user?.Permissions?.includes("ReceiveDispatchOrders") && (
           <Btn variant="success" onClick={handleConfirmReceiving} disabled={checkedItems.length === 0 || loadingConfirm}>
             {loadingConfirm ? "جارٍ الحفظ..." : `📦 تأكيد الاستلام (${checkedItems.length}/${Items.length})`}
           </Btn>
         )}
         {(Status === "Received" || Status === "PartialReceived") && <Btn variant="primary" onClick={() => window.print()}>🖨 طباعة تقرير الاستلام</Btn>}
+        {user?.user?.Permissions?.includes("PrintDispatchOrders") && <Btn variant="primary" onClick={handleSharePDF} style={{ background: "#27AE60" }}>  📤 مشاركة PDF</Btn>}
+
       </div>
     </div>
   );
 };
 // ─────────────────────────────────────────────
-// ORDERS LIST — DYNAMIC API
+// ITEMS MODAL — عرض بيان الأصناف
 // ─────────────────────────────────────────────
-const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
+const ItemsModal = ({ open, onClose, order }) => {
+  if (!open || !order) return null;
+  const Items = order.Items || [];
+  const Status = order.Status;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+      zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center",
+      paddingTop: 40, paddingBottom: 40, overflow: "auto"
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 16, padding: 24,
+        width: "90%", maxWidth: 900, direction: "rtl",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "2px solid #f0f0f0", paddingBottom: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18 }}>📦 بيان الأصناف — {order.DispatchOrderNumber}</h3>
+            <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>
+              <StatusBadge Status={Status} /> &nbsp; | &nbsp;
+              <b>الوجهة:</b> {order.Destination} &nbsp; | &nbsp;
+              <b>التاريخ:</b> {order.DispatchDate?.slice(0, 10)}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "#888" }}>×</button>
+        </div>
+
+        {/* جدول الأصناف */}
+        <TableComp
+          cols={[
+            { key: "_seq", label: "#", render: (_, __, idx) => idx + 1 },
+            { key: "AssetTypeName", label: "نوع الأصل" },
+            { key: "ModelName", label: "الموديل", render: v => v || "—" },
+            { key: "RequestedQuantity", label: "المطلوب" },
+            { key: "LoadedQuantity", label: "المحمّل", render: v => v ?? "—" },
+            { key: "ReceivedQuantity", label: "المستلَم", render: v => v ?? "—" },
+            {
+              key: "_diff", label: "الفرق", render: (_, row) => {
+                if (Status !== "Received" && Status !== "PartialReceived") return <span style={{ color: "#aaa" }}>—</span>;
+                const d = (row.RequestedQuantity || 0) - (row.ReceivedQuantity || 0);
+                return <span style={{ color: d > 0 ? "#E74C3C" : d < 0 ? "#E67E22" : "#27AE60", fontWeight: 700 }}>{d > 0 ? `-${d}` : d < 0 ? `+${Math.abs(d)}` : "✓"}</span>;
+              }
+            },
+          ]}
+          rows={Items}
+        />
+
+        {/* ملخص الإجماليات */}
+        <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 14, marginTop: 16, display: "flex", gap: 20, flexWrap: "wrap", fontSize: 13 }}>
+          <div><b>عدد الأصناف:</b> <span style={{ color: "#2E86C1", fontWeight: 700 }}>{Items.length}</span></div>
+          <div><b>إجمالي المطلوب:</b> <span style={{ color: "#1a56db", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.RequestedQuantity || 0), 0)}</span></div>
+          <div><b>إجمالي المحمّل:</b> <span style={{ color: "#E67E22", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.LoadedQuantity || 0), 0)}</span></div>
+          <div><b>إجمالي المستلَم:</b> <span style={{ color: "#27AE60", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.ReceivedQuantity || 0), 0)}</span></div>
+        </div>
+
+        <div style={{ marginTop: 20, textAlign: "left" }}>
+          <Btn variant="ghost" onClick={onClose}>إغلاق</Btn>
+        </div>
+      </div>
+    </div>
+  );
+};
+const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh, assetTypes = [] }) => {
+  const { user } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ Status: "", Destination: "", Keyword: "" });
+  const [filters, setFilters] = useState({ Status: "", Destination: "", Keyword: "", AssetTypeId: "", AssetModelId: "" });
   const [statusCounts, setStatusCounts] = useState({});
+  const [modelOptions, setModelOptions] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [itemsModalOrder, setItemsModalOrder] = useState(null);
+  const [loadingItems, setLoadingItems] = useState(false);
+
   const setF = (k, v) => setFilters(f => ({ ...f, [k]: v }));
 
-  const loadOrders = useCallback(async () => { setLoading(true); setError(null); try { const clean = {}; Object.entries(filters).forEach(([k, v]) => { if (v) clean[k] = v; }); clean.PageSize = 100; clean.CurrentPage = 1; const d = await api.getDispatchOrders(clean); setOrders(d.results || d.Results || []); } catch (e) { setError(e.message); } finally { setLoading(false); } }, [filters]);
-  const loadCounts = useCallback(async () => { try { const d = await api.getDispatchOrders({ PageSize: 1000, CurrentPage: 1 }); const all = d.results || d.Results || []; const c = {}; all.forEach(o => { c[o.Status] = (c[o.Status] || 0) + 1; }); setStatusCounts(c); } catch { } }, []);
+  // عند تغيير نوع الأصل → جيب الموديلات (cascade)
+  useEffect(() => {
+    if (!filters.AssetTypeId) {
+      setModelOptions([]);
+      setFilters(f => ({ ...f, AssetModelId: "" }));
+      return;
+    }
+    (async () => {
+      setLoadingModels(true);
+      try {
+        const m = await api.getAssetModels(filters.AssetTypeId);
+        setModelOptions(m || []);
+      } catch {
+        setModelOptions([]);
+      } finally {
+        setLoadingModels(false);
+      }
+    })();
+  }, [filters.AssetTypeId]);
+
+  const loadOrders = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      const clean = {};
+      Object.entries(filters).forEach(([k, v]) => { if (v) clean[k] = v; });
+      clean.PageSize = 250;
+      clean.CurrentPage = 1;
+      const d = await api.getDispatchOrders(clean);
+      setOrders(d.results || d.Results || []);
+    } catch (e) { setError(e.message); } finally { setLoading(false); }
+  }, [filters]);
+
+  const loadCounts = useCallback(async () => {
+    try {
+      const d = await api.getDispatchOrders({ PageSize: 1000, CurrentPage: 1 });
+      const all = d.results || d.Results || [];
+      const c = {};
+      all.forEach(o => { c[o.Status] = (c[o.Status] || 0) + 1; });
+      setStatusCounts(c);
+    } catch { }
+  }, []);
 
   useEffect(() => { loadOrders(); }, [loadOrders, refreshKey]);
   useEffect(() => { loadCounts(); }, [loadCounts, refreshKey]);
 
+  // فتح مودال الأصناف — يجيب تفاصيل الأمر
+  const handleShowItems = async (order) => {
+    setLoadingItems(true);
+    try {
+      const fullOrder = await api.getDispatchOrder(order.DispatchOrderId);
+      setItemsModalOrder(fullOrder);
+    } catch (e) {
+      alert(e.message || "فشل تحميل الأصناف");
+    } finally {
+      setLoadingItems(false);
+    }
+  };
+
   return (
     <div>
+      {/* الفلاتر */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", background: "#F7F8FA", borderRadius: 12, padding: 16, marginBottom: 20, direction: "rtl" }}>
-        <div style={{ flex: "1 1 180px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الحالة</label><select value={filters.Status} onChange={e => setF("Status", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}><option value="">الكل</option>{Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></div>
-        <div style={{ flex: "1 1 140px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الوجهة</label><select value={filters.Destination} onChange={e => setF("Destination", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}><option value="">الكل</option>{DestinationS.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
-        <div style={{ flex: "2 1 220px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>بحث</label><input placeholder="رقم الأمر، المستلم، المخيم..." value={filters.Keyword} onChange={e => setF("Keyword", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }} /></div>
-        <Btn variant="ghost" onClick={() => setFilters({ Status: "", Destination: "", Keyword: "" })} small>مسح الفلاتر</Btn>
-        <Btn variant="primary" onClick={onCreate}>+ إنشاء أمر جديد</Btn>
+        <div style={{ flex: "1 1 160px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الحالة</label>
+          <select value={filters.Status} onChange={e => setF("Status", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}>
+            <option value="">الكل</option>
+            {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+
+        <div style={{ flex: "1 1 130px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الوجهة</label>
+          <select value={filters.Destination} onChange={e => setF("Destination", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}>
+            <option value="">الكل</option>
+            {DestinationS.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+
+        {/* ✅ فلتر نوع الأصل */}
+        <div style={{ flex: "1 1 180px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>نوع الأصل</label>
+          <AntSelect
+            showSearch
+            value={filters.AssetTypeId || undefined}
+            onChange={v => { setF("AssetTypeId", v || ""); setF("AssetModelId", ""); }}
+            placeholder="كل الأنواع"
+            optionFilterProp="label"
+            style={{ width: "100%", direction: "rtl" }}
+            options={assetTypes.map(t => ({ value: t.AssetTypeId, label: t.AssetTypeName || t.name }))}
+            allowClear
+          />
+        </div>
+
+        {/* ✅ فلتر الموديل — cascade (يظهر بعد اختيار النوع) */}
+        {filters.AssetTypeId && (
+          <div style={{ flex: "1 1 200px" }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>
+              الموديل {loadingModels && <span style={{ color: "#aaa", fontSize: 11 }}>(جارٍ التحميل...)</span>}
+            </label>
+            <AntSelect
+              showSearch
+              value={filters.AssetModelId || undefined}
+              onChange={v => setF("AssetModelId", v || "")}
+              placeholder="كل الموديلات"
+              optionFilterProp="label"
+              style={{ width: "100%", direction: "rtl" }}
+              options={modelOptions.map(m => ({
+                value: m.AssetModelId,
+                label: `${m.ModelName}${m.Brand ? ` - ${m.Brand}` : ""}${m.ModelNumber ? ` - ${m.ModelNumber}` : ""}`
+              }))}
+              disabled={loadingModels || modelOptions.length === 0}
+              allowClear
+            />
+          </div>
+        )}
+
+        <div style={{ flex: "2 1 200px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>بحث</label>
+          <input placeholder="رقم الأمر، المستلم، المخيم..." value={filters.Keyword} onChange={e => setF("Keyword", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }} />
+        </div>
+
+        <Btn variant="ghost" onClick={() => setFilters({ Status: "", Destination: "", Keyword: "", AssetTypeId: "", AssetModelId: "" })} small>مسح الفلاتر</Btn>
+        {user?.user?.Permissions?.includes("AddDispatchOrders") && <Btn variant="primary" onClick={onCreate}>+ إنشاء أمر جديد</Btn>}
       </div>
+
+      {/* شارات الحالة */}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-        {Object.entries(STATUS_CONFIG).map(([Status, cfg]) => (<div key={Status} onClick={() => setF("Status", filters.Status === Status ? "" : Status)} style={{ padding: "8px 16px", borderRadius: 30, background: cfg.bg, border: `2px solid ${filters.Status === Status ? cfg.color : "transparent"}`, cursor: "pointer", fontSize: 13, color: cfg.color, fontWeight: 600 }}>{cfg.label} ({statusCounts[Status] || 0})</div>))}
+        {Object.entries(STATUS_CONFIG).map(([Status, cfg]) => (
+          <div key={Status} onClick={() => setF("Status", filters.Status === Status ? "" : Status)}
+            style={{ padding: "8px 16px", borderRadius: 30, background: cfg.bg, border: `2px solid ${filters.Status === Status ? cfg.color : "transparent"}`, cursor: "pointer", fontSize: 13, color: cfg.color, fontWeight: 600 }}>
+            {cfg.label} ({statusCounts[Status] || 0})
+          </div>
+        ))}
       </div>
-      {loading ? <Loader /> : error ? <ErrorMsg msg={error} onRetry={loadOrders} /> : (<>
-        <TableComp
-          cols={[
-            { key: "_seq", label: "#", render: (_, row, idx) => idx + 1 },
-            { key: "DispatchOrderNumber", label: "رقم الأمر" },
-            { key: "DispatchDate", label: "التاريخ", render: v => v?.slice(0, 10) },
-            { key: "Destination", label: "الوجهة" },
-            // { key: "CampNames", label: "المخيمات" },
-            { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralServices ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🏗 خدمات عامة للمخيمات</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },
-            { key: "ManagerName", label: "المستلم" },
-            { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
-            { key: "ItemCount", label: "الأصناف" },
-            { key: "TotalRequested", label: "المطلوب" },
-            { key: "Notes", label: "ملاحظات" },
-            {
-              key: "_actions", label: "الإجراءات", render: (_, row) =>
-                row.Status === "Loaded" ? (
-                  <Btn variant="warning" small onClick={async (e) => {
-                    e.stopPropagation();
-                    if (!window.confirm(`تأكيد خروج السيارة للأمر ${row.DispatchOrderNumber}؟`)) return;
-                    try {
-                      const r = await api.setInTransit(row.DispatchOrderId);
-                      if (r.success) onRefresh();
-                      else alert(r.message);
-                    } catch (err) { alert(err.message); }
-                  }}>🚛 فى الطريق</Btn>
-                ) : null
-            },
-          ]}
-          rows={orders}
-          onRowClick={onSelect}
-        />
-        <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>إجمالي: {orders.length} أمر</div></>)}
+
+      {loading ? <Loader /> : error ? <ErrorMsg msg={error} onRetry={loadOrders} /> : (
+        <>
+          <TableComp
+            cols={[
+              { key: "_seq", label: "#", render: (_, row, idx) => idx + 1 },
+              { key: "DispatchOrderNumber", label: "رقم الأمر" },
+              { key: "DispatchDate", label: "التاريخ", render: v => v?.slice(0, 10) },
+              { key: "Destination", label: "الوجهة" },
+              { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralServices ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🏗 خدمات عامة للمخيمات</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },
+              { key: "ManagerName", label: "المستلم" },
+              { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
+              // ✅ عمود الأصناف — clickable
+              {
+                key: "ItemCount",
+                label: "الأصناف",
+                render: (v, row) => (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleShowItems(row); }}
+                    disabled={loadingItems}
+                    title="عرض بيان الأصناف"
+                    style={{
+                      background: "#EBF5FB",
+                      color: "#1a56db",
+                      border: "1.5px solid #1a56db",
+                      borderRadius: 20,
+                      padding: "3px 14px",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      transition: "all .15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#1a56db"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "#EBF5FB"; e.currentTarget.style.color = "#1a56db"; }}
+                  >
+                    📦 {v || 0}
+                  </button>
+                )
+              },
+              { key: "TotalRequested", label: "المطلوب" },
+              { key: "Notes", label: "ملاحظات" },
+              {
+                key: "_actions", label: "الإجراءات", render: (_, row) =>
+                  (row.Status === "Loaded" && user?.user?.Permissions?.includes("ReceiveDispatchOrders")) ? (
+                    <Btn variant="warning" small onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!window.confirm(`تأكيد خروج السيارة للأمر ${row.DispatchOrderNumber}؟`)) return;
+                      try {
+                        const r = await api.setInTransit(row.DispatchOrderId);
+                        if (r.success) onRefresh();
+                        else alert(r.message);
+                      } catch (err) { alert(err.message); }
+                    }}>🚛 فى الطريق</Btn>
+                  ) : null
+              },
+            ]}
+            rows={orders}
+            onRowClick={onSelect}
+          />
+          <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>إجمالي: {orders.length} أمر</div>
+        </>
+      )}
+
+      {/* ✅ مودال بيان الأصناف */}
+      <ItemsModal
+        open={!!itemsModalOrder}
+        onClose={() => setItemsModalOrder(null)}
+        order={itemsModalOrder}
+      />
     </div>
   );
 };
@@ -679,7 +1138,7 @@ const OrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
 // SCAN SCREEN — DYNAMIC API
 // ─────────────────────────────────────────────
 const ScanScreen = ({ phase }) => {
-  const {user} = useContext(UserProvider);
+  const {user} = useContext(UserContext);
   const [pendingOrders, setPendingOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -692,7 +1151,7 @@ const ScanScreen = ({ phase }) => {
 
   const validStatuses = phase === "Loaded" ? ["Approved"] : ["Loaded", "InTransit"];
 
-  useEffect(() => { (async () => { setLoadingOrders(true); try { const d = await api.getDispatchOrders({ PageSize: 100, CurrentPage: 1 }); setPendingOrders((d.results || d.Results || []).filter(o => validStatuses.includes(o.Status))); } catch { } finally { setLoadingOrders(false); } })(); }, [confirmed]); // eslint-disable-line
+  useEffect(() => { (async () => { setLoadingOrders(true); try { const d = await api.getDispatchOrders({ PageSize: 250, CurrentPage: 1 }); setPendingOrders((d.results || d.Results || []).filter(o => validStatuses.includes(o.Status))); } catch { } finally { setLoadingOrders(false); } })(); }, [confirmed]); // eslint-disable-line
   useEffect(() => { if (!selectedOrderId) { setOrder(null); return; } (async () => { try { setOrder(await api.getDispatchOrder(Number(selectedOrderId))); } catch { } })(); }, [selectedOrderId]);
 
   // Mock RFID scan (replace with real reader)
@@ -732,8 +1191,7 @@ const ScanScreen = ({ phase }) => {
           {scannedAssets.length > 0 && <div style={{ maxHeight: 150, overflow: "auto", background: "#1a1a2e", borderRadius: 10, padding: 10, marginBottom: 14, fontFamily: "monospace", fontSize: 11, color: "#7effa0" }}>{scannedAssets.slice(0, 20).map(a => <div key={a.UniversityAssetId}>▶ {a.rfidCode} — {a.AssetTypeName} — {a.scannedAt?.slice(11, 19)}</div>)}</div>}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {!scanning ? <Btn variant={phase === "Loaded" ? "warning" : "success"} onClick={() => setScanning(true)}>📡 بدء القراءة</Btn> : <Btn variant="danger" onClick={() => setScanning(false)}>⏹ إيقاف</Btn>}
-            {user?.user?.Permissions?.includes(
-              "ReceiveDispatchOrders") &&
+            {user?.user?.Permissions?.includes("ReceiveDispatchOrders") &&
               <Btn variant="primary" onClick={handleConfirm} disabled={scannedAssets.length === 0 || confirming}>{confirming ? "جارٍ الحفظ..." : `✅ ${phase === "Loaded" ? "تأكيد التحميل" : "تأكيد الاستلام"}`}</Btn>
             }
             <Btn variant="ghost" onClick={reset} small>إعادة تعيين</Btn>
@@ -747,6 +1205,389 @@ const ScanScreen = ({ phase }) => {
 // ─────────────────────────────────────────────
 // APP ROOT
 // ─────────────────────────────────────────────
+const ModelUpdateForm = ({ order, assetTypes, onSave, onCancel }) => {
+  const [items, setItems] = useState(
+    (order.Items || []).map(it => ({
+      DispatchOrderItemId: it.DispatchOrderItemId,
+      AssetTypeId: it.AssetTypeId,
+      AssetTypeName: it.AssetTypeName,
+      AssetModelId: it.AssetModelId || "",
+      RequestedQuantity: it.RequestedQuantity,
+    }))
+  );
+  const [modelMap, setModelMap] = useState({});
+  const [stockMap, setStockMap] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchModels = useCallback(async (typeId) => {
+    if (!typeId || modelMap[typeId]) return;
+    try {
+      const m = await api.getAssetModels(typeId);
+      setModelMap(prev => ({ ...prev, [typeId]: m || [] }));
+    } catch {
+      setModelMap(prev => ({ ...prev, [typeId]: [] }));
+    }
+  }, [modelMap]);
+
+  const fetchStock = useCallback(async (modelId) => {
+    if (!modelId) return;
+    try {
+      const result = await api.getModelStockQuantity(modelId);
+      setStockMap(prev => ({ ...prev, [modelId]: result?.stockQuantity ?? result?.StockQuantity ?? result ?? 0 }));
+    } catch {
+      setStockMap(prev => ({ ...prev, [modelId]: 0 }));
+    }
+  }, []);
+
+  useEffect(() => {
+    items.forEach(it => {
+      if (it.AssetTypeId) fetchModels(it.AssetTypeId);
+      if (it.AssetModelId) fetchStock(it.AssetModelId);
+    });
+  }, []); // eslint-disable-line
+
+  const updateModel = (idx, modelId) => {
+    setItems(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], AssetModelId: modelId };
+      return updated;
+    });
+    if (modelId) fetchStock(modelId);
+  };
+
+  const handleSave = async () => {
+    // validate — كل بند لازم يكون له موديل
+    for (let i = 0; i < items.length; i++) {
+      if (!items[i].AssetModelId) {
+        setError(`السطر ${i + 1}: الموديل مطلوب`);
+        return;
+      }
+    }
+    setError(null);
+    setSaving(true);
+    try {
+      const payload = {
+        DispatchOrderId: order.DispatchOrderId,
+        Items: items.map(it => ({
+          DispatchOrderItemId: it.DispatchOrderItemId,
+          AssetModelId: Number(it.AssetModelId),
+        })),
+      };
+      const result = await api.updateDispatchOrderModels(payload);
+      if (result.success) {
+        onSave(result);
+      } else {
+        setError(result.message || "فشل التحديث");
+      }
+    } catch (e) {
+      setError(e.message || "فشل الاتصال");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      {error && (
+        <div style={{ background: "#FDEDEC", color: "#E74C3C", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13, direction: "rtl" }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 20, fontSize: 13, direction: "rtl", marginBottom: 14, color: "#555" }}>
+          <span><b>رقم الأمر:</b> {order.DispatchOrderNumber}</span>
+          <span><b>الوجهة:</b> {order.Destination}</span>
+          <span><b>التاريخ:</b> {order.DispatchDate?.slice(0, 10)}</span>
+        </div>
+      </div>
+
+      <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+        <h4 style={{ margin: "0 0 14px", fontSize: 15, color: "#1a1a2e", direction: "rtl" }}>📋 تحديث الموديلات</h4>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, direction: "rtl" }}>
+            <thead>
+              <tr style={{ background: "#e8edf3" }}>
+                {["#", "نوع الأصل", "الموديل *", "الكمية المتوفرة", "الكمية المطلوبة"].map(h => (
+                  <th key={h} style={{ padding: "8px 10px", textAlign: "right", fontWeight: 600, color: "#555" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, idx) => {
+                const models = modelMap[item.AssetTypeId] || [];
+                return (
+                  <tr key={item.DispatchOrderItemId} style={{ borderBottom: "1px solid #e0e0e0" }}>
+                    <td style={{ padding: "6px 8px", textAlign: "center", fontWeight: 600, color: "#888" }}>{idx + 1}</td>
+                    <td style={{ padding: "6px 8px", minWidth: 140 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{item.AssetTypeName}</span>
+                    </td>
+                    <td style={{ padding: "6px 8px", minWidth: 180 }}>
+                      <select
+                        value={item.AssetModelId}
+                        onChange={e => updateModel(idx, e.target.value)}
+                        style={{
+                          width: "100%", padding: "6px 8px", borderRadius: 6,
+                          border: item.AssetModelId ? "1.5px solid #27AE60" : "1.5px solid #E74C3C",
+                          direction: "rtl", fontSize: 13,
+                          background: item.AssetModelId ? "#EAFAF1" : "#FFF"
+                        }}
+                      >
+                        <option value="">اختر الموديل...</option>
+                        {models.map(m => (
+                          <option key={m.AssetModelId} value={m.AssetModelId}>
+                            {m.ModelName} - {m.Brand} - {m.ModelNumber}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td style={{ padding: "6px 8px", minWidth: 100, textAlign: "center" }}>
+                      {item.AssetModelId ? (
+                        stockMap[item.AssetModelId] !== undefined ? (
+                          <span style={{
+                            fontWeight: 700, fontSize: 14,
+                            color: stockMap[item.AssetModelId] > 0 ? "#27AE60" : "#E74C3C",
+                            background: stockMap[item.AssetModelId] > 0 ? "#EAFAF1" : "#FDEDEC",
+                            padding: "4px 12px", borderRadius: 6, display: "inline-block"
+                          }}>
+                            {stockMap[item.AssetModelId]}
+                          </span>
+                        ) : <span style={{ color: "#aaa", fontSize: 12 }}>جارٍ التحميل...</span>
+                      ) : <span style={{ color: "#ccc" }}>—</span>}
+                    </td>
+                    <td style={{ padding: "6px 8px", textAlign: "center", fontWeight: 700 }}>
+                      {item.RequestedQuantity}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="outOrders-btnGroup">
+        <Btn variant="ghost" onClick={onCancel}>إلغاء</Btn>
+        <Btn variant="primary" onClick={handleSave} disabled={saving}>
+          {saving ? "جارٍ الحفظ..." : "💾 حفظ الموديلات"}
+        </Btn>
+      </div>
+    </div>
+  );
+};
+// const SearchModelModal = ({ open, onClose, assetTypes }) => {
+//   const [assetTypeId, setAssetTypeId] = useState(null);
+//   const [assetModelId, setAssetModelId] = useState(null);
+//   const [destination, setDestination] = useState(null);
+//   const [models, setModels] = useState([]);
+//   const [result, setResult] = useState(null);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+
+//   // جلب الموديلات عند اختيار نوع الأصل
+//   useEffect(() => {
+//     if (!assetTypeId) { setModels([]); setAssetModelId(null); return; }
+//     (async () => {
+//       try {
+//         const m = await api.getAssetModels(assetTypeId);
+//         setModels(m || []);
+//       } catch { setModels([]); }
+//     })();
+//   }, [assetTypeId]);
+
+//   const handleSearch = async () => {
+//     if (!assetTypeId) { setError("اختر نوع الأصل"); return; }
+//     setError(null);
+//     setLoading(true);
+//     setResult(null);
+//     try {
+//       const r = await api.getModelDistribution(assetTypeId, assetModelId, destination);
+//       setResult(r);
+//     } catch (e) { setError(e.message || "فشل البحث"); }
+//     finally { setLoading(false); }
+//   };
+
+//   const handleReset = () => {
+//     setAssetTypeId(null);
+//     setAssetModelId(null);
+//     setDestination(null);
+//     setModels([]);
+//     setResult(null);
+//     setError(null);
+//   };
+
+//   if (!open) return null;
+
+//   return (
+//     <div style={{
+//       position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+//       zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center",
+//       paddingTop: 40, paddingBottom: 40, overflow: "auto"
+//     }}>
+//       <div style={{
+//         background: "#fff", borderRadius: 16, padding: 24,
+//         width: "90%", maxWidth: 800, direction: "rtl",
+//         boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+//       }}>
+//         {/* Header */}
+//         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottom: "2px solid #f0f0f0", paddingBottom: 12 }}>
+//           <h3 style={{ margin: 0, fontSize: 18 }}>🔍 بحث بالموديل — التوزيع على المخيمات (المستلَمة)</h3>
+//           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "#888" }}>×</button>
+//         </div>
+
+//         {/* Filters */}
+//         <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+//           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+//             <div>
+//               <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#444" }}>
+//                 نوع الأصل <span style={{ color: "#E74C3C" }}>*</span>
+//               </label>
+//               <AntSelect
+//                 showSearch
+//                 value={assetTypeId || undefined}
+//                 onChange={v => { setAssetTypeId(v); setAssetModelId(null); }}
+//                 placeholder="اختر نوع الأصل..."
+//                 optionFilterProp="label"
+//                 style={{ width: "100%", direction: "rtl" }}
+//                 options={assetTypes.map(t => ({ value: t.AssetTypeId, label: t.AssetTypeName || t.name }))}
+//                 allowClear
+//               />
+//             </div>
+
+//             <div>
+//               <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#444" }}>
+//                 الموديل (اختياري)
+//               </label>
+//               <AntSelect
+//                 showSearch
+//                 value={assetModelId || undefined}
+//                 onChange={setAssetModelId}
+//                 placeholder="كل الموديلات"
+//                 optionFilterProp="label"
+//                 style={{ width: "100%", direction: "rtl" }}
+//                 options={models.map(m => ({ value: m.AssetModelId, label: `${m.ModelName} - ${m.Brand || ""} - ${m.ModelNumber || ""}` }))}
+//                 disabled={!assetTypeId}
+//                 allowClear
+//               />
+//             </div>
+
+//             <div>
+//               <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#444" }}>
+//                 الوجهة (اختياري)
+//               </label>
+//               <AntSelect
+//                 value={destination || undefined}
+//                 onChange={setDestination}
+//                 placeholder="كل الوجهات"
+//                 style={{ width: "100%", direction: "rtl" }}
+//                 options={DestinationS.map(d => ({ value: d, label: d }))}
+//                 allowClear
+//               />
+//             </div>
+//           </div>
+
+//           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+//             <Btn variant="primary" onClick={handleSearch} disabled={loading || !assetTypeId}>
+//               {loading ? "جارٍ البحث..." : "🔍 بحث"}
+//             </Btn>
+//             <Btn variant="ghost" onClick={handleReset} small>🔄 إعادة تعيين</Btn>
+//           </div>
+//         </div>
+
+//         {error && (
+//           <div style={{ background: "#FDEDEC", color: "#E74C3C", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
+//             ⚠️ {error}
+//           </div>
+//         )}
+
+//         {/* Results */}
+//         {loading ? <Loader text="جارٍ البحث..." /> : result && (
+//           <>
+//             {/* Summary */}
+//             <div style={{ background: "linear-gradient(135deg, #EBF5FB 0%, #EAFAF1 100%)", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+//               <div style={{ fontSize: 13, color: "#555", marginBottom: 6 }}>
+//                 <b>نوع الأصل:</b> {result.AssetTypeName}
+//                 {result.ModelName && <> — <b>الموديل:</b> {result.ModelName} {result.Brand && `(${result.Brand})`} {result.ModelNumber && `- ${result.ModelNumber}`}</>}
+//                 {result.Destination && <> — <b>الوجهة:</b> {result.Destination}</>}
+//               </div>
+//               <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 10 }}>
+//                 <div style={{ background: "#fff", borderRadius: 8, padding: "10px 16px", flex: 1, minWidth: 150 }}>
+//                   <div style={{ fontSize: 11, color: "#888" }}>إجمالي الكمية المستلَمة</div>
+//                   <div style={{ fontSize: 24, fontWeight: 800, color: "#27AE60" }}>{result.GrandTotal || 0}</div>
+//                 </div>
+//                 <div style={{ background: "#fff", borderRadius: 8, padding: "10px 16px", flex: 1, minWidth: 150 }}>
+//                   <div style={{ fontSize: 11, color: "#888" }}>عدد الأوامر</div>
+//                   <div style={{ fontSize: 24, fontWeight: 800, color: "#2E86C1" }}>{result.TotalOrders || 0}</div>
+//                 </div>
+//                 <div style={{ background: "#fff", borderRadius: 8, padding: "10px 16px", flex: 1, minWidth: 150 }}>
+//                   <div style={{ fontSize: 11, color: "#888" }}>عدد المخيمات</div>
+//                   <div style={{ fontSize: 24, fontWeight: 800, color: "#8E44AD" }}>{result.Distribution?.length || 0}</div>
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* Distribution Table */}
+//             {result.Distribution && result.Distribution.length > 0 ? (
+//               <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", overflow: "hidden" }}>
+//                 <div style={{ background: "#F7F8FA", padding: "10px 16px", fontWeight: 700, fontSize: 14, borderBottom: "2px solid #e8e8e8" }}>
+//                   📊 التوزيع على المخيمات
+//                 </div>
+//                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+//                   <thead>
+//                     <tr style={{ background: "#fafafa" }}>
+//                       <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: "#555" }}>#</th>
+//                       <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: "#555" }}>المخيم</th>
+//                       <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: "#555" }}>الوجهة</th>
+//                       <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#555" }}>عدد الأوامر</th>
+//                       <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#555" }}>الكمية المستلَمة</th>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {result.Distribution.map((d, i) => (
+//                       <tr key={d.CampId} style={{ borderBottom: "1px solid #f0f0f0", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+//                         <td style={{ padding: "10px 14px", fontWeight: 600, color: "#888" }}>{i + 1}</td>
+//                         <td style={{ padding: "10px 14px", fontWeight: 600 }}>{d.CampName}</td>
+//                         <td style={{ padding: "10px 14px", color: "#555" }}>{d.Destination || "—"}</td>
+//                         <td style={{ padding: "10px 14px", textAlign: "center", color: "#2E86C1", fontWeight: 700 }}>{d.OrdersCount}</td>
+//                         <td style={{ padding: "10px 14px", textAlign: "center" }}>
+//                           <span style={{
+//                             background: "#EAFAF1", color: "#27AE60",
+//                             padding: "4px 14px", borderRadius: 6,
+//                             fontWeight: 800, fontSize: 15, display: "inline-block", minWidth: 50
+//                           }}>
+//                             {d.TotalReceived}
+//                           </span>
+//                         </td>
+//                       </tr>
+//                     ))}
+//                   </tbody>
+//                   <tfoot>
+//                     <tr style={{ background: "#1a1a2e", color: "#fff" }}>
+//                       <td colSpan={3} style={{ padding: "10px 14px", fontWeight: 700 }}>الإجمالي</td>
+//                       <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700 }}>{result.TotalOrders}</td>
+//                       <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 800, fontSize: 16 }}>{result.GrandTotal}</td>
+//                     </tr>
+//                   </tfoot>
+//                 </table>
+//               </div>
+//             ) : (
+//               <div style={{ textAlign: "center", padding: 40, color: "#888", background: "#F7F8FA", borderRadius: 10 }}>
+//                 <div style={{ fontSize: 40, marginBottom: 10 }}>📭</div>
+//                 <div>لا توجد نتائج مطابقة — لم يتم استلام هذا الموديل في أي مخيم</div>
+//               </div>
+//             )}
+//           </>
+//         )}
+
+//         {/* Footer */}
+//         <div style={{ marginTop: 20, textAlign: "left" }}>
+//           <Btn variant="ghost" onClick={onClose}>إغلاق</Btn>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 export default function OutOrders() {
   const [tab, setTab] = useState("orders");
   const [assetTypes, setAssetTypes] = useState([]);
@@ -754,9 +1595,11 @@ export default function OutOrders() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editOrder, setEditOrder] = useState(null);
+  const [modelUpdateOrder, setModelUpdateOrder] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [camps, setCamps] = useState([]);
   const [campManagers, setCampManagers] = useState([]);
+  const [showSearchModel, setShowSearchModel] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -784,7 +1627,17 @@ export default function OutOrders() {
     <div style={{ minHeight: "100vh", background: "#f0f2f7", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
       <div style={{ margin: "0 auto", padding: "" }}>
         {tab === "orders" && (<>
-          {(showForm || editOrder) ? (
+  {modelUpdateOrder ? (
+    <div className={"outOrders-card"}>
+      <h3 style={{ direction: "rtl", marginTop: 0 }}>📋 تحديث الموديلات — {modelUpdateOrder.DispatchOrderNumber}</h3>
+      <ModelUpdateForm
+        order={modelUpdateOrder}
+        assetTypes={assetTypes}
+        onSave={() => { setModelUpdateOrder(null); triggerRefresh(); }}
+        onCancel={() => setModelUpdateOrder(null)}
+      />
+    </div>
+  ) : (showForm || editOrder) ? (
             <div className={"outOrders-card"}>
               {/* <h3 style={{ direction: "rtl", marginTop: 0 }}>{editOrder ? "تعديل أمر الخروج" : "إنشاء أمر خروج جديد"}</h3> */}
               <h3 style={{ direction: "rtl", marginTop: 0 }}>
@@ -795,18 +1648,32 @@ export default function OutOrders() {
             </div>
           ) : view === "detail" && selectedOrderId ? (
             <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
-              <OrderDetail orderId={selectedOrderId} onBack={() => { setView("list"); setSelectedOrderId(null); }} onEdit={handleEdit} onRefresh={triggerRefresh} />
+              <OrderDetail orderId={selectedOrderId} onBack={() => { setView("list"); setSelectedOrderId(null); }} onEdit={handleEdit} onRefresh={triggerRefresh} onUpdateModels={(order) => { setModelUpdateOrder(order); setView("list"); }}/>
             </div>
           ) : (
             <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, direction: "rtl" }}><h2 style={{ margin: 0, fontSize: 22 }}>أوامر الخروج</h2></div>
-              <OrdersList refreshKey={refreshKey} onSelect={o => { setSelectedOrderId(o.DispatchOrderId); setView("detail"); }} onCreate={() => { setEditOrder(null); setShowForm(true); setView("create"); }} onRefresh={triggerRefresh} />
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, direction: "rtl" }}>
+  <h2 style={{ margin: 0, fontSize: 22 }}>أوامر الخروج</h2>
+  <Btn variant="outline" onClick={() => setShowSearchModel(true)} style={{ background: "#8E44AD", color: "#fff", border: "none" }}>
+    🔍 بحث بالموديل (المستلَم)
+  </Btn>
+</div>              <OrdersList refreshKey={refreshKey}   assetTypes={assetTypes}  onSelect={o => { setSelectedOrderId(o.DispatchOrderId); setView("detail"); }} onCreate={() => { setEditOrder(null); setShowForm(true); setView("create"); }} onRefresh={triggerRefresh} />
             </div>
           )}
         </>)}
-        {tab === "scanLoad" && <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}><ScanScreen phase="Loaded" /></div>}
+        {tab === "scanLoad" && <div style={{ background: "#171616", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}><ScanScreen phase="Loaded" /></div>}
         {tab === "scanReceive" && <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 2px 16px rgba(0,0,0,.07)" }}><ScanScreen phase="Received" /></div>}
       </div>
+      {/* <SearchModelModal
+  open={showSearchModel}
+  onClose={() => setShowSearchModel(false)}
+  assetTypes={assetTypes}
+/> */}
+<SearchModelDistributionModal
+  open={showSearchModel}
+  onClose={() => setShowSearchModel(false)}
+  assetTypes={assetTypes}
+/>
     </div>
   );
 }

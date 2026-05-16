@@ -142,9 +142,9 @@ const CategoryListPage = () => {
       width: 30,
     },
     { title: " تصنيف الأصل", dataIndex: "CategoryName", key: "CategoryName" },
-    { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName" },
+    // { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName" },
     { title: "الكود   ", dataIndex: "CategoryCode", key: "CategoryCode" },
-    { title: " الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
+    // { title: " الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -274,7 +274,7 @@ const CategoryListPage = () => {
 
       <div className="sub-table">
         <h5 style={{ justifySelf: 'center', marginBottom: '20px' }}>تصنيف الأصول(المحاور) </h5>
-        <div className='sp-btwn'>
+        {/* <div className='sp-btwn'>
           <Input type='text' placeholder='ابحث بالاسم (تصنيف الأصل) او كود تصنيف الأصل' onChange={(e) => setkeyword(e.target.value)} />
           <Select
             allowClear
@@ -288,7 +288,7 @@ const CategoryListPage = () => {
               { label: "مبني إداري", value: 2 },
             ]}
           />
-        </div>
+        </div> */}
 
 
         <Table

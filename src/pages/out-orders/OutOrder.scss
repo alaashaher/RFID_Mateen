@@ -60,8 +60,12 @@
 }
 
 /* Responsive table wrapper */
+// .outOrders-tableWrapper {
+//   overflow-x: auto;
+// }
 .outOrders-tableWrapper {
-  overflow-x: auto;
+  overflow-x: auto;  // ← دي السبب
+  max-height: 500px; // ← أو دي
 }
 
 /* Responsive button group */

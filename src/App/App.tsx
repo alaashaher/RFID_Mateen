@@ -36,6 +36,7 @@ function App() {
           {!loggedIn ? (
             <Routes>
               <Route path={RouterLinks.homePage} element={<LogIn />}></Route>
+              {/* <Route path={RouterLinks.homePage} element={<LogIn />}></Route> */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           ) : (

@@ -31,9 +31,10 @@ import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/Sc
 import OutOrders from "../pages/out-orders/OutOrders";
 import CampOrdersPage from "../pages/CampOrdersPage/CampOrdersPage";
 import CampsManagement from "../pages/CampsManagement/CampsManagement";
-
-
-
+import CampAdjustmentPage from "../pages/Campadjustmentpage/CampAdjustmentPage"
+import ReturnOrders from "../pages/ReturnOrdersPage/ReturnOrders";
+import InventoryReport from "../pages/InventoryReport/InventoryReport";
+import Suites from "../pages/Suites/Suites"
 
 
 const Routess = () => {
@@ -128,24 +129,11 @@ const Routess = () => {
           <UniversityFloors />
         </ProtectedRoute>}>
       </Route>
-      
-
-
-   
-
-     
-
-
-
-
-
-
-
-
-    
-
-
-
+      <Route path={routerLinks.CampAdjustmentPage} element={
+        <ProtectedRoute requiredPermission="ViewCampAdjustment">
+          <CampAdjustmentPage />
+        </ProtectedRoute>}>
+      </Route>
 
       <Route path={routerLinks.roles} element={
         <ProtectedRoute requiredPermission="ViewRoles">
@@ -157,6 +145,21 @@ const Routess = () => {
       <Route path={routerLinks.users} element={
         <ProtectedRoute requiredPermission="ViewUsers">
           <Users />
+        </ProtectedRoute>
+      }></Route>
+<Route path={routerLinks.returnOrders} element={
+        <ProtectedRoute requiredPermission="ViewReturnOrders">
+          <ReturnOrders />
+        </ProtectedRoute>
+      }></Route>
+<Route path={routerLinks.InventoryReport} element={
+        <ProtectedRoute requiredPermission="ViewReturnOrders">
+          <InventoryReport />
+        </ProtectedRoute>
+      }></Route>
+      <Route path={routerLinks.Suites} element={
+        <ProtectedRoute requiredPermission="ViewRooms">
+          <Suites />
         </ProtectedRoute>
       }></Route>
 

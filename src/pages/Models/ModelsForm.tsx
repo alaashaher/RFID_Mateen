@@ -30,18 +30,23 @@ const ModelsForm = () => {
     Brand: toEdit ? toEdit.Brand : "",
     ModelCode: toEdit ? toEdit.ModelCode : "",
     AssetTotalCount: toEdit ? toEdit.AssetTotalCount : "",
-    RemainingCountNow: toEdit ? toEdit.RemainingCountNow : ""
+    RemainingCountNow: toEdit ? toEdit.RemainingCountNow : "",
+    RemainingNewCountNow: toEdit ? toEdit.RemainingNewCountNow : "",
+    DamagedCountNow: toEdit ? toEdit.DamagedCountNow : "",
+    IsLot: toEdit ? toEdit.IsLot : false
   };
   const schema = Yup.object().shape({
     ModelName: Yup.string().required("ادخل اسم الموديل"),
-    ModelCode: Yup.string().required("ادخل كود الموديل"),
+    ModelCode: Yup.string(),
+    IsLot: Yup.boolean(),
     ModelNumber: Yup.string(),
     AssetTypeId: Yup.string().required("ادخل نوع الاصل"),
     TagType: Yup.string().required("ادخل نوع اللاصق"),  // ✅ جديد
     Brand: Yup.string(),
     AssetTotalCount: Yup.string(),
     RemainingCountNow: Yup.string().nullable(),
-
+    RemainingNewCountNow: Yup.string().nullable(),
+    DamagedCountNow:Yup.string().nullable(),
   });
   const tagTypeOptions = [
   { title: "RFID-DogBone97*27",  value: "RFID-DogBone97*27"  },
@@ -91,7 +96,10 @@ const ModelsForm = () => {
       setValue("Brand", toEdit.Brand);
       setValue("AssetTotalCount", toEdit.AssetTotalCount);
       setValue("RemainingCountNow", toEdit.RemainingCountNow);
-      setValue("ModelCode", toEdit.ModelCode)
+      setValue("RemainingNewCountNow", toEdit.RemainingNewCountNow);
+      setValue("DamagedCountNow", toEdit.DamagedCountNow);
+      setValue("ModelCode", toEdit.ModelCode);
+      setValue("IsLot", toEdit.IsLot);
     }
   }, [toEdit, setValue]);
   const onFinish = async (data) => {
@@ -109,7 +117,10 @@ const ModelsForm = () => {
         Brand: data.Brand,
         AssetTotalCount: data.AssetTotalCount,
         RemainingCountNow: data.RemainingCountNow === "" ? null : data.RemainingCountNow, 
+        RemainingNewCountNow: data.RemainingNewCountNow === "" ? null : data.RemainingNewCountNow, 
+        DamagedCountNow: data.DamagedCountNow === "" ? null : data.DamagedCountNow, 
         UniversityName: data.UniversityName,
+        IsLot: data.IsLot ?? false,
         "IsActive": true,
         "IsDeleted": false
         //Category: {}
@@ -210,7 +221,7 @@ const ModelsForm = () => {
               type={'text'}
             />
           </Col>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
               control={control}
               name={`ModelCode`}
@@ -221,7 +232,7 @@ const ModelsForm = () => {
               type={'text'}
             // disabled={true}
             />
-          </Col>
+          </Col> */}
 
           <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
             <AntdTextField
@@ -270,6 +281,38 @@ const ModelsForm = () => {
             // disabled={true}
             />
           </Col>
+            <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`RemainingNewCountNow`}
+              placeholder={`عدد الجديد فى المستودع`}
+              label={`عدد الجديد فى المستودع`}
+              errorMsg={errors?.[`RemainingNewCountNow`]?.message}
+              validateStatus={errors?.[`RemainingNewCountNow`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+            <AntdTextField
+              control={control}
+              name={`DamagedCountNow`}
+              placeholder={`عدد التالف فى المستودع`}
+              label={`عدد التالف فى المستودع`}
+              errorMsg={errors?.[`DamagedCountNow`]?.message}
+              validateStatus={errors?.[`DamagedCountNow`] ? "error" : ""}
+              type={'text'}
+            // disabled={true}
+            />
+          </Col>
+          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12}>
+  <AntdCheckbox
+    control={control}
+    name="IsLot"
+    label="Is Lot"
+    errorMsg={errors?.IsLot?.message}
+  />
+</Col>
         </Row>
         <div className="footer-form">
           <Button type="primary" htmlType="submit" loading={isSubmitting} disabled={isSubmitting}>

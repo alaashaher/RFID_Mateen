@@ -13,28 +13,21 @@ const RouterLinks = {
   WarehouseAdjustmentScsnnedUniversityAssets: "/WarehouseAdjustmentScsnnedUniversityAssets",
   ScsnnedUniversityAssetsPage: "/ScsnnedUniversityAssetsPage",
   UniversityAssetsRelocation: "/UniversityAssetsRelocation",
-
   OutOrders:'/OutOrders',
   CampOrdersPage: '/CampOrdersPage',
   CampsManagement:'/CampsManagement',
   UniversityAssetsScanned: "/UniversityAssetsScanned",
-
-
   UniversityAssetsAdjustment: "/UniversityAssetsAdjustmentInfo",
-
   UniversityFloors: "/UniversityFloors",
-
-
-
-
-
-
-
+  CampAdjustmentPage: "/CampAdjustmentPage",
+  returnOrders: "/ReturnOrdersPage",
   roles: "/roles",
   users: "/users",
   permissions: "/permissions",
   referenceandResource: "/referenceandResource",
+  InventoryReport: "/InventoryReport",
   notFound: "/not-found",
+  Suites: "/Suites",
 };
 
 export default RouterLinks;

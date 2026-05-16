@@ -88,26 +88,35 @@ const AppLayout: React.FC<any> = ({ children }) => {
   // ////console.log("🚀 ~ onCollapse ~ collapsed:", collapsed)
 
   const mainLinks = [
+    // {
+    //   key: 1,
+    //   path: routerLinks.homePage,
+    //   name: "الصفحة الرئيسية",
+    //   icon: <HomeOutlined />,
+    // },
     {
-      key: 1,
-      path: routerLinks.homePage,
-      name: "الصفحة الرئيسية",
+      key: 2,
+      path: routerLinks.InventoryReport,
+      name: "الصفحة الرئيسية - المستودع",
       icon: <HomeOutlined />,
     },
-    {
-      key: 1,
-      path: routerLinks.CategoryNew,
-      name: " تصنيف الاصول",
-      icon: <BranchesOutlined />,
-      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
-    },
+    
+    
     {
       key: 110,
       path: routerLinks.OutOrders,
-      name: " أمر الخروج",
+      name: " أوامر الخروج",
       icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes(
         "ViewDispatchOrders")) ? false : true
+    },
+{
+      key: 114,
+      path: routerLinks.returnOrders,
+      name: " أوامر الرجوع الى المستودع",
+      icon: <CiOutlined />,
+      hidden: (user?.user?.Permissions?.includes(
+        "ViewReturnOrders")) ? false : true
     },
 
     {
@@ -124,6 +133,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCampOrders")) ? false : true
     },
+    {
+      key: 113,
+      path: routerLinks.CampAdjustmentPage,
+      name: " جرد المخيمات",
+      icon: <CiOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewCampAdjustment")) ? false : true
+    },
     // {
     //   key: 111,
     //   path: routerLinks.CategoryTypes,
@@ -131,6 +147,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
     //   icon: <BarChartOutlined />,
     //   hidden: (user?.user?.Permissions?.includes("ViewCategoryTypes")) ? false : true
     // },
+    {
+      key: 3,
+      path: routerLinks.CategoryNew,
+      name: " تصنيف الاصول",
+      icon: <BranchesOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewCategory")) ? false : true
+    },
     {
       key: 1,
       path: routerLinks.category,
@@ -156,6 +179,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       key: 6,
       path: routerLinks.UniversityFloors,
       name: "الأدوار",
+      icon: <HddOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewUniversityFloors")) ? false : true
+    },
+    {
+      key: 7,
+      path: routerLinks.Suites,
+      name: "الجناح",
       icon: <HddOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewUniversityFloors")) ? false : true
     },

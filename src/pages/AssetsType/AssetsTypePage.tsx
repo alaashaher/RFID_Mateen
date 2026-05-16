@@ -166,7 +166,7 @@ const AssetsTypePage = () => {
         return value.HasModels ? <CheckCircleFilled /> : <CloseCircleFilled style={{color:"red"}} />;
       }
      },
-    { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
+    // { title: "اسم الجهة ", dataIndex: "UniversityName", key: "UniversityName" },
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -253,7 +253,7 @@ const AssetsTypePage = () => {
           </Select> */}
 
           {/* NEW: BuildingType filter - 2 static options */}
-          <Select
+          {/* <Select
             allowClear
             placeholder="اختر نوع مبنى الأصل"
             onChange={(value) => {
@@ -264,7 +264,7 @@ const AssetsTypePage = () => {
               { label: "مستودع", value: 1 },
               { label: "مبني إداري", value: 2 },
             ]}
-          />
+          /> */}
 
           {/* NEW: Category filter - dynamic based on BuildingTypeId */}
           <Select
@@ -275,7 +275,7 @@ const AssetsTypePage = () => {
               setSelectedCategoryId(value ?? "");
             }}
             style={{ width: 250 }}
-            disabled={!selectedBuildingTypeId}
+            //disabled={!selectedBuildingTypeId}
           >
             {categories?.map((item) => (
               <Option key={item.CategoryId} value={item.CategoryId}>

@@ -296,8 +296,7 @@ export default function CampsManagement() {
               onChange={e => setFilter(e.target.value)}
               style={{ flex: 1, padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", fontSize: 14, direction: "rtl", boxSizing: "border-box" }}
             />
-            {tab === "camps" && user?.user?.Permissions?.includes(
-              "AddCamps") && (
+            {tab === "camps" && user?.user?.Permissions?.includes("AddCamps") && (
                 <Btn variant="primary" onClick={() => { setEditCamp(null); setShowCampModal(true); }}>+ إضافة مخيم</Btn>
               )}
             {tab === "managers" && user?.user?.Permissions?.includes("AddCampManagers") && (
@@ -360,8 +359,8 @@ export default function CampsManagement() {
                       key: "_actions", label: "الإجراءات",
                       render: (_, row) => (
                         <div style={{ display: "flex", gap: 6 }}>
-                          <Btn variant="outline" small onClick={(e) => handleEditManager(row, e)}>✏️</Btn>
-                          <Btn variant="danger" small onClick={(e) => handleDeleteManager(row, e)}>🗑</Btn>
+                         {user?.user?.Permissions?.includes("EditCamps") && <Btn variant="outline" small onClick={(e) => handleEditManager(row, e)}>✏️</Btn>}
+                          {user?.user?.Permissions?.includes("DeleteCamps") &&<Btn variant="danger" small onClick={(e) => handleDeleteManager(row, e)}>🗑</Btn>}
                         </div>
                       )
                     },

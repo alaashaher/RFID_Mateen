@@ -1,0 +1,74 @@
+.suites-page {
+  padding: 24px;
+  direction: rtl;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f0f0;
+
+    h2 {
+      margin: 0 0 4px 0;
+      font-size: 24px;
+      color: #1f2937;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #6b7280;
+      font-size: 13px;
+    }
+  }
+
+  .filters-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .suite-code {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #eff6ff;
+    color: #1e40af;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+    font-weight: 700;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &.inactive {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  }
+
+  .info-note {
+    padding: 10px 14px;
+    background: #fef3c7;
+    border-right: 3px solid #f59e0b;
+    border-radius: 4px;
+    color: #92400e;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+}

@@ -28,14 +28,14 @@ const AssetsTypeForm = () => {
     CategoryId: toEdit ? toEdit.CategoryId : "",
     UniversityName: toEdit ? toEdit.UniversityName : "أوقاف الراجحى الخيرية",
 
-    BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "1"
+    //BuildingTypeId: toEdit ? toEdit.BuildingTypeId : "1"
   };
   const schema = Yup.object().shape({
     AssetTypeName: Yup.string().required("ادخل اسم الطابق"),
     AssetTypeCode: Yup.string(),
     CategoryId: Yup.string().required("ادخل نوع الاصل"),
     UniversityName: Yup.string(),
-    BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
+    //BuildingTypeId: Yup.string().required("ادخل نوع المبني"),
   });
   const [form] = Form.useForm();
   const {
@@ -53,14 +53,14 @@ const AssetsTypeForm = () => {
 
     const fetchLanguages = async () => {
       try {
-        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=${getValues("BuildingTypeId") ? getValues("BuildingTypeId") : ""}`);
+        const res = await getFromApi(`Category/get-category-ddl?BuildingTypeId=""}`);
         setBuildings(res);
       } catch (error) {
         //console.log(error);
       }
     };
     fetchLanguages();
-  }, [watch("BuildingTypeId")])
+  },)
 
   const handleCloseModal = () => {
     setToEdit(null);
@@ -73,7 +73,7 @@ const AssetsTypeForm = () => {
       setValue("AssetTypeCode", toEdit.AssetTypeCode);
       setValue("CategoryId", String(toEdit.CategoryId))
       setValue("UniversityName", toEdit.UniversityName);
-      setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
+      //setValue("BuildingTypeId", toEdit.BuildingTypeId ? String(toEdit.BuildingTypeId) : "1");
 
     }
   }, [toEdit, setValue]);
@@ -90,7 +90,7 @@ const AssetsTypeForm = () => {
         AssetTypeCode: data.AssetTypeCode,
         "IsActive": true,
         UniversityName: data.UniversityName,
-        BuildingTypeId: data.BuildingTypeId,
+        //BuildingTypeId: data.BuildingTypeId,
         //Category: {}
       };
       if (toEdit) {
@@ -152,7 +152,7 @@ const AssetsTypeForm = () => {
     <div>
       <Form form={form} onFinish={handleSubmit(onFinish)} className="custom-form">
         <Row style={{ display: "flex" }} gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
+          {/* <Col xs={24} sm={24} md={24} lg={12} xl={12} xxl={12} >
             <AntdSelectOption
               control={control}
               name="BuildingTypeId"
@@ -163,7 +163,7 @@ const AssetsTypeForm = () => {
               placeholder=" نوع المبني"
               options={[{ title: "مستودع", value: 1 }, { title: "مبني أدري", value: 2 }]}
             />
-          </Col>
+          </Col> */}
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >
 
             <AntdSelectOption
