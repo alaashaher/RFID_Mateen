@@ -783,10 +783,10 @@ const handleSharePDF = async () => {
 
       {/* ===== الأزرار — تختفي عند الطباعة ===== */}
       <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 24, flexWrap: "wrap" }}>
-         {user?.user?.Permissions?.includes("UpdateModelsDispatchOrders") &&<Btn variant="primary" onClick={() => onUpdateModels(order)} style={{ background: "#8E44AD" }}>
+         {user?.user?.Permissions?.includes("UpdateModelsDispatchOrders") && Status !== "Received" && <Btn variant="primary" onClick={() => onUpdateModels(order)} style={{ background: "#8E44AD" }}>
     📋 تحديث الموديلات
   </Btn>}
-  {user?.user?.Permissions?.includes("EditDispatchOrders") && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>}
+  {user?.user?.Permissions?.includes("EditDispatchOrders") && Status !== "Received" && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>}
         {Status === "Draft" && (<>
             {/* {user?.user?.Permissions?.includes("EditDispatchOrders") && <Btn variant="outline" onClick={() => onEdit(order)}>✏️ تعديل</Btn>} */}
   {user?.user?.Permissions?.includes("ApproveDispatchOrders") && <Btn variant="success" onClick={handleApprove}>✅ اعتماد</Btn>}
