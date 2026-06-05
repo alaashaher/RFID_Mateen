@@ -42,6 +42,14 @@ const api = {
     if (destination) params.append("destination", destination);
     return getFromApi(`DispatchOrder/get-model-distribution?${params.toString()}`);
   },
+  // أوامر الاسترجاع
+getReturnDistribution: (assetTypeId, assetModelId, destination) => {
+  const params = new URLSearchParams();
+  params.append("assetTypeId", assetTypeId);
+  if (assetModelId) params.append("assetModelId", assetModelId);
+  if (destination) params.append("destination", destination);
+  return getFromApi(`ReturnOrder/get-model-distribution?${params.toString()}`);
+},
   // الجرد اليدوي
   getCampAdjustmentDistribution: (assetTypeId, assetModelId, locationType) => {
     const params = [];
@@ -76,7 +84,9 @@ const SearchModelDistributionModal = ({ open, onClose, assetTypes: assetTypesPro
   // Camp Adjustment results
   const [campResult, setCampResult] = useState([]);
   const [campLoading, setCampLoading] = useState(false);
-
+  // Return Order results
+  const [returnResult, setReturnResult] = useState(null);
+  const [returnLoading, setReturnLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // لو assetTypes لم يتم تمريرها من المستدعي، نحضرها بأنفسنا
@@ -99,40 +109,69 @@ const SearchModelDistributionModal = ({ open, onClose, assetTypes: assetTypesPro
     })();
   }, [assetTypeId]);
 
+  // const handleSearch = async () => {
+  //   if (!assetTypeId) { setError("اختر نوع الأصل"); return; }
+  //   setError(null);
+  //   setDispatchResult(null);
+  //   setCampResult([]);
+  //   setDispatchLoading(true);
+  //   setCampLoading(true);
+
+  //   const locationType = destinationToLocationType(destination);
+
+  //   // نستدعي الـ API-تين بالتوازي
+  //   const dispatchPromise = api.getDispatchDistribution(assetTypeId, assetModelId, destination)
+  //     .then(r => { setDispatchResult(r); })
+  //     .catch(e => console.error("Dispatch error:", e))
+  //     .finally(() => setDispatchLoading(false));
+
+  //   const campPromise = api.getCampAdjustmentDistribution(assetTypeId, assetModelId, locationType)
+  //     .then(r => { setCampResult(r || []); })
+  //     .catch(e => console.error("Camp error:", e))
+  //     .finally(() => setCampLoading(false));
+
+  //   await Promise.all([dispatchPromise, campPromise]);
+  // };
+
   const handleSearch = async () => {
-    if (!assetTypeId) { setError("اختر نوع الأصل"); return; }
-    setError(null);
-    setDispatchResult(null);
-    setCampResult([]);
-    setDispatchLoading(true);
-    setCampLoading(true);
+  if (!assetTypeId) { setError("اختر نوع الأصل"); return; }
+  setError(null);
+  setDispatchResult(null);
+  setCampResult([]);
+  setReturnResult(null);
+  setDispatchLoading(true);
+  setCampLoading(true);
+  setReturnLoading(true);
 
-    const locationType = destinationToLocationType(destination);
+  const locationType = destinationToLocationType(destination);
 
-    // نستدعي الـ API-تين بالتوازي
-    const dispatchPromise = api.getDispatchDistribution(assetTypeId, assetModelId, destination)
-      .then(r => { setDispatchResult(r); })
-      .catch(e => console.error("Dispatch error:", e))
-      .finally(() => setDispatchLoading(false));
+  const dispatchPromise = api.getDispatchDistribution(assetTypeId, assetModelId, destination)
+    .then(r => { setDispatchResult(r); })
+    .catch(e => console.error("Dispatch error:", e))
+    .finally(() => setDispatchLoading(false));
 
-    const campPromise = api.getCampAdjustmentDistribution(assetTypeId, assetModelId, locationType)
-      .then(r => { setCampResult(r || []); })
-      .catch(e => console.error("Camp error:", e))
-      .finally(() => setCampLoading(false));
+  const campPromise = api.getCampAdjustmentDistribution(assetTypeId, assetModelId, locationType)
+    .then(r => { setCampResult(r || []); })
+    .catch(e => console.error("Camp error:", e))
+    .finally(() => setCampLoading(false));
 
-    await Promise.all([dispatchPromise, campPromise]);
-  };
+  const returnPromise = api.getReturnDistribution(assetTypeId, assetModelId, destination)
+    .then(r => { setReturnResult(r); })
+    .catch(e => console.error("Return error:", e))
+    .finally(() => setReturnLoading(false));
 
-  const handleReset = () => {
-    setAssetTypeId(null);
-    setAssetModelId(null);
-    setDestination(null);
-    setModels([]);
-    setDispatchResult(null);
-    setCampResult([]);
-    setError(null);
-  };
-
+  await Promise.all([dispatchPromise, campPromise, returnPromise]);
+};
+const handleReset = () => {
+  setAssetTypeId(null);
+  setAssetModelId(null);
+  setDestination(null);
+  setModels([]);
+  setDispatchResult(null);
+  setCampResult([]);
+  setReturnResult(null);
+  setError(null);
+};
   if (!open) return null;
 
   // حسابات إجمالي الجرد اليدوي
@@ -207,9 +246,12 @@ const SearchModelDistributionModal = ({ open, onClose, assetTypes: assetTypesPro
           </div>
 
           <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
-            <Btn variant="primary" onClick={handleSearch} disabled={(dispatchLoading || campLoading) || !assetTypeId}>
+            {/* <Btn variant="primary" onClick={handleSearch} disabled={(dispatchLoading || campLoading) || !assetTypeId}>
               {(dispatchLoading || campLoading) ? "جارٍ البحث..." : "🔍 بحث"}
-            </Btn>
+            </Btn> */}
+            <Btn variant="primary" onClick={handleSearch} disabled={(dispatchLoading || campLoading || returnLoading) || !assetTypeId}>
+             {(dispatchLoading || campLoading || returnLoading) ? "جارٍ البحث..." : "🔍 بحث"}
+           </Btn>
             <Btn variant="ghost" onClick={handleReset} small>🔄 إعادة تعيين</Btn>
           </div>
         </div>
@@ -298,7 +340,100 @@ const SearchModelDistributionModal = ({ open, onClose, assetTypes: assetTypesPro
             )}
           </div>
         )}
+{/* ═══════════════ SECTION 3: أوامر الاسترجاع ═══════════════ */}
+{dispatchResult && dispatchResult.Distribution && (
+  <div style={{ marginBottom: 20 }}>
+    <div style={{ background: "#E67E22", color: "#fff", borderRadius: "10px 10px 0 0", padding: "10px 16px", fontWeight: 700, fontSize: 14 }}>
+      🔄 التوزيع من أوامر الاسترجاع (المستلَم في المستودع)
+    </div>
 
+    {returnLoading ? <Loader text="جارٍ تحميل أوامر الاسترجاع..." /> : returnResult && (
+      <div style={{ border: "1px solid #e8e8e8", borderTop: "none", borderRadius: "0 0 10px 10px", padding: 14 }}>
+        {/* Summary */}
+        <div style={{ background: "linear-gradient(135deg, #FEF9E7 0%, #FDEDEC 100%)", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ fontSize: 13, color: "#555", marginBottom: 6 }}>
+            <b>نوع الأصل:</b> {returnResult.AssetTypeName}
+            {returnResult.ModelName && <> — <b>الموديل:</b> {returnResult.ModelName} {returnResult.Brand && `(${returnResult.Brand})`} {returnResult.ModelNumber && `- ${returnResult.ModelNumber}`}</>}
+            {returnResult.Destination && <> — <b>الوجهة:</b> {returnResult.Destination}</>}
+          </div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+            <div style={{ background: "#fff", borderRadius: 6, padding: "8px 14px", flex: 1, minWidth: 120 }}>
+              <div style={{ fontSize: 11, color: "#888" }}>إجمالي المسترجع</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#E67E22" }}>{returnResult.GrandTotal || 0}</div>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 6, padding: "8px 14px", flex: 1, minWidth: 120 }}>
+              <div style={{ fontSize: 11, color: "#888" }}>السليم</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#27AE60" }}>{returnResult.TotalGood || 0}</div>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 6, padding: "8px 14px", flex: 1, minWidth: 120 }}>
+              <div style={{ fontSize: 11, color: "#888" }}>التالف</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#E74C3C" }}>{returnResult.TotalDamaged || 0}</div>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 6, padding: "8px 14px", flex: 1, minWidth: 120 }}>
+              <div style={{ fontSize: 11, color: "#888" }}>عدد الأوامر</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#2E86C1" }}>{returnResult.TotalOrders || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        {returnResult.Distribution && returnResult.Distribution.length > 0 ? (
+          <div style={{ overflow: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: "#fafafa" }}>
+                  <th style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "#555" }}>#</th>
+                  <th style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "#555" }}>المخيم</th>
+                  <th style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "#555" }}>الوجهة</th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", fontWeight: 600, color: "#555" }}>عدد الأوامر</th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", fontWeight: 600, color: "#555" }}>المسترجع</th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", fontWeight: 600, color: "#555" }}>سليم</th>
+                  <th style={{ padding: "8px 12px", textAlign: "center", fontWeight: 600, color: "#555" }}>تالف</th>
+                </tr>
+              </thead>
+              <tbody>
+                {returnResult.Distribution.map((d, i) => (
+                  <tr key={d.CampId || i} style={{ borderBottom: "1px solid #f0f0f0", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                    <td style={{ padding: "8px 12px", color: "#888" }}>{i + 1}</td>
+                    <td style={{ padding: "8px 12px", fontWeight: 600 }}>{d.CampName}</td>
+                    <td style={{ padding: "8px 12px", color: "#555" }}>{d.Destination || "—"}</td>
+                    <td style={{ padding: "8px 12px", textAlign: "center", color: "#2E86C1", fontWeight: 700 }}>{d.OrdersCount}</td>
+                    <td style={{ padding: "8px 12px", textAlign: "center" }}>
+                      <span style={{ background: "#FEF9E7", color: "#E67E22", padding: "3px 12px", borderRadius: 6, fontWeight: 800, fontSize: 14, display: "inline-block", minWidth: 40 }}>
+                        {d.TotalReceived}
+                      </span>
+                    </td>
+                    <td style={{ padding: "8px 12px", textAlign: "center" }}>
+                      <span style={{ color: "#27AE60", fontWeight: 700 }}>{d.TotalGood || 0}</span>
+                    </td>
+                    <td style={{ padding: "8px 12px", textAlign: "center" }}>
+                      {(d.TotalDamaged || 0) > 0 ? (
+                        <span style={{ color: "#E74C3C", fontWeight: 700 }}>{d.TotalDamaged}</span>
+                      ) : <span style={{ color: "#aaa" }}>—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: "#1a1a2e", color: "#fff" }}>
+                  <td colSpan={3} style={{ padding: "8px 12px", fontWeight: 700 }}>الإجمالي</td>
+                  <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: 700 }}>{returnResult.TotalOrders}</td>
+                  <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: 800, fontSize: 15 }}>{returnResult.GrandTotal}</td>
+                  <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: 700 }}>{returnResult.TotalGood || 0}</td>
+                  <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: 700, color: "#ff6b6b" }}>{returnResult.TotalDamaged || 0}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: 24, color: "#888", background: "#fafafa", borderRadius: 8 }}>
+            📭 لا توجد أوامر استرجاع مستلَمة لهذا الموديل
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
         {/* ═══════════════ SECTION 2: الجرد اليدوي ═══════════════ */}
         {(campLoading || campResult.length >= 0) && (dispatchResult || campResult.length > 0 || campLoading) && (
           <div style={{ marginBottom: 20 }}>

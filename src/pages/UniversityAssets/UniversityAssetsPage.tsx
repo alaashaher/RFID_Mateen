@@ -10,9 +10,9 @@ import {
   CameraOutlined,
   UploadOutlined,
   PlusOutlined,
-  DeleteOutlined as DeleteIcon,
+  DeleteOutlined as DeleteIcon,WarningOutlined,
 } from "@ant-design/icons";
-import { deleteFromApi, getFromApi, postToApi } from "../../apis/apis";
+import { deleteFromApi, getFromApi, postToApi, putToApi } from "../../apis/apis";
 import {
   Button,
   Pagination,
@@ -108,12 +108,14 @@ interface AssetImageUploadProps {
   assetId: number;
   open: boolean;
   onClose: () => void;
+  onSuccess: () => void;  // ← أضف هذا
 }
 
 const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
   assetId,
   open,
   onClose,
+  onSuccess, 
 }) => {
   const [fileList, setFileList] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -197,6 +199,7 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
           animationOut: ["animate__animated", "animate__fadeOut"],
           dismiss: { duration: 2000, onScreen: true },
         });
+        onSuccess();
         onClose();
       } else {
         Store.addNotification({
@@ -448,7 +451,35 @@ const UniversityAssetsPage = () => {
       if (response) { setToEdit(response); setOpenFormModel(true); }
     } catch (error) {}
   };
-
+const handleDamaged = async (assetId: number) => {
+  try {
+    setLoading(true);
+    const response = await putToApi(
+      `UniversityAsset/damaged-universityAsset?universityAssetId=${assetId}`,
+      {}
+    );
+    if (response) {
+      setdetectChanges((prev) => prev + 1);
+      Store.addNotification({
+        title: "", message: "تم تحديد الأصل كتالف",
+        type: "success", insert: "top", container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    }
+  } catch (error) {
+    Store.addNotification({
+      title: "", message: "حدث خطأ، حاول مرة أخرى",
+      type: "danger", insert: "top", container: "top-right",
+      animationIn: ["animate__animated", "animate__fadeIn"],
+      animationOut: ["animate__animated", "animate__fadeOut"],
+      dismiss: { duration: 2000, onScreen: true },
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   const handleModelPopUp = async (TableId) => {
     try {
       const response = await getFromApi(
@@ -603,6 +634,14 @@ const UniversityAssetsPage = () => {
       //responsive: ["lg"] as any,
     },
     {
+      title: "حالة الاصل",
+      dataIndex: "AssetStatus",
+      key: "AssetStatus",
+      ellipsis: true,
+      width: isMobile ? 160 : 160,
+      //responsive: ["lg"] as any,
+    },
+    {
       title: "طباعه",
       dataIndex: "PrintedNumber",
       key: "PrintedNumber",
@@ -673,6 +712,23 @@ const UniversityAssetsPage = () => {
                 />
               </Tooltip>
             )}
+            {user.user.Permissions.includes("EditUniversityAssets") && (
+  <Tooltip title="تالف">
+    <Popconfirm
+      title="هل أنت متأكد من تحديد هذا الأصل كتالف؟"
+      onConfirm={() => handleDamaged(record.UniversityAssetId)}
+      okText="نعم"
+      cancelText="لا"
+    >
+      <Button
+        icon={<WarningOutlined />}
+        shape="circle"
+        size={isMobile ? "small" : "middle"}
+        danger
+      />
+    </Popconfirm>
+  </Tooltip>
+)}
           </div>
         );
       },
@@ -821,11 +877,17 @@ const UniversityAssetsPage = () => {
             </Option>
           ))}
         </Select>
-        <Select
+        {/* <Select
           allowClear
+          showSearch
           placeholder="اختر موديل الاصل"
           value={modelId || undefined}
           onChange={setModelId}
+          filterOption={(input, option) =>
+    (option?.children as unknown as string)
+      ?.toLowerCase()
+      .includes(input.toLowerCase())
+  }
           style={{ width: isMobile ? "100%" : 320 }}
         >
           {Models.map((client) => (
@@ -835,6 +897,25 @@ const UniversityAssetsPage = () => {
             </Option>
           ))}
         </Select>
+         */}
+         <Select
+  allowClear
+  showSearch
+  placeholder="اختر موديل الاصل"
+  value={modelId || undefined}
+  onChange={setModelId}
+  optionFilterProp="label"
+  filterOption={(input, option) =>
+    String(option?.label ?? "")
+      .toLowerCase()
+      .includes(input.toLowerCase())
+  }
+  style={{ width: isMobile ? "100%" : 380 }}
+  options={Models.map((client) => ({
+    value: client.AssetModelId,
+    label: `${client.Brand ?? ""} - ${client.ModelName ?? ""} - ${client.ModelNumber ?? ""} - عدد ${client.AssetTotalCount ?? 0} قطعه`,
+  }))}
+/>
         <div className="assets-page-size">
           <span>عرض</span>
           <Select
@@ -923,6 +1004,7 @@ const UniversityAssetsPage = () => {
           assetId={imageUploadAssetId}
           open={imageUploadOpen}
           onClose={handleCloseImageUpload}
+          onSuccess={() => setdetectChanges((prev) => prev + 1)}  
         />
       )}
     </div>

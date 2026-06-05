@@ -568,47 +568,170 @@ const ReturnOrderDetail = ({ orderId, onBack, onEdit, onRefresh }) => {
     </div>
   );
 };
+const ItemsModal = ({ open, onClose, order }) => {
+  if (!open || !order) return null;
+  const Items = order.Items || [];
+  const Status = order.Status;
 
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+      zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center",
+      paddingTop: 40, paddingBottom: 40, overflow: "auto"
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 16, padding: 24,
+        width: "90%", maxWidth: 900, direction: "rtl",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.2)"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "2px solid #f0f0f0", paddingBottom: 12 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 18 }}>📦 بيان الأصناف — {order.ReturnOrderNumber}</h3>
+            <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>
+              <StatusBadge Status={Status} /> &nbsp; | &nbsp;
+              <b>المصدر:</b> {order.Destination} &nbsp; | &nbsp;
+              <b>التاريخ:</b> {order.ReturnDate?.slice(0, 10)}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "#888" }}>×</button>
+        </div>
+
+        <TableComp
+          cols={[
+            { key: "_seq", label: "#", render: (_, __, idx) => idx + 1 },
+            { key: "AssetTypeName", label: "نوع الأصل" },
+            { key: "ModelName", label: "الموديل", render: v => v || "—" },
+            { key: "ReturnReasonAr", label: "السبب", render: (v, row) => <ReasonBadge reason={row.ReturnReason} /> },
+            { key: "RequestedQuantity", label: "المطلوب" },
+            { key: "ReportedDamaged", label: "تالف (تقرير)", render: v => v > 0 ? <span style={{ color: "#E74C3C", fontWeight: 700 }}>{v}</span> : "—" },
+            { key: "LoadedQuantity", label: "المحمّل", render: v => v ?? "—" },
+            { key: "ReceivedGood", label: "سليم", render: v => v != null ? <span style={{ color: "#27AE60", fontWeight: 700 }}>{v}</span> : "—" },
+            { key: "ReceivedDamaged", label: "تالف", render: v => v != null && v > 0 ? <span style={{ color: "#E74C3C", fontWeight: 700 }}>{v}</span> : "—" },
+          ]}
+          rows={Items}
+        />
+
+        <div style={{ background: "#F7F8FA", borderRadius: 10, padding: 14, marginTop: 16, display: "flex", gap: 20, flexWrap: "wrap", fontSize: 13 }}>
+          <div><b>عدد الأصناف:</b> <span style={{ color: "#2E86C1", fontWeight: 700 }}>{Items.length}</span></div>
+          <div><b>إجمالي المطلوب:</b> <span style={{ color: "#1a56db", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.RequestedQuantity || 0), 0)}</span></div>
+          <div><b>إجمالي المحمّل:</b> <span style={{ color: "#E67E22", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.LoadedQuantity || 0), 0)}</span></div>
+          <div><b>إجمالي السليم:</b> <span style={{ color: "#27AE60", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.ReceivedGood || 0), 0)}</span></div>
+          <div><b>إجمالي التالف:</b> <span style={{ color: "#E74C3C", fontWeight: 700 }}>{Items.reduce((s, i) => s + (i.ReceivedDamaged || 0), 0)}</span></div>
+        </div>
+
+        <div style={{ marginTop: 20, textAlign: "left" }}>
+          <Btn variant="ghost" onClick={onClose}>إغلاق</Btn>
+        </div>
+      </div>
+    </div>
+  );
+};
 // ─────────────────────────────────────────────
 // RETURN ORDERS LIST
 // ─────────────────────────────────────────────
-const ReturnOrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
+const ReturnOrdersList = ({ onSelect, onCreate, refreshKey, onRefresh, assetTypes = [] }) => {
   const { user } = useContext(UserContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ Status: "", Destination: "", Keyword: "" });
+  const [filters, setFilters] = useState({ Status: "", Destination: "", Keyword: "", AssetTypeId: "", AssetModelId: "" });
   const [statusCounts, setStatusCounts] = useState({});
+  const [modelOptions, setModelOptions] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [itemsModalOrder, setItemsModalOrder] = useState(null);
+  const [loadingItems, setLoadingItems] = useState(false);
   const setF = (k, v) => setFilters(f => ({ ...f, [k]: v }));
+
+  // عند تغيير نوع الأصل → جيب الموديلات
+  useEffect(() => {
+    if (!filters.AssetTypeId) {
+      setModelOptions([]);
+      setFilters(f => ({ ...f, AssetModelId: "" }));
+      return;
+    }
+    (async () => {
+      setLoadingModels(true);
+      try {
+        const m = await api.getAssetModels(filters.AssetTypeId);
+        setModelOptions(m || []);
+      } catch { setModelOptions([]); }
+      finally { setLoadingModels(false); }
+    })();
+  }, [filters.AssetTypeId]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true); setError(null);
-    try { const clean = {}; Object.entries(filters).forEach(([k, v]) => { if (v) clean[k] = v; }); clean.PageSize = 150; clean.CurrentPage = 1; const d = await api.getReturnOrders(clean); setOrders(d.results || d.Results || []); }
-    catch (e) { setError(e.message); } finally { setLoading(false); }
+    try {
+      const clean = {};
+      Object.entries(filters).forEach(([k, v]) => { if (v) clean[k] = v; });
+      clean.PageSize = 250; clean.CurrentPage = 1;
+      const d = await api.getReturnOrders(clean);
+      setOrders(d.results || d.Results || []);
+    } catch (e) { setError(e.message); } finally { setLoading(false); }
   }, [filters]);
-  const loadCounts = useCallback(async () => { try { const d = await api.getReturnOrders({ PageSize: 1000, CurrentPage: 1 }); const all = d.results || d.Results || []; const c = {}; all.forEach(o => { c[o.Status] = (c[o.Status] || 0) + 1; }); setStatusCounts(c); } catch { } }, []);
+
+  const loadCounts = useCallback(async () => {
+    try {
+      const d = await api.getReturnOrders({ PageSize: 1000, CurrentPage: 1 });
+      const all = d.results || d.Results || [];
+      const c = {};
+      all.forEach(o => { c[o.Status] = (c[o.Status] || 0) + 1; });
+      setStatusCounts(c);
+    } catch { }
+  }, []);
 
   useEffect(() => { loadOrders(); }, [loadOrders, refreshKey]);
   useEffect(() => { loadCounts(); }, [loadCounts, refreshKey]);
 
+  const handleShowItems = async (order) => {
+    setLoadingItems(true);
+    try {
+      const fullOrder = await api.getReturnOrder(order.ReturnOrderId);
+      setItemsModalOrder(fullOrder);
+    } catch (e) { alert(e.message || "فشل تحميل الأصناف"); }
+    finally { setLoadingItems(false); }
+  };
+
   return (
     <div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", background: "#F7F8FA", borderRadius: 12, padding: 16, marginBottom: 20, direction: "rtl" }}>
-        <div style={{ flex: "1 1 180px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الحالة</label>
+        <div style={{ flex: "1 1 160px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الحالة</label>
           <select value={filters.Status} onChange={e => setF("Status", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}>
             <option value="">الكل</option>{Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
-        <div style={{ flex: "1 1 140px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>الوجهة (المصدر)</label>
+        <div style={{ flex: "1 1 130px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>المصدر</label>
           <select value={filters.Destination} onChange={e => setF("Destination", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl" }}>
             <option value="">الكل</option>{DestinationS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
-        <div style={{ flex: "2 1 220px" }}><label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>بحث</label>
+        <div style={{ flex: "1 1 180px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>نوع الأصل</label>
+          <AntSelect showSearch value={filters.AssetTypeId || undefined}
+            onChange={v => { setF("AssetTypeId", v || ""); setF("AssetModelId", ""); }}
+            placeholder="كل الأنواع" optionFilterProp="label" style={{ width: "100%", direction: "rtl" }}
+            options={assetTypes.map(t => ({ value: t.AssetTypeId, label: t.AssetTypeName || t.name }))} allowClear />
+        </div>
+        {filters.AssetTypeId && (
+          <div style={{ flex: "1 1 200px" }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>
+              الموديل {loadingModels && <span style={{ color: "#aaa", fontSize: 11 }}>(جارٍ التحميل...)</span>}
+            </label>
+            <AntSelect showSearch value={filters.AssetModelId || undefined}
+              onChange={v => setF("AssetModelId", v || "")}
+              placeholder="كل الموديلات" optionFilterProp="label" style={{ width: "100%", direction: "rtl" }}
+              options={modelOptions.map(m => ({ value: m.AssetModelId, label: `${m.ModelName}${m.Brand ? ` - ${m.Brand}` : ""}${m.ModelNumber ? ` - ${m.ModelNumber}` : ""}` }))}
+              disabled={loadingModels || modelOptions.length === 0} allowClear />
+          </div>
+        )}
+        <div style={{ flex: "2 1 200px" }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, marginBottom: 4, color: "#555" }}>بحث</label>
           <input placeholder="رقم الأمر، المخيم، السائق..." value={filters.Keyword} onChange={e => setF("Keyword", e.target.value)}
             style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }} />
         </div>
-        <Btn variant="ghost" onClick={() => setFilters({ Status: "", Destination: "", Keyword: "" })} small>مسح الفلاتر</Btn>
+        <Btn variant="ghost" onClick={() => setFilters({ Status: "", Destination: "", Keyword: "", AssetTypeId: "", AssetModelId: "" })} small>مسح الفلاتر</Btn>
         {user?.user?.Permissions?.includes("AddReturnOrders") && <Btn variant="primary" onClick={onCreate}>+ إنشاء أمر استرجاع</Btn>}
       </div>
 
@@ -631,7 +754,22 @@ const ReturnOrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
             { key: "CampNames", label: "المخيمات", render: (v, row) => row.IsGeneralReturn ? <span style={{ color: "#8E44AD", fontWeight: 700 }}>🔄 استرجاع عام</span> : row.ForAllCamps ? <span style={{ color: "#27AE60", fontWeight: 700 }}>✓ كل المخيمات</span> : (v || "—") },
             { key: "ManagerName", label: "المسئول" },
             { key: "Status", label: "الحالة", render: v => <StatusBadge Status={v} /> },
-            { key: "ItemCount", label: "الأصناف" },
+            {
+              key: "ItemCount", label: "الأصناف",
+              render: (v, row) => (
+                <button onClick={(e) => { e.stopPropagation(); handleShowItems(row); }}
+                  disabled={loadingItems} title="عرض بيان الأصناف"
+                  style={{
+                    background: "#EBF5FB", color: "#1a56db", border: "1.5px solid #1a56db",
+                    borderRadius: 20, padding: "3px 14px", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, transition: "all .15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#1a56db"; e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#EBF5FB"; e.currentTarget.style.color = "#1a56db"; }}>
+                  📦 {v || 0}
+                </button>
+              )
+            },
             { key: "TotalRequested", label: "المطلوب" },
             { key: "TotalDamaged", label: "التالف", render: v => v > 0 ? <span style={{ color: "#E74C3C", fontWeight: 700 }}>{v}</span> : "—" },
             { key: "Notes", label: "ملاحظات" },
@@ -641,6 +779,8 @@ const ReturnOrdersList = ({ onSelect, onCreate, refreshKey, onRefresh }) => {
         />
         <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>إجمالي: {orders.length} أمر</div>
       </>)}
+
+      <ItemsModal open={!!itemsModalOrder} onClose={() => setItemsModalOrder(null)} order={itemsModalOrder} />
     </div>
   );
 };
@@ -699,10 +839,10 @@ export default function ReturnOrders() {
                 🔍 بحث بالموديل
               </Btn>
             </div>
-            <ReturnOrdersList refreshKey={refreshKey}
-              onSelect={o => { setSelectedOrderId(o.ReturnOrderId); setView("detail"); }}
-              onCreate={() => { setEditOrder(null); setShowForm(true); setView("create"); }}
-              onRefresh={triggerRefresh} />
+           <ReturnOrdersList refreshKey={refreshKey} assetTypes={assetTypes}
+  onSelect={o => { setSelectedOrderId(o.ReturnOrderId); setView("detail"); }}
+  onCreate={() => { setEditOrder(null); setShowForm(true); setView("create"); }}
+  onRefresh={triggerRefresh} />
           </div>
         )}
       </div>
