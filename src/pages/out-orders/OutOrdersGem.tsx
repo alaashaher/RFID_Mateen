@@ -4,7 +4,8 @@ import "./OutOrdersGem.module.scss";
 // ─────────────────────────────────────────────
 // API LAYER
 // ─────────────────────────────────────────────
-const BASE_URL = "http://localhost:7228/api";
+const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
+// const BASE_URL = "http://localhost:7228/api";
 
 const api = {
   getDispatchOrders: async (filters = {}) => {

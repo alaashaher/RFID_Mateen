@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 // ─────────────────────────────────────────────
 // API LAYER  (swap BASE_URL for your real backend)
 // ─────────────────────────────────────────────
-const BASE_URL = "http://localhost:7228/api";
-
+// const BASE_URL = "http://localhost:7228/api";
+const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
 const api = {
   // ── Dispatch Orders ──────────────────────────
   getDispatchOrders: (filters = {}) => {

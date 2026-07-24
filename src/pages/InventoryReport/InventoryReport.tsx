@@ -82,7 +82,8 @@ const InventoryReport: React.FC = () => {
     setExportLoading(true);
     try {
       const baseUrl =
-        (window as any)?.BASE_URL ?? "http://localhost:7228/api";
+        // (window as any)?.BASE_URL ?? "http://localhost:7228/api";
+        (window as any)?.BASE_URL ?? "https://rfidrajhiapi.sirumaps.net/api";
       const token = localStorage.getItem("token");
       const res = await fetch(`${baseUrl}/InventoryReport/export-excel`, {
         method: "POST",

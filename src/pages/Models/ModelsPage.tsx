@@ -12,7 +12,7 @@ import {
   Popconfirm,
   Image,
   Tag,
-  Form,
+  Form, Upload,
 } from "antd";
 import { Select as AntSelect } from "antd";
 import * as XLSX from 'xlsx';
@@ -36,7 +36,9 @@ import { Store } from "react-notifications-component";
 import { useNavigate } from "react-router-dom";
 import RouterLinks from "../../App/RouterLinks";
 const { Option } = Select;
-
+const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
+//const BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/api";
+//const BASE_URL = "http://localhost:7228/api";
 const ModelsPage = () => {
   const navigate = useNavigate();
   const [categoryType, setcategoryType] = useState([]);
@@ -71,6 +73,21 @@ const ModelsPage = () => {
   const [correctionAssetTypeId, setCorrectionAssetTypeId] = useState<number | undefined>(undefined);
   const [correctionModelName, setCorrectionModelName] = useState<string>("");
   const [correctionMosandaId, setCorrectionMosandaId] = useState<number | undefined>(undefined);
+  const [correctionModelNumber, setCorrectionModelNumber] = useState<string>("");
+  const [correctionBrand, setCorrectionBrand] = useState<string>("");
+  // ===================================================================
+  interface ImageSlot {
+  uid: string;
+  url?: string;
+  originFileObj?: File;
+  isExisting: boolean;
+}
+
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [imageModalLoading, setImageModalLoading] = useState(false);
+  const [currentImageModel, setCurrentImageModel] = useState<any>(null);
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [imageSlots, setImageSlots] = useState<(ImageSlot | null)[]>([null, null]);
   // ===================================================================
 
   useEffect(() => {
@@ -182,7 +199,8 @@ const ModelsPage = () => {
     setCorrectionAssetTypeId(record?.AssetTypeId ?? undefined);
     setCorrectionModelName(record?.ModelName ?? "");
     setCorrectionMosandaId(undefined);
-
+    setCorrectionModelNumber(record?.ModelNumber ?? "");  // ← جديد
+    setCorrectionBrand(record?.Brand ?? "");              // ← جديد
     setCorrectionModalOpen(true);
     setCorrectionLoading(true);
 
@@ -239,6 +257,8 @@ const ModelsPage = () => {
     setCorrectionCategoryId(undefined);
     setCorrectionAssetTypeId(undefined);
     setCorrectionModelName("");
+    setCorrectionModelNumber(""); 
+    setCorrectionBrand("");   
     setCorrectionMosandaId(undefined);
     setFilteredAssetTypesList([]);
   };
@@ -283,19 +303,19 @@ const ModelsPage = () => {
       });
       return;
     }
-    if (!correctionMosandaId) {
-      Store.addNotification({
-        title: "تنبيه",
-        message: "برجاء اختيار الموديل المرجعي من اودو",
-        type: "warning",
-        insert: "top",
-        container: "top-right",
-        animationIn: ["animate__animated", "animate__fadeIn"],
-        animationOut: ["animate__animated", "animate__fadeOut"],
-        dismiss: { duration: 2000, onScreen: true },
-      });
-      return;
-    }
+    // // if (!correctionMosandaId) {
+    // //   Store.addNotification({
+    // //     title: "تنبيه",
+    // //     message: "برجاء اختيار الموديل المرجعي من اودو",
+    // //     type: "warning",
+    // //     insert: "top",
+    // //     container: "top-right",
+    // //     animationIn: ["animate__animated", "animate__fadeIn"],
+    // //     animationOut: ["animate__animated", "animate__fadeOut"],
+    // //     dismiss: { duration: 2000, onScreen: true },
+    // //   });
+    //   return;
+    // }
 
     try {
       setCorrectionLoading(true);
@@ -305,7 +325,9 @@ const ModelsPage = () => {
         CategoryId: correctionCategoryId,
         AssetTypeId: correctionAssetTypeId,
         ModelName: correctionModelName.trim(),
-        MosandaOdooAssetId: correctionMosandaId,
+        ModelNumber: correctionModelNumber.trim() || null, 
+        Brand: correctionBrand.trim() || null, 
+        MosandaOdooAssetId: correctionMosandaId ?? null,
       };
 
       await postToApi(`AssetModel/correct-assetModel-info`, payload);
@@ -339,6 +361,271 @@ const ModelsPage = () => {
     }
   };
   // ===================================================================
+
+ const handleOpenImageModal = (record: any) => {
+  setCurrentImageModel(record);
+
+  const slots: (ImageSlot | null)[] = [null, null];
+
+  if (record?.ModelImagePath?.trim()) {
+    slots[0] = {
+      uid: "-1",
+      url: record.ModelImagePath,
+      isExisting: true,
+    };
+  }
+  if (record?.AnotherModelImagePath?.trim()) {
+    slots[1] = {
+      uid: "-2",
+      url: record.AnotherModelImagePath,
+      isExisting: true,
+    };
+  }
+
+  setImageSlots(slots);
+  setImageModalOpen(true);
+};
+
+const handleCloseImageModal = () => {
+  setImageModalOpen(false);
+  setCurrentImageModel(null);
+  setImageSlots([null, null]);
+};
+
+const handleSwap = () => {
+  setImageSlots((prev) => [prev[1], prev[0]]);
+};
+
+const handleDeleteSlot = (index: number) => {
+  setImageSlots((prev) => {
+    const next = [...prev];
+    next[index] = null;
+    return next;
+  });
+};
+
+const handleUploadToSlot = (index: number, file: File) => {
+  const newSlot: ImageSlot = {
+    uid: Date.now().toString(),
+    originFileObj: file,
+    url: URL.createObjectURL(file), // للـ preview فقط
+    isExisting: false,
+  };
+  setImageSlots((prev) => {
+    const next = [...prev];
+    next[index] = newSlot;
+    return next;
+  });
+  return false; // منع الرفع التلقائي
+};
+
+const handleSaveImages = async () => {
+  try {
+    setImageModalLoading(true);
+    const formData = new FormData();
+    formData.append("AssetModelId", currentImageModel?.AssetModelId);
+
+    // Slot 0 — الرئيسية
+    const primary = imageSlots[0];
+    if (primary?.originFileObj) {
+      formData.append("PrimaryImage", primary.originFileObj); // ملف جديد
+    } else if (primary?.isExisting && primary?.url) {
+      formData.append("PrimaryExistingUrl", primary.url);    // موجودة — نبعت الـ URL
+    }
+    // لو null → مش بنبعت شيء = Backend يعرف إنها اتحذفت
+
+    // Slot 1 — الثانوية
+    const secondary = imageSlots[1];
+    if (secondary?.originFileObj) {
+      formData.append("SecondaryImage", secondary.originFileObj);
+    } else if (secondary?.isExisting && secondary?.url) {
+      formData.append("SecondaryExistingUrl", secondary.url);
+    }
+
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE_URL}/AssetModel/upload-model-images`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error();
+
+    Store.addNotification({
+      title: "تم بنجاح", message: "تم حفظ الصور بنجاح",
+      type: "success", insert: "top", container: "top-right",
+      animationIn: ["animate__animated", "animate__fadeIn"],
+      animationOut: ["animate__animated", "animate__fadeOut"],
+      dismiss: { duration: 2000, onScreen: true },
+    });
+
+    setdetectChanges((prev: number) => prev + 1);
+    handleCloseImageModal();
+  } catch {
+    Store.addNotification({
+      title: "خطأ", message: "حدث خطأ أثناء رفع الصور",
+      type: "danger", insert: "top", container: "top-right",
+      animationIn: ["animate__animated", "animate__fadeIn"],
+      animationOut: ["animate__animated", "animate__fadeOut"],
+      dismiss: { duration: 2000, onScreen: true },
+    });
+  } finally {
+    setImageModalLoading(false);
+  }
+};
+const SlotBox = ({
+  slot, index, isPrimary, onDelete, onUpload,
+}: {
+  slot: ImageSlot | null;
+  index: number;
+  isPrimary: boolean;
+  onDelete: (i: number) => void;
+  onUpload: (i: number, file: File) => void;
+}) => (
+  <div
+    style={{
+      flex: 1,
+      border: `2px solid ${isPrimary ? "#faad14" : "#d9d9d9"}`,
+      borderRadius: "12px",
+      padding: "14px",
+      backgroundColor: isPrimary ? "#fffbe6" : "#fafafa",
+      textAlign: "center",
+      minHeight: "200px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "10px",
+    }}
+  >
+    {/* Badge */}
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: "4px",
+      backgroundColor: isPrimary ? "#faad14" : "#8c8c8c",
+      color: "#fff", borderRadius: "20px",
+      padding: "2px 12px", fontSize: "12px", fontWeight: 700,
+    }}>
+      {isPrimary ? "⭐ الرئيسية" : "📷 الثانوية"}
+    </div>
+
+    {slot ? (
+      /* عرض الصورة مع زر الحذف */
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <Image
+          src={slot.url}
+          width={110} height={110}
+          style={{
+            objectFit: "cover", borderRadius: "8px",
+            border: `2px solid ${isPrimary ? "#faad14" : "#d9d9d9"}`,
+          }}
+          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
+        />
+        {/* زر الحذف */}
+        <Button
+          shape="circle"
+          size="small"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => onDelete(index)}
+          style={{
+            position: "absolute", top: -8, left: -8,
+            width: "24px", height: "24px",
+            minWidth: "24px", fontSize: "11px",
+            backgroundColor: "#ff4d4f", color: "#fff",
+            border: "none", boxShadow: "0 2px 6px rgba(255,77,79,0.4)",
+          }}
+        />
+        <div style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>
+          {slot.isExisting ? "موجودة" : "✓ جديدة"}
+        </div>
+      </div>
+    ) : (
+      /* Slot فارغة — Upload */
+      <Upload
+        accept="image/*"
+        showUploadList={false}
+        beforeUpload={(file) => { onUpload(index, file); return false; }}
+      >
+        <div style={{
+          width: "110px", height: "110px",
+          border: `2px dashed ${isPrimary ? "#faad14" : "#d9d9d9"}`,
+          borderRadius: "8px", display: "flex",
+          flexDirection: "column", alignItems: "center",
+          justifyContent: "center", cursor: "pointer",
+          color: isPrimary ? "#faad14" : "#8c8c8c",
+          backgroundColor: "#fff",
+        }}>
+          <PictureOutlined style={{ fontSize: "28px" }} />
+          <div style={{ fontSize: "11px", marginTop: "6px" }}>اختر صورة</div>
+        </div>
+      </Upload>
+    )}
+  </div>
+);
+
+// const handleUploadImages = async () => {
+//   const newFiles = fileList.filter((f) => f.originFileObj);
+//   if (newFiles.length === 0) {
+//     Store.addNotification({
+//       title: "تنبيه",
+//       message: "برجاء اختيار صورة على الأقل",
+//       type: "warning",
+//       insert: "top",
+//       container: "top-right",
+//       animationIn: ["animate__animated", "animate__fadeIn"],
+//       animationOut: ["animate__animated", "animate__fadeOut"],
+//       dismiss: { duration: 2000, onScreen: true },
+//     });
+//     return;
+//   }
+
+//   try {
+//     setImageModalLoading(true);
+//     const formData = new FormData();
+//     formData.append("AssetModelId", currentImageModel?.AssetModelId);
+//     newFiles.forEach((file) => {
+//       formData.append("Images", file.originFileObj);
+//     });
+
+//     const token = localStorage.getItem("token");
+//     const res = await fetch(
+//       `${BASE_URL}/AssetModel/upload-model-images`,
+//       {
+//         method: "POST",
+//         headers: { Authorization: `Bearer ${token}` },
+//         body: formData,
+//       }
+//     );
+
+//     if (!res.ok) throw new Error();
+
+//     Store.addNotification({
+//       title: "تم بنجاح",
+//       message: "تم رفع الصور بنجاح",
+//       type: "success",
+//       insert: "top",
+//       container: "top-right",
+//       animationIn: ["animate__animated", "animate__fadeIn"],
+//       animationOut: ["animate__animated", "animate__fadeOut"],
+//       dismiss: { duration: 2000, onScreen: true },
+//     });
+
+//     setdetectChanges((prev: number) => prev + 1);
+//     handleCloseImageModal();
+//   } catch {
+//     Store.addNotification({
+//       title: "خطأ",
+//       message: "حدث خطأ أثناء رفع الصور",
+//       type: "danger",
+//       insert: "top",
+//       container: "top-right",
+//       animationIn: ["animate__animated", "animate__fadeIn"],
+//       animationOut: ["animate__animated", "animate__fadeOut"],
+//       dismiss: { duration: 2000, onScreen: true },
+//     });
+//   } finally {
+//     setImageModalLoading(false);
+//   }
+// };
 // ============ NEW: Handler لزر "مطابق!" ============
 const handleExactAssetModel = async (assetModelId: number) => {
   try {
@@ -373,219 +660,416 @@ const handleExactAssetModel = async (assetModelId: number) => {
   }
 };
 // =====================================================
-  const columns = [
-    {
-      title: "#",
-      key: "index",
-      render: (item, record, index) => <>{index + 1}</>,
-      width: 30,
-    },
-    { title: "رقم الموديل", dataIndex: "AssetModelId", key: "AssetModelId" },
-    { title: "كود نوع الصنف", dataIndex: "AssetTypeId", key: "AssetTypeId" },
-    { title: "اسم الموديل", dataIndex: "ModelName", key: "ModelName" },
-    { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber" },
-    { title: "الماركة", dataIndex: "Brand", key: "Brand" },
-    { title: "نوع الصنف ", dataIndex: "AssetTypeName", key: "AssetTypeName" },
+//   const columns = [
+//     {
+//       title: "#",
+//       key: "index",
+//       render: (item, record, index) => <>{index + 1}</>,
+//       width: 30,
+//     },
+//     { title: "رقم الموديل", dataIndex: "AssetModelId", key: "AssetModelId" },
+//     { title: "كود نوع الصنف", dataIndex: "AssetTypeId", key: "AssetTypeId" },
+//     { title: "اسم الموديل", dataIndex: "ModelName", key: "ModelName" },
+//     { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber" },
+//     { title: "الماركة", dataIndex: "Brand", key: "Brand" },
+//     { title: "نوع الصنف ", dataIndex: "AssetTypeName", key: "AssetTypeName" },
 
-    {
-      title: "صورة الموديل",
-      dataIndex: "ModelImagePath",
-      key: "ModelImagePath",
-      width: 90,
-      render: (imagePath: string) => {
-        if (!imagePath || imagePath.trim() === "") {
-          return <span style={{ color: "#bbb" }}>—</span>;
-        }
+//     {
+//       title: "صورة الموديل",
+//       dataIndex: "ModelImagePath",
+//       key: "ModelImagePath",
+//       width: 90,
+//       render: (imagePath: string) => {
+//         if (!imagePath || imagePath.trim() === "") {
+//           return <span style={{ color: "#bbb" }}>—</span>;
+//         }
+//         return (
+//           <Image
+//             src={imagePath}
+//             alt="model"
+//             width={50}
+//             height={50}
+//             style={{
+//               objectFit: "cover",
+//               borderRadius: "6px",
+//               border: "1px solid #eee",
+//               cursor: "pointer",
+//             }}
+//             preview={{ mask: <PictureOutlined style={{ fontSize: 18 }} /> }}
+//             fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
+//           />
+//         );
+//       },
+//     },
+
+//     {
+//       title: "متطابق مع أودو",
+//       dataIndex: "MatchConfidence",
+//       key: "MatchConfidence",
+//       width: 130,
+//       render: (value: string) => {
+//         if (!value) return <span style={{ color: "#bbb" }}>—</span>;
+//         if (value === "Exact") {
+//           return (
+//             <Tag
+//               color="green"
+//               style={{
+//                 fontSize: "13px",
+//                 padding: "4px 10px",
+//                 borderRadius: "6px",
+//                 fontWeight: 600,
+//               }}
+//             >
+//               مطابق
+//             </Tag>
+//           );
+//         }
+//         if (value === "Approximate") {
+//           return (
+//             <Tag
+//               style={{
+//                 fontSize: "13px",
+//                 padding: "4px 10px",
+//                 borderRadius: "6px",
+//                 fontWeight: 600,
+//                 backgroundColor: "#fff7e6",
+//                 color: "#d48806",
+//                 border: "1px solid #ffe58f",
+//               }}
+//             >
+//               غير مطابق
+//             </Tag>
+//           );
+//         }
+//         return <span>{value}</span>;
+//       },
+//     },
+
+//     {
+//       title: "ملاحظات",
+//       dataIndex: "Notes",
+//       key: "Notes",
+//       width: 100,
+//       render: (notes: string, record: any) => {
+//         if (!notes || notes.trim() === "") {
+//           return <span style={{ color: "#bbb" }}>—</span>;
+//         }
+//         return (
+//           <Tooltip title="عرض الملاحظات">
+//             <Button
+//               icon={<FileTextOutlined />}
+//               shape="circle"
+//               type="primary"
+//               ghost
+//               onClick={() => handleShowNotes(notes, record.ModelName)}
+//             />
+//           </Tooltip>
+//         );
+//       },
+//     },
+
+//     { title: "كمية الموديل ", dataIndex: "AssetTotalCount", key: "AssetTotalCount" },
+//     {
+//       title: "هل له أصول؟", dataIndex: "HasAssets", key: "HasAssets",
+//       render: (_, value) => {
+//         return value.HasAssets ? <CheckCircleFilled /> : <CloseCircleFilled style={{ color: "red" }} />;
+//       }
+//     },
+//     {
+//       title: "نفس عدد الاصول؟", dataIndex: "HasSameCount", key: "HasSameCount",
+//       render: (_, value) => {
+//         return value.HasSameCount ? <CheckCircleFilled /> : <CheckCircleFilled />;
+//       }
+//     },
+//     { title: "نوع اللاصق ", dataIndex: "TagType", key: "TagType" },
+//     { title: "العدد المتبقى فى المستودع", dataIndex: "RemainingCountNow", key: "RemainingCountNow" },
+//     { title: "عدد التالف", dataIndex: "DamagedCountNow", key: "DamagedCountNow" },
+
+//     {
+//       title: "إجراءات",
+//       dataIndex: "Actions",
+//       key: "Actions",
+//       width: 200,
+//       //fixed: 'right',
+//       fixed: 'left',
+//       render: (_, record) => {
+//         return (
+//           <div className="act-btns">
+//             {user.user.Permissions.includes("EditCategory") && (
+//               <Tooltip title="تعديل">
+//                 <Button
+//                   onClick={() => { handleEditMod(record); }}
+//                   icon={<EditOutlined />}
+//                   shape="circle"
+//                 />
+//               </Tooltip>
+//             )}
+
+//             <Tooltip title="عرض تفاصيل الاصول">
+//               <Button
+//                 onClick={() => {
+//                   setModelFilter(record);
+//                   navigate(RouterLinks.UniversityAssets);
+//                 }}
+//                 icon={<EyeFilled />}
+//                 shape="circle"
+//               />
+//             </Tooltip>
+
+//             {/* ============ NEW: زر تصحيح معلومات الأصل (يظهر فقط لو CompanyId === 2) ============ */}
+//             {/* ============ زر تصحيح معلومات الأصل (يظهر فقط لو CompanyId === 2) ============ */}
+// {(record?.CompanyId === 2 || record?.TagType === null) && (
+//   <Tooltip title="تصحيح معلومات الأصل">
+//     <Button
+//       onClick={() => handleOpenCorrectionModal(record)}
+//       icon={<SyncOutlined />}
+//       shape="circle"
+//       style={{
+//         backgroundColor: "#fff7e6",
+//         color: "#d48806",
+//         borderColor: "#ffe58f",
+//       }}
+//     />
+//   </Tooltip>
+// )}
+
+// {/* ============ NEW: زر "مطابق!" ============ */}
+// {(record?.CompanyId === 2 || record?.TagType === null) && (
+//   <Popconfirm
+//     title="تأكيد المطابقة"
+//     description="هل أنت متأكد من أن هذا الموديل مطابق؟"
+//     onConfirm={() => handleExactAssetModel(record?.AssetModelId)}
+//     okText="نعم"
+//     cancelText="لا"
+//   >
+//     <Tooltip title="مطابق!">
+//       <Button
+//         icon={<CheckCircleFilled />}
+//         shape="circle"
+//         style={{
+//           backgroundColor: "#f6ffed",
+//           color: "#52c41a",
+//           borderColor: "#b7eb8f",
+//         }}
+//       />
+//     </Tooltip>
+//   </Popconfirm>
+// )}
+// {/* ===================================================================== */}
+//             {/* ===================================================================== */}
+
+//             {user.user.Permissions.includes("DeleteCategory") && (
+//               <Popconfirm
+//                 title="هل أنت متأكد من الحذف؟"
+//                 onConfirm={() => { handleDelete(record?.AssetModelId); }}
+//                 okText="نعم"
+//                 cancelText="لا"
+//               >
+//                 <Tooltip title="حذف">
+//                   <Button icon={<DeleteOutlined />} shape="circle" danger />
+//                 </Tooltip>
+//               </Popconfirm>
+//             )}
+//           </div>
+//         );
+//       },
+//     },
+//   ];
+const columns = [
+  {
+    title: "#",
+    key: "index",
+    fixed: "left" as const,
+    render: (item, record, index) => <>{index + 1}</>,
+    width: 50,
+  },
+  { title: "رقم الموديل",  dataIndex: "AssetModelId",  key: "AssetModelId",  width: 100 },
+  { title: "كود نوع الصنف", dataIndex: "AssetTypeId",  key: "AssetTypeId",   width: 110 },
+  { title: "اسم الموديل",  dataIndex: "ModelName",     key: "ModelName",     width: 160 },
+  { title: "كود الموديل",  dataIndex: "ModelNumber",   key: "ModelNumber",   width: 110 },
+  { title: "الماركة",      dataIndex: "Brand",         key: "Brand",         width: 90 },
+  { title: "نوع الصنف",    dataIndex: "AssetTypeName", key: "AssetTypeName", width: 150 },
+  {
+    title: "صورة الموديل",
+    dataIndex: "ModelImagePath",
+    key: "ModelImagePath",
+    width: 100,
+    render: (imagePath: string) => {
+      if (!imagePath || imagePath.trim() === "") {
+        return <span style={{ color: "#bbb" }}>—</span>;
+      }
+      return (
+        <Image
+          src={imagePath}
+          alt="model"
+          width={50}
+          height={50}
+          style={{ objectFit: "cover", borderRadius: "6px", border: "1px solid #eee", cursor: "pointer" }}
+          preview={{ mask: <PictureOutlined style={{ fontSize: 18 }} /> }}
+          fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
+        />
+      );
+    },
+  },
+  {
+    title: "متطابق مع أودو",
+    dataIndex: "MatchConfidence",
+    key: "MatchConfidence",
+    width: 125,
+    render: (value: string) => {
+      if (!value) return <span style={{ color: "#bbb" }}>—</span>;
+      if (value === "Exact") {
         return (
-          <Image
-            src={imagePath}
-            alt="model"
-            width={50}
-            height={50}
-            style={{
-              objectFit: "cover",
-              borderRadius: "6px",
-              border: "1px solid #eee",
-              cursor: "pointer",
-            }}
-            preview={{ mask: <PictureOutlined style={{ fontSize: 18 }} /> }}
-            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
+          <Tag color="green" style={{ fontSize: "13px", padding: "4px 10px", borderRadius: "6px", fontWeight: 600 }}>
+            مطابق
+          </Tag>
+        );
+      }
+      if (value === "Approximate") {
+        return (
+          <Tag style={{ fontSize: "13px", padding: "4px 10px", borderRadius: "6px", fontWeight: 600, backgroundColor: "#fff7e6", color: "#d48806", border: "1px solid #ffe58f" }}>
+            غير مطابق
+          </Tag>
+        );
+      }
+      return <span>{value}</span>;
+    },
+  },
+  {
+    title: "ملاحظات",
+    dataIndex: "Notes",
+    key: "Notes",
+    width: 100,
+    render: (notes: string, record: any) => {
+      if (!notes || notes.trim() === "") {
+        return <span style={{ color: "#bbb" }}>—</span>;
+      }
+      return (
+        <Tooltip title="عرض الملاحظات">
+          <Button
+            icon={<FileTextOutlined />}
+            shape="circle"
+            type="primary"
+            ghost
+            onClick={() => handleShowNotes(notes, record.ModelName)}
           />
-        );
-      },
+        </Tooltip>
+      );
     },
-
-    {
-      title: "متطابق مع أودو",
-      dataIndex: "MatchConfidence",
-      key: "MatchConfidence",
-      width: 130,
-      render: (value: string) => {
-        if (!value) return <span style={{ color: "#bbb" }}>—</span>;
-        if (value === "Exact") {
-          return (
-            <Tag
-              color="green"
-              style={{
-                fontSize: "13px",
-                padding: "4px 10px",
-                borderRadius: "6px",
-                fontWeight: 600,
-              }}
-            >
-              مطابق
-            </Tag>
-          );
-        }
-        if (value === "Approximate") {
-          return (
-            <Tag
-              style={{
-                fontSize: "13px",
-                padding: "4px 10px",
-                borderRadius: "6px",
-                fontWeight: 600,
-                backgroundColor: "#fff7e6",
-                color: "#d48806",
-                border: "1px solid #ffe58f",
-              }}
-            >
-              غير مطابق
-            </Tag>
-          );
-        }
-        return <span>{value}</span>;
-      },
+  },
+  { title: "كمية الموديل", dataIndex: "AssetTotalCount", key: "AssetTotalCount", width: 120 },
+  {
+    title: "هل له أصول؟",
+    dataIndex: "HasAssets",
+    key: "HasAssets",
+    width: 100,
+    render: (_, value) => {
+      return value.HasAssets
+        ? <CheckCircleFilled />
+        : <CloseCircleFilled style={{ color: "red" }} />;
     },
-
-    {
-      title: "ملاحظات",
-      dataIndex: "Notes",
-      key: "Notes",
-      width: 100,
-      render: (notes: string, record: any) => {
-        if (!notes || notes.trim() === "") {
-          return <span style={{ color: "#bbb" }}>—</span>;
-        }
-        return (
-          <Tooltip title="عرض الملاحظات">
-            <Button
-              icon={<FileTextOutlined />}
-              shape="circle"
-              type="primary"
-              ghost
-              onClick={() => handleShowNotes(notes, record.ModelName)}
-            />
-          </Tooltip>
-        );
-      },
+  },
+  {
+    title: "نفس عدد الاصول؟",
+    dataIndex: "HasSameCount",
+    key: "HasSameCount",
+    width: 130,
+    render: (_, value) => {
+      return value.HasSameCount
+        ? <CheckCircleFilled />
+        : <CheckCircleFilled />;
     },
-
-    { title: "كمية الموديل ", dataIndex: "AssetTotalCount", key: "AssetTotalCount" },
-    {
-      title: "هل له أصول؟", dataIndex: "HasAssets", key: "HasAssets",
-      render: (_, value) => {
-        return value.HasAssets ? <CheckCircleFilled /> : <CloseCircleFilled style={{ color: "red" }} />;
-      }
-    },
-    {
-      title: "نفس عدد الاصول؟", dataIndex: "HasSameCount", key: "HasSameCount",
-      render: (_, value) => {
-        return value.HasSameCount ? <CheckCircleFilled /> : <CheckCircleFilled />;
-      }
-    },
-    { title: "نوع اللاصق ", dataIndex: "TagType", key: "TagType" },
-    { title: "العدد المتبقى فى المستودع", dataIndex: "RemainingCountNow", key: "RemainingCountNow" },
-    { title: "عدد التالف", dataIndex: "DamagedCountNow", key: "DamagedCountNow" },
-
-    {
-      title: "إجراءات",
-      dataIndex: "Actions",
-      key: "Actions",
-      width: 200,
-      render: (_, record) => {
-        return (
-          <div className="act-btns">
-            {user.user.Permissions.includes("EditCategory") && (
-              <Tooltip title="تعديل">
-                <Button
-                  onClick={() => { handleEditMod(record); }}
-                  icon={<EditOutlined />}
-                  shape="circle"
-                />
-              </Tooltip>
-            )}
-
-            <Tooltip title="عرض تفاصيل الاصول">
+  },
+  { title: "نوع اللاصق",                dataIndex: "TagType",           key: "TagType",           width: 110 },
+  { title: "العدد المتبقى فى المستودع", dataIndex: "RemainingCountNow", key: "RemainingCountNow", width: 170 },
+  { title: "عدد التالف",                dataIndex: "DamagedCountNow",   key: "DamagedCountNow",   width: 110 },
+  {
+    title: "إجراءات",
+    dataIndex: "Actions",
+    key: "Actions",
+    width: 200,
+    fixed: "right" as const,
+    render: (_, record) => {
+      return (
+        <div className="act-btns">
+          {user.user.Permissions.includes("EditCategory") && (
+            <Tooltip title="تعديل">
               <Button
-                onClick={() => {
-                  setModelFilter(record);
-                  navigate(RouterLinks.UniversityAssets);
-                }}
-                icon={<EyeFilled />}
+                onClick={() => { handleEditMod(record); }}
+                icon={<EditOutlined />}
                 shape="circle"
               />
             </Tooltip>
+          )}
 
-            {/* ============ NEW: زر تصحيح معلومات الأصل (يظهر فقط لو CompanyId === 2) ============ */}
-            {/* ============ زر تصحيح معلومات الأصل (يظهر فقط لو CompanyId === 2) ============ */}
-{(record?.CompanyId === 2 || record?.TagType === null) && (
-  <Tooltip title="تصحيح معلومات الأصل">
-    <Button
-      onClick={() => handleOpenCorrectionModal(record)}
-      icon={<SyncOutlined />}
-      shape="circle"
-      style={{
-        backgroundColor: "#fff7e6",
-        color: "#d48806",
-        borderColor: "#ffe58f",
-      }}
-    />
-  </Tooltip>
-)}
+          <Tooltip title="عرض تفاصيل الاصول">
+            <Button
+              onClick={() => {
+                setModelFilter(record);
+                navigate(RouterLinks.UniversityAssets);
+              }}
+              icon={<EyeFilled />}
+              shape="circle"
+            />
+          </Tooltip>
+<Tooltip title="رفع صور الموديل">
+  <Button
+    onClick={() => handleOpenImageModal(record)}
+    icon={<PictureOutlined />}
+    shape="circle"
+    style={{
+      backgroundColor: "#e6f7ff",
+      color: "#1890ff",
+      borderColor: "#91d5ff",
+    }}
+  />
+</Tooltip>
+          {(record?.CompanyId === 2 || record?.TagType === null) && (
+            <Tooltip title="تصحيح معلومات الأصل">
+              <Button
+                onClick={() => handleOpenCorrectionModal(record)}
+                icon={<SyncOutlined />}
+                shape="circle"
+                style={{ backgroundColor: "#fff7e6", color: "#d48806", borderColor: "#ffe58f" }}
+              />
+            </Tooltip>
+          )}
 
-{/* ============ NEW: زر "مطابق!" ============ */}
-{(record?.CompanyId === 2 || record?.TagType === null) && (
-  <Popconfirm
-    title="تأكيد المطابقة"
-    description="هل أنت متأكد من أن هذا الموديل مطابق؟"
-    onConfirm={() => handleExactAssetModel(record?.AssetModelId)}
-    okText="نعم"
-    cancelText="لا"
-  >
-    <Tooltip title="مطابق!">
-      <Button
-        icon={<CheckCircleFilled />}
-        shape="circle"
-        style={{
-          backgroundColor: "#f6ffed",
-          color: "#52c41a",
-          borderColor: "#b7eb8f",
-        }}
-      />
-    </Tooltip>
-  </Popconfirm>
-)}
-{/* ===================================================================== */}
-            {/* ===================================================================== */}
+          {(record?.CompanyId === 2 || record?.TagType === null) && (
+            <Popconfirm
+              title="تأكيد المطابقة"
+              description="هل أنت متأكد من أن هذا الموديل مطابق؟"
+              onConfirm={() => handleExactAssetModel(record?.AssetModelId)}
+              okText="نعم"
+              cancelText="لا"
+            >
+              <Tooltip title="مطابق!">
+                <Button
+                  icon={<CheckCircleFilled />}
+                  shape="circle"
+                  style={{ backgroundColor: "#f6ffed", color: "#52c41a", borderColor: "#b7eb8f" }}
+                />
+              </Tooltip>
+            </Popconfirm>
+          )}
 
-            {user.user.Permissions.includes("DeleteCategory") && (
-              <Popconfirm
-                title="هل أنت متأكد من الحذف؟"
-                onConfirm={() => { handleDelete(record?.AssetModelId); }}
-                okText="نعم"
-                cancelText="لا"
-              >
-                <Tooltip title="حذف">
-                  <Button icon={<DeleteOutlined />} shape="circle" danger />
-                </Tooltip>
-              </Popconfirm>
-            )}
-          </div>
-        );
-      },
+          {user.user.Permissions.includes("DeleteCategory") && (
+            <Popconfirm
+              title="هل أنت متأكد من الحذف؟"
+              onConfirm={() => { handleDelete(record?.AssetModelId); }}
+              okText="نعم"
+              cancelText="لا"
+            >
+              <Tooltip title="حذف">
+                <Button icon={<DeleteOutlined />} shape="circle" danger />
+              </Tooltip>
+            </Popconfirm>
+          )}
+        </div>
+      );
     },
-  ];
+  },
+];
 
   const handleCloseFormModel = () => {
     setOpenFormModel(false);
@@ -685,7 +1169,7 @@ const handleExactAssetModel = async (assetModelId: number) => {
           dataSource={rowData?.Results}
           pagination={false}
           loading={loading}
-          scroll={{ x: 200 }}
+          scroll={{ x: 2000 }}
           summary={(pageData) => {
             const totalCount = pageData.reduce((sum, row) => sum + (row.AssetTotalCount || 0), 0);
             const totalRemaining = pageData.reduce((sum, row) => sum + (row.RemainingCountNow || 0), 0);
@@ -822,6 +1306,7 @@ const handleExactAssetModel = async (assetModelId: number) => {
             }}
             fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
           />
+
         </div>
       )}
             {/* 1. التصنيف */}
@@ -886,9 +1371,28 @@ const handleExactAssetModel = async (assetModelId: number) => {
                 onChange={(e) => setCorrectionModelName(e.target.value)}
               />
             </Form.Item>
+<Form.Item
+  label={<span style={{ fontWeight: 600 }}>كود الموديل</span>}
+>
+  <Input
+    placeholder="أدخل كود الموديل"
+    value={correctionModelNumber}
+    onChange={(e) => setCorrectionModelNumber(e.target.value)}
+  />
+</Form.Item>
 
+{/* ← جديد: الماركة */}
+<Form.Item
+  label={<span style={{ fontWeight: 600 }}>الماركة</span>}
+>
+  <Input
+    placeholder="أدخل الماركة"
+    value={correctionBrand}
+    onChange={(e) => setCorrectionBrand(e.target.value)}
+  />
+</Form.Item>
             {/* 4. الموديل المرجعي من Mosanda */}
-            <Form.Item
+            {/* <Form.Item
               label={
                 <span style={{ fontWeight: 600 }}>
                   الموديل المرجعي (Odoo Models) <span style={{ color: "red" }}>*</span>
@@ -900,7 +1404,20 @@ const handleExactAssetModel = async (assetModelId: number) => {
                   ابحث في القائمة الكاملة واختر الموديل المطابق
                 </span>
               }
-            >
+            > */}
+            <Form.Item
+  label={
+    <span style={{ fontWeight: 600 }}>
+      الموديل المرجعي (Odoo Models)
+      <span style={{ color: "#888", fontSize: "12px", marginRight: "6px" }}>(اختياري)</span>
+    </span>
+  }
+  extra={
+    <span style={{ color: "#888", fontSize: "12px" }}>
+      ابحث في القائمة واختر الموديل المطابق إن وجد
+    </span>
+  }
+>
               <AntSelect
   showSearch
   allowClear
@@ -948,6 +1465,87 @@ const handleExactAssetModel = async (assetModelId: number) => {
         </div>
       </Modal>
       {/* ================================================ */}
+      <Modal
+  open={imageModalOpen}
+  title={
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <PictureOutlined style={{ color: "#1890ff" }} />
+      <span>إدارة صور الموديل: {currentImageModel?.ModelName}</span>
+    </div>
+  }
+  onCancel={handleCloseImageModal}
+  width={520}
+  footer={[
+    <Button key="cancel" onClick={handleCloseImageModal} disabled={imageModalLoading}>
+      إلغاء
+    </Button>,
+    <Button
+      key="save" type="primary"
+      loading={imageModalLoading}
+      onClick={handleSaveImages}
+    >
+      حفظ
+    </Button>,
+  ]}
+>
+  <div style={{ padding: "10px 0" }}>
+
+    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+
+      {/* Slot 0 — الرئيسية */}
+      <SlotBox
+        slot={imageSlots[0]}
+        index={0}
+        isPrimary={true}
+        onDelete={handleDeleteSlot}
+        onUpload={handleUploadToSlot}
+      />
+
+      {/* زرار الـ Swap */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+        <Tooltip title="تبديل الترتيب">
+          <Button
+            shape="circle"
+            icon={<SyncOutlined />}
+            onClick={handleSwap}
+            disabled={!imageSlots[0] || !imageSlots[1]}
+            style={{
+              width: "40px", height: "40px",
+              backgroundColor:
+                imageSlots[0] && imageSlots[1] ? "#e6f7ff" : "#f5f5f5",
+              borderColor:
+                imageSlots[0] && imageSlots[1] ? "#91d5ff" : "#d9d9d9",
+              color:
+                imageSlots[0] && imageSlots[1] ? "#1890ff" : "#bbb",
+            }}
+          />
+        </Tooltip>
+        <span style={{ fontSize: "10px", color: "#aaa" }}>تبديل</span>
+      </div>
+
+      {/* Slot 1 — الثانوية */}
+      <SlotBox
+        slot={imageSlots[1]}
+        index={1}
+        isPrimary={false}
+        onDelete={handleDeleteSlot}
+        onUpload={handleUploadToSlot}
+      />
+
+    </div>
+
+    {/* ملاحظة */}
+    <div style={{
+      marginTop: "14px", padding: "10px 14px",
+      backgroundColor: "#e6f7ff", borderRadius: "8px",
+      border: "1px solid #91d5ff", fontSize: "12px", color: "#096dd9",
+    }}>
+      💡 الصورة <strong>الرئيسية ⭐</strong> هي التي تظهر في القائمة.
+      اضغط <strong>تبديل</strong> لتغيير ترتيبهم.
+    </div>
+
+  </div>
+</Modal>
     </div>
   );
 };

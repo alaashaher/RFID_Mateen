@@ -10,7 +10,8 @@ import {
   CameraOutlined,
   UploadOutlined,
   PlusOutlined,
-  DeleteOutlined as DeleteIcon,WarningOutlined,
+  DeleteOutlined as DeleteIcon,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { deleteFromApi, getFromApi, postToApi, putToApi } from "../../apis/apis";
 import {
@@ -20,16 +21,11 @@ import {
   Tooltip,
   Popconfirm,
   Modal,
-  Tabs,
-  Flex,
   Input,
   Select,
   Upload,
   message,
-  Spin,
 } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import UniversityAssetsForm from "./UniversityAssetsForm";
 import UserContext from "../../contexts/user-context/UserProvider";
 import UniversityAssetsScannedContext from "../../contexts/pages-context/UniversityAssetsProviderScanned";
@@ -38,11 +34,10 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import UniversityModelForm from "./UniversityModelForm";
 import CategoryContext from "../../contexts/pages-context/CategoryProvider";
-import { use } from "i18next";
 import "./UniversityAssets.css";
 
 // ============================
-// Responsive helper — عرض الشاشة
+// Responsive helper
 // ============================
 const useIsMobile = (breakpoint = 768) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= breakpoint);
@@ -108,14 +103,14 @@ interface AssetImageUploadProps {
   assetId: number;
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;  // ← أضف هذا
+  onSuccess: () => void;
 }
 
 const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
   assetId,
   open,
   onClose,
-  onSuccess, 
+  onSuccess,
 }) => {
   const [fileList, setFileList] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -230,9 +225,7 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
         title="رفع صور لواصق الأصل"
         onCancel={onClose}
         footer={[
-          <Button key="cancel" onClick={onClose} disabled={uploading}>
-            إلغاء
-          </Button>,
+          <Button key="cancel" onClick={onClose} disabled={uploading}>إلغاء</Button>,
           <Button
             key="upload" type="primary" onClick={handleUpload}
             loading={uploading} disabled={fileList.length === 0}
@@ -295,6 +288,11 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
 // ============================
 // الصفحة الرئيسية
 // ============================
+
+// المبنى رقم 1 (BuildingTypeId = 1) هو "مستودع" — يظهر فلاتر التصنيف/النوع/الموديل
+// أي buildingTypeId آخر يظهر فلاتر الدور/الجناح/الغرفة
+const WAREHOUSE_BUILDING_TYPE_ID = 1;
+
 const UniversityAssetsPage = () => {
   const {
     rowData, setRowData, pageSize, setPageSize,
@@ -310,22 +308,205 @@ const UniversityAssetsPage = () => {
   const isMobile = useIsMobile();
 
   const { Option } = Select;
-  const [buildings, setBuildings] = useState<any>([]);
+
+  // ── فلاتر مشتركة ──
+  const [buildingTypes, setBuildingTypes] = useState<any[]>([]);
+  const [selectedBuildingTypeId, setSelectedBuildingTypeId] = useState<any>("");
+
+  const [buildings, setBuildings] = useState<any[]>([]);
   const [buildingId, setBuildingId] = useState<any>("");
-  const [floors, setFloor] = useState<any>([]);
-  const [floorId, setFloorId] = useState<any>("");
-  const [rooms, setRooms] = useState([]);
-  const [cats, setCats] = useState([]);
-  const [AssetType, setAssetType] = useState([]);
+
+  // ── فلاتر المستودع (buildingTypeId == 1) ──
+  const [cats, setCats] = useState<any[]>([]);
   const [CategoryId, setCategoryId] = useState<any>("");
+  const [AssetType, setAssetType] = useState<any[]>([]);
   const [AssetTypeId, setAssetTypeId] = useState<any>("");
-  const [Models, setModels] = useState([]);
+  const [Models, setModels] = useState<any[]>([]);
   const [modelId, setModelId] = useState<any>("");
 
-  // State لرفع الصور
+  // ── فلاتر غير المستودع ──
+  const [floors, setFloors] = useState<any[]>([]);
+  const [floorId, setFloorId] = useState<any>("");
+  const [suites, setSuites] = useState<any[]>([]);
+  const [suiteId, setSuiteId] = useState<any>("");
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [roomId, setRoomId] = useState<any>("");
+
+    // ── فلتر حالة الأصل (مستقل) ──
+  const [statuses, setStatuses] = useState<any[]>([]);
+  const [selectedStatusId, setSelectedStatusId] = useState<any>("");
+  
+  // ── رفع الصور ──
   const [imageUploadOpen, setImageUploadOpen] = useState(false);
   const [imageUploadAssetId, setImageUploadAssetId] = useState<number | null>(null);
 
+  // هل الـ building type المختار هو مستودع؟
+  const isWarehouseType = selectedBuildingTypeId === WAREHOUSE_BUILDING_TYPE_ID;
+
+  // ── تحديد الـ API query parameters بناءً على نوع المبنى ──
+   const buildApiParams = () => {
+    const base = `isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}`;
+    if (isWarehouseType) {
+      return `${base}&buildingId=${buildingId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
+    } else {
+      return `${base}&buildingId=${buildingId || 0}&universityFloorId=${floorId || 0}&suiteId=${suiteId || 0}&roomId=${roomId || 0}&StatusId=${selectedStatusId || 0}`;
+    }
+  };
+
+  // helper — يضمن إن الـ response دايماً array
+  const toArray = (res: any): any[] => (Array.isArray(res) ? res : []);
+
+  // ── جلب أنواع المباني عند التحميل ──
+  useEffect(() => {
+    setkeyword("");
+    const fetchBuildingTypes = async () => {
+      try {
+        const res = await getFromApi("BuildingType/get-buildingType-ddl");
+        setBuildingTypes(toArray(res));
+      } catch (error) { setBuildingTypes([]); }
+    };
+    fetchBuildingTypes();
+  }, []);
+
+  // ── جلب حالات الأصل عند التحميل (مستقل) ──
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const res = await getFromApi("Status/get-statuses-ddl");
+        setStatuses(toArray(res));
+      } catch (error) { setStatuses([]); }
+    };
+    fetchStatuses();
+  }, []);
+ 
+  // ── جلب المباني عند تغيير نوع المبنى ──
+  useEffect(() => {
+    setModelFilter(null);
+    setBuildingId("");
+    setCategoryId(""); setAssetTypeId(""); setModelId("");
+    setFloorId(""); setSuiteId(""); setRoomId("");
+    setFloors([]); setSuites([]); setRooms([]);
+
+    if (!selectedBuildingTypeId) {
+      setBuildings([]);
+      return;
+    }
+    const fetchBuildings = async () => {
+      try {
+        const res = await getFromApi(
+          `Building/get-building-ddl?buildingTypeId=${selectedBuildingTypeId}`
+        );
+        setBuildings(toArray(res));
+      } catch (error) { setBuildings([]); }
+    };
+    fetchBuildings();
+  }, [selectedBuildingTypeId]);
+
+  // ── جلب التصنيفات (مستودع فقط) عند تغيير المبنى ──
+  useEffect(() => {
+    setModelFilter(null);
+    if (!isWarehouseType || !buildingId) {
+      setCats([]);
+      setCategoryId(""); setAssetTypeId(""); setModelId("");
+      return;
+    }
+    const fetchCats = async () => {
+      try {
+        const res = await getFromApi(
+          `Category/get-category-ddl?BuildingTypeId=${selectedBuildingTypeId}`
+        );
+        setCats(toArray(res));
+      } catch (error) { setCats([]); }
+    };
+    fetchCats();
+  }, [buildingId, isWarehouseType]);
+
+  // ── جلب أنواع الأصول (مستودع فقط) عند تغيير التصنيف ──
+  useEffect(() => {
+    setModelFilter(null);
+    if (!CategoryId) {
+      setAssetType([]); setAssetTypeId(""); setModelId("");
+      return;
+    }
+    const fetchAssetTypes = async () => {
+      try {
+        const res = await getFromApi(
+          `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${CategoryId}&hasModels=true`
+        );
+        setAssetType(toArray(res));
+      } catch (error) { setAssetType([]); }
+    };
+    fetchAssetTypes();
+  }, [CategoryId]);
+
+  // ── جلب الموديلات (مستودع فقط) عند تغيير نوع الأصل ──
+  useEffect(() => {
+    setModelFilter(null);
+    const fetchModels = async () => {
+      try {
+        const res = await getFromApi(
+          `AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId || ""}`
+        );
+        setModels(toArray(res));
+      } catch (error) { setModels([]); }
+    };
+    fetchModels();
+  }, [AssetTypeId]);
+
+  // ── جلب الأدوار (غير مستودع) عند تغيير المبنى ──
+  useEffect(() => {
+    setModelFilter(null);
+    if (isWarehouseType || !buildingId) {
+      setFloors([]); setFloorId(""); setSuites([]); setSuiteId(""); setRooms([]); setRoomId("");
+      return;
+    }
+    const fetchFloors = async () => {
+      try {
+        const res = await getFromApi(
+          `UniversityFloor/get-universityFloor-ddl?buildingId=${buildingId}`
+        );
+        const floorData = res?.Data ?? res;
+        setFloors(toArray(floorData));
+      } catch (error) { setFloors([]); }
+    };
+    fetchFloors();
+  }, [buildingId, isWarehouseType]);
+
+  // ── جلب الأجنحة عند تغيير الدور ──
+  useEffect(() => {
+    setModelFilter(null);
+    setSuiteId(""); setRooms([]); setRoomId("");
+    if (!floorId) { setSuites([]); return; }
+    const fetchSuites = async () => {
+      try {
+        const res = await getFromApi(
+          `Suite/get-suite-ddl?floorId=${floorId}`
+        );
+        const suiteData = res?.Data ?? res;
+        setSuites(toArray(suiteData));
+      } catch (error) { setSuites([]); }
+    };
+    fetchSuites();
+  }, [floorId]);
+
+  // ── جلب الغرف عند تغيير الجناح ──
+  useEffect(() => {
+    setModelFilter(null);
+    setRoomId("");
+    if (!suiteId) { setRooms([]); return; }
+    const fetchRooms = async () => {
+      try {
+        const res = await getFromApi(
+          `Room/get-room-ddl?suiteId=${suiteId}`
+        );
+        const roomData = res?.Data ?? res;
+        setRooms(toArray(roomData));
+      } catch (error) { setRooms([]); }
+    };
+    fetchRooms();
+  }, [suiteId]);
+
+  // ── modelFilter من صفحات أخرى ──
   useEffect(() => {
     if (modelFilter != null) {
       setAssetTypeId(modelFilter.AssetTypeId);
@@ -336,113 +517,25 @@ const UniversityAssetsPage = () => {
     return () => { setModelFilter(null); };
   }, [modelFilter]);
 
+  // ── جلب البيانات الرئيسية ──
   useEffect(() => {
-    setModelFilter(null);
-    const fetchLanguages = async () => {
+    const getAllData = async () => {
       try {
-        const res = await getFromApi(
-          `AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId ? AssetTypeId : ""}`
+        const resp = await getFromApi(
+          `UniversityAsset/get-all-universityAsset-pager?${buildApiParams()}`
         );
-        setModels(res);
+        setRowData(resp);
       } catch (error) {}
     };
-    fetchLanguages();
-  }, [AssetTypeId]);
+    getAllData();
+  }, [
+    pageNumber, pageSize, keyword, detectChanges,
+    buildingId, CategoryId, AssetTypeId, modelId,
+    floorId, suiteId, roomId,selectedStatusId,
+    selectedBuildingTypeId,
+  ]);
 
-  useEffect(() => {
-    setkeyword("");
-    const fetchLanguages = async () => {
-      try {
-        const res = await getFromApi(`Building/get-building-ddl`);
-        setBuildings(res);
-      } catch (error) {}
-    };
-    fetchLanguages();
-  }, []);
-
-  useEffect(() => {
-    setModelFilter(null);
-    if (floorId != "") {
-      const getAllData = async () => {
-        try {
-          const resp = await getFromApi(`Room/get-room-ddl?floorId=${floorId ? floorId : ""}`);
-          setRooms(resp);
-        } catch (error) {}
-      };
-      getAllData();
-    }
-  }, [floorId]);
-
-  useEffect(() => {
-    setModelFilter(null);
-    const fetchLanguages = async () => {
-      try {
-        const hasmode = true;
-        const res = await getFromApi(
-          `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${CategoryId ? CategoryId : ""}&hasModels=${hasmode}`
-        );
-        setAssetType(res);
-      } catch (error) {}
-    };
-    fetchLanguages();
-  }, [CategoryId]);
-
-  useEffect(() => {
-    setModelFilter(null);
-    const fetchCats = async () => {
-      try {
-        const res = await getFromApi(
-          `Category/get-category-ddl?BuildingTypeId=${buildingId ? buildingId : ""}`
-        );
-        setCats(res);
-      } catch (error) {}
-    };
-    fetchCats();
-  }, [buildingId]);
-
-  useEffect(() => {
-    setModelFilter(null);
-    if (buildingId != "") {
-      const fetchLanguages = async () => {
-        try {
-          const res = await getFromApi(
-            `UniversityFloor/get-universityFloor-ddl?buildingId=${buildingId ? buildingId : ""}`
-          );
-          setFloor(res);
-        } catch (error) {}
-      };
-      fetchLanguages();
-    }
-  }, [buildingId]);
-
-  useEffect(() => {
-    if (modelFilter != null) {
-      const getAllData = async () => {
-        try {
-          const resp = await getFromApi(
-            `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${modelFilter?.buildingId ? modelFilter.buildingId : 0}&AssetTypeId=${modelFilter?.AssetTypeId ? modelFilter.AssetTypeId : 0}&ModelId=${modelFilter?.AssetModelId ? modelFilter.AssetModelId : 0}&CategoryId=${modelFilter?.CategoryId ? modelFilter.CategoryId : 0}`
-          );
-          setRowData(resp);
-        } catch (error) {}
-      };
-      getAllData();
-    }
-  }, [pageNumber, pageSize, keyword, detectChanges]);
-
-  useEffect(() => {
-    if (modelFilter == null) {
-      const getAllData = async () => {
-        try {
-          const resp = await getFromApi(
-            `UniversityAsset/get-all-universityAsset-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&&buildingId=${buildingId ? buildingId : 0}&AssetTypeId=${AssetTypeId ? AssetTypeId : 0}&ModelId=${modelId ? modelId : 0}&CategoryId=${CategoryId ? CategoryId : 0}`
-          );
-          setRowData(resp);
-        } catch (error) {}
-      };
-      getAllData();
-    }
-  }, [pageNumber, pageSize, keyword, detectChanges, buildingId, AssetTypeId, modelId, CategoryId]);
-
+  // ── Handlers ──
   const handleEditMod = async (TableId) => {
     try {
       const response = await getFromApi(
@@ -451,35 +544,37 @@ const UniversityAssetsPage = () => {
       if (response) { setToEdit(response); setOpenFormModel(true); }
     } catch (error) {}
   };
-const handleDamaged = async (assetId: number) => {
-  try {
-    setLoading(true);
-    const response = await putToApi(
-      `UniversityAsset/damaged-universityAsset?universityAssetId=${assetId}`,
-      {}
-    );
-    if (response) {
-      setdetectChanges((prev) => prev + 1);
+
+  const handleDamaged = async (assetId: number) => {
+    try {
+      setLoading(true);
+      const response = await putToApi(
+        `UniversityAsset/damaged-universityAsset?universityAssetId=${assetId}`,
+        {}
+      );
+      if (response) {
+        setdetectChanges((prev) => prev + 1);
+        Store.addNotification({
+          title: "", message: "تم تحديد الأصل كتالف",
+          type: "success", insert: "top", container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: { duration: 2000, onScreen: true },
+        });
+      }
+    } catch (error) {
       Store.addNotification({
-        title: "", message: "تم تحديد الأصل كتالف",
-        type: "success", insert: "top", container: "top-right",
+        title: "", message: "حدث خطأ، حاول مرة أخرى",
+        type: "danger", insert: "top", container: "top-right",
         animationIn: ["animate__animated", "animate__fadeIn"],
         animationOut: ["animate__animated", "animate__fadeOut"],
         dismiss: { duration: 2000, onScreen: true },
       });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    Store.addNotification({
-      title: "", message: "حدث خطأ، حاول مرة أخرى",
-      type: "danger", insert: "top", container: "top-right",
-      animationIn: ["animate__animated", "animate__fadeIn"],
-      animationOut: ["animate__animated", "animate__fadeOut"],
-      dismiss: { duration: 2000, onScreen: true },
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
   const handleModelPopUp = async (TableId) => {
     try {
       const response = await getFromApi(
@@ -561,105 +656,73 @@ const handleDamaged = async (assetId: number) => {
     setImageUploadAssetId(null);
   };
 
-  // === الأعمدة — على الموبايل نخفي بعض الأعمدة الأقل أهمية ===
+  const handleCloseFormModel = () => {
+    setOpenFormModel(false);
+    setToEdit(null);
+  };
+
+  const handleSearch = (e: any) => { setkeyword(e.target.value); };
+  const handleshowPage = (e: any) => { setPageSize(e); };
+
+  const exportToExcel = () => {
+    const selectedColumns = columns.slice(1, -1);
+    const newResult: any[] = [];
+    rowData?.Results.forEach((element) => {
+      let newObject: any = {};
+      selectedColumns.forEach((col: any) => { newObject[col.title] = element[col.dataIndex]; });
+      newResult.push(newObject);
+    });
+    const worksheet = XLSX.utils.json_to_sheet(newResult);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), "Assets.xlsx");
+  };
+
+  const exportToCSV = () => {
+    const selectedColumns = columns.slice(1, -1);
+    const csvHeader = selectedColumns.map((col: any) => `"${col.title.replace(/"/g, '""')}"`).join(",") + "\n";
+    const csvRows = rowData?.Results.map((row: any) =>
+      selectedColumns.map((col: any) => {
+        const cell = row[col.dataIndex];
+        const cellStr = typeof cell === "string" ? cell.replace(/"/g, '""') : cell;
+        return `"${cellStr}"`;
+      }).join(",")
+    ).join("\n");
+    const blob = new Blob(["\uFEFF" + csvHeader + csvRows], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "Assets.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ── أعمدة الجدول ──
   const columns = [
     {
       title: "#",
       key: "index",
       render: (item, record, index) => <>{index + 1}</>,
       width: 40,
-      fixed: isMobile ? undefined : undefined,
     },
-    {
-      title: "الأصل",
-      dataIndex: "UniversityAssetName",
-      key: "UniversityAssetName",
-      ellipsis: true,
-      width: isMobile ? 140 : 140,
-    },
-    {
-      title: "موديل الأصل",
-      dataIndex: "ModelName",
-      key: "ModelName",
-      ellipsis: true,
-      width: isMobile ? 100 : 100,
-      //responsive: ["md"] as any,
-    },
-    {
-      title: "رقم الموديل",
-      dataIndex: "ModelNumber",
-      key: "ModelNumber",
-      width: isMobile ? 100 : 100,
-      //responsive: ["lg"] as any,
-    },
-    {
-      title: "البراند",
-      dataIndex: "Brand",
-      key: "Brand",
-      width: isMobile ? 100 : 100,
-      //responsive: ["md"] as any,
-    },
-    {
-      title: "نوع مبنى الأصول",
-      dataIndex: "BuildingTypeName",
-      key: "BuildingTypeName",
-      responsive: ["xl"] as any,
-    },
-    {
-      title: "المبنى",
-      dataIndex: "BuildingName",
-      key: "BuildingName",
-      responsive: ["lg"] as any,
-    },
-    {
-      title: "تصنيف الاصل",
-      dataIndex: "CategoryName",
-      key: "CategoryName",
-      responsive: ["lg"] as any,
-    },
-    {
-      title: "باركود الأصل",
-      dataIndex: "AssetBarcode",
-      key: "AssetBarcode",
-      ellipsis: true,
-      width: isMobile ? 160 : 160,
-      //responsive: ["md"] as any,
-    },
-    {
-      title: "Serial Number",
-      dataIndex: "AssetSerialNo",
-      key: "AssetSerialNo",
-      ellipsis: true,
-      width: isMobile ? 160 : 160,
-      //responsive: ["lg"] as any,
-    },
-    {
-      title: "حالة الاصل",
-      dataIndex: "AssetStatus",
-      key: "AssetStatus",
-      ellipsis: true,
-      width: isMobile ? 160 : 160,
-      //responsive: ["lg"] as any,
-    },
-    {
-      title: "طباعه",
-      dataIndex: "PrintedNumber",
-      key: "PrintedNumber",
-      width: 60,
-      responsive: ["sm"] as any,
-    },
+    { title: "الأصل", dataIndex: "UniversityAssetName", key: "UniversityAssetName", ellipsis: true, width: isMobile ? 140 : 140 },
+    { title: "موديل الأصل", dataIndex: "ModelName", key: "ModelName", ellipsis: true, width: 100 },
+    { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber", width: 100 },
+    { title: "البراند", dataIndex: "Brand", key: "Brand", width: 100 },
+    { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName", responsive: ["xl"] as any },
+    { title: "المبنى", dataIndex: "BuildingName", key: "BuildingName", responsive: ["lg"] as any },
+    { title: "تصنيف الاصل", dataIndex: "CategoryName", key: "CategoryName", responsive: ["lg"] as any },
+    { title: "باركود الأصل", dataIndex: "AssetBarcode", key: "AssetBarcode", ellipsis: true, width: isMobile ? 160 : 160 },
+    { title: "Serial Number", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
+    { title: "حالة الاصل", dataIndex: "AssetStatus", key: "AssetStatus", ellipsis: true, width: 160 },
+    { title: "طباعه", dataIndex: "PrintedNumber", key: "PrintedNumber", width: 60, responsive: ["sm"] as any },
     {
       title: "موديل",
       dataIndex: "AssetTypeId",
       key: "AssetTypeId",
       width: 60,
-      render: (_, value) => {
-        return value.AssetModelId != null ? (
-          <CheckCircleFilled style={{ color: "#52c41a" }} />
-        ) : (
-          <CloseCircleFilled style={{ color: "red" }} />
-        );
-      },
+      render: (_, value) => value.AssetModelId != null
+        ? <CheckCircleFilled style={{ color: "#52c41a" }} />
+        : <CloseCircleFilled style={{ color: "red" }} />,
     },
     {
       title: "إجراءات",
@@ -667,144 +730,48 @@ const handleDamaged = async (assetId: number) => {
       key: "Actions",
       width: isMobile ? 100 : 160,
       fixed: "right" as const,
-      render: (_, record) => {
-        return (
-          <div className="act-btns">
-            {user.user.Permissions.includes("EditUniversityAssets") && (
-              <Tooltip title="تعديل">
-                <Button
-                  onClick={() => handleEditMod(record.UniversityAssetId)}
-                  icon={<EditOutlined />}
-                  shape="circle"
-                  size={isMobile ? "small" : "middle"}
-                />
-              </Tooltip>
-            )}
-            {user.user.Permissions.includes("EditUniversityAssets") &&
-              record.AssetModelId == null && (
-                <Tooltip title="أضافه موديل">
-                  <Button
-                    onClick={() => handleModelPopUp(record.UniversityAssetId)}
-                    icon={<SettingFilled />}
-                    shape="circle"
-                    size={isMobile ? "small" : "middle"}
-                  />
-                </Tooltip>
-              )}
-            {user.user.Permissions.includes("PrintRFIDUniversityAssets") && (
-              <Tooltip title="طباعه الباركود">
-                <Button
-                  onClick={() => handlePrintMod(record.UniversityAssetId)}
-                  icon={<PrinterOutlined />}
-                  shape="circle"
-                  size={isMobile ? "small" : "middle"}
-                />
-              </Tooltip>
-            )}
-            {user.user.Permissions.includes("EditUniversityAssets") && (
-              <Tooltip title="رفع صور اللواصق">
-                <Button
-                  onClick={() => handleOpenImageUpload(record.UniversityAssetId)}
-                  icon={<CameraOutlined />}
-                  shape="circle"
-                  size={isMobile ? "small" : "middle"}
-                  style={{ color: "#1890ff" }}
-                />
-              </Tooltip>
-            )}
-            {user.user.Permissions.includes("EditUniversityAssets") && (
-  <Tooltip title="تالف">
-    <Popconfirm
-      title="هل أنت متأكد من تحديد هذا الأصل كتالف؟"
-      onConfirm={() => handleDamaged(record.UniversityAssetId)}
-      okText="نعم"
-      cancelText="لا"
-    >
-      <Button
-        icon={<WarningOutlined />}
-        shape="circle"
-        size={isMobile ? "small" : "middle"}
-        danger
-      />
-    </Popconfirm>
-  </Tooltip>
-)}
-          </div>
-        );
-      },
+      render: (_, record) => (
+        <div className="act-btns">
+          {user.user.Permissions.includes("EditUniversityAssets") && (
+            <Tooltip title="تعديل">
+              <Button onClick={() => handleEditMod(record.UniversityAssetId)} icon={<EditOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
+            <Tooltip title="أضافه موديل">
+              <Button onClick={() => handleModelPopUp(record.UniversityAssetId)} icon={<SettingFilled />} shape="circle" size={isMobile ? "small" : "middle"} />
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("PrintRFIDUniversityAssets") && (
+            <Tooltip title="طباعه الباركود">
+              <Button onClick={() => handlePrintMod(record.UniversityAssetId)} icon={<PrinterOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("EditUniversityAssets") && (
+            <Tooltip title="رفع صور اللواصق">
+              <Button onClick={() => handleOpenImageUpload(record.UniversityAssetId)} icon={<CameraOutlined />} shape="circle" size={isMobile ? "small" : "middle"} style={{ color: "#1890ff" }} />
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("EditUniversityAssets") && (
+            <Tooltip title="تالف">
+              <Popconfirm title="هل أنت متأكد من تحديد هذا الأصل كتالف؟" onConfirm={() => handleDamaged(record.UniversityAssetId)} okText="نعم" cancelText="لا">
+                <Button icon={<WarningOutlined />} shape="circle" size={isMobile ? "small" : "middle"} danger />
+              </Popconfirm>
+            </Tooltip>
+          )}
+        </div>
+      ),
     },
   ];
 
-  const handleCloseFormModel = () => {
-    setOpenFormModel(false);
-    setToEdit(null);
-  };
-
-  const handleSearch = (e: any) => {
-    setkeyword(e.target.value);
-  };
-
-  const handleshowPage = (e: any) => {
-    setPageSize(e);
-  };
-
-  const exportToExcel = () => {
-    const selectedColumns = columns.slice(1, -1);
-    const newResult = [];
-    rowData?.Results.forEach((element, index) => {
-      let newObject = {};
-      selectedColumns.forEach((col) => {
-        newObject[col.title] = element[col.dataIndex];
-      });
-      newResult.push(newObject);
-    });
-    const worksheet = XLSX.utils.json_to_sheet(newResult);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const fileName = "Assets.xlsx";
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, fileName);
-  };
-
-  const exportToCSV = () => {
-    const selectedColumns = columns.slice(1, -1);
-    const csvHeader =
-      selectedColumns.map((col) => `"${col.title.replace(/"/g, '""')}"`).join(",") + "\n";
-    const csvRows = rowData?.Results.map((row) =>
-      selectedColumns
-        .map((col) => {
-          const cell = row[col.dataIndex];
-          const cellStr = typeof cell === "string" ? cell.replace(/"/g, '""') : cell;
-          return `"${cellStr}"`;
-        })
-        .join(",")
-    ).join("\n");
-    const BOM = "\uFEFF";
-    const csvContent = BOM + csvHeader + csvRows;
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Assets.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="custom-container">
-      <h5 style={{ textAlign: "center", marginBottom: "16px" }}>
-        اصول المستودع
-      </h5>
+      <h5 style={{ textAlign: "center", marginBottom: "16px" }}>اصول المستودع</h5>
 
-      {/* === شريط الأزرار العلوي === */}
+      {/* ── شريط الأزرار العلوي ── */}
       <div className="assets-top-bar">
         {user.user.Permissions.includes("AddUniversityAssets") && (
-          <Button
-            type="primary"
-            onClick={() => setOpenFormModel(true)}
-            icon={<PlusOutlined />}
-          >
+          <Button type="primary" onClick={() => setOpenFormModel(true)} icon={<PlusOutlined />}>
             إضافة جديد
           </Button>
         )}
@@ -814,113 +781,172 @@ const handleDamaged = async (assetId: number) => {
         </div>
       </div>
 
-      {/* === الفلاتر === */}
+      {/* ── الفلاتر ── */}
       <div className="assets-filters-wrapper">
+
+        {/* بحث */}
         <Input
-          type="text"
-          placeholder=" ابحث بالاسم او الباركود"
-          onChange={(e) => handleSearch(e)}
+          placeholder="ابحث بالاسم او الباركود"
+          onChange={handleSearch}
           allowClear
           style={{ flex: isMobile ? "unset" : "1 1 160px", width: isMobile ? "100%" : undefined }}
         />
+
+        {/* نوع المبنى — أول dropdown */}
         <Select
           allowClear
-          placeholder="اختر المبني"
-          value={buildingId || undefined}
-          onChange={(e) => {
-            setRooms([]);
-            setBuildingId(e);
-            setCategoryId("");
-            setAssetTypeId("");
-            setModelId("");
+          placeholder="نوع المبنى"
+          value={selectedBuildingTypeId || undefined}
+          onChange={(val) => {
+            setSelectedBuildingTypeId(val ?? "");
           }}
-          style={{ width: isMobile ? "100%" : 200 }}
+          style={{ width: isMobile ? "100%" : 180 }}
         >
-          {buildings
-            .filter((res) => res.BuildingTypeId == 1)
-            .map((client) => (
-              <Option key={client.BuildingId} value={client.BuildingId}>
-                {client.BuildingName} - {client.BuildingCode}
+          {buildingTypes.map((bt) => (
+            <Option key={bt.BuildingTypeId} value={bt.BuildingTypeId}>
+              {bt.BuildingTypeName}
+            </Option>
+          ))}
+        </Select>
+
+        {/* المبنى — يظهر بعد اختيار نوع المبنى */}
+        {selectedBuildingTypeId !== "" && (
+          <Select
+            allowClear
+            placeholder="اختر المبني"
+            value={buildingId || undefined}
+            onChange={(val) => {
+              setBuildingId(val ?? "");
+              setCategoryId(""); setAssetTypeId(""); setModelId("");
+              setFloorId(""); setSuiteId(""); setRoomId("");
+            }}
+            style={{ width: isMobile ? "100%" : 400 }}
+          >
+            {buildings.map((b) => (
+              <Option key={b.BuildingId} value={b.BuildingId}>
+                {b.BuildingName} - {b.BuildingCode}
               </Option>
             ))}
-        </Select>
+          </Select>
+        )}
+
+        {/* ── فلاتر المستودع (buildingTypeId == 1) ── */}
+        {isWarehouseType && buildingId && (
+          <>
+            <Select
+              allowClear
+              placeholder="اختر نوع الاصل"
+              onChange={(val) => { setCategoryId(val ?? ""); setAssetTypeId(""); setModelId(""); }}
+              value={CategoryId || undefined}
+              style={{ width: isMobile ? "100%" : 200 }}
+            >
+              {cats.map((c) => (
+                <Option key={c.CategoryId} value={c.CategoryId}>{c.CategoryName}</Option>
+              ))}
+            </Select>
+
+            <Select
+              allowClear
+              placeholder="اختر تصنيف الاصل"
+              value={AssetTypeId || undefined}
+              onChange={(val) => { setAssetTypeId(val ?? ""); setModelId(""); }}
+              style={{ width: isMobile ? "100%" : 200 }}
+            >
+              {AssetType.map((at) => (
+                <Option key={at.AssetTypeId} value={at.AssetTypeId}>{at.AssetTypeName}</Option>
+              ))}
+            </Select>
+
+            <Select
+              allowClear
+              showSearch
+              placeholder="اختر موديل الاصل"
+              value={modelId || undefined}
+              onChange={(val) => setModelId(val ?? "")}
+              optionFilterProp="label"
+              filterOption={(input, option) =>
+                String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
+              style={{ width: isMobile ? "100%" : 380 }}
+              options={Models.map((m) => ({
+                value: m.AssetModelId,
+                label: `${m.Brand ?? ""} - ${m.ModelName ?? ""} - ${m.ModelNumber ?? ""} - عدد ${m.AssetTotalCount ?? 0} قطعه`,
+              }))}
+            />
+          </>
+        )}
+
+        {/* ── فلاتر غير المستودع ── */}
+        {!isWarehouseType && selectedBuildingTypeId !== "" && buildingId && (
+          <>
+            <Select
+              allowClear
+              placeholder="اختر الدور"
+              value={floorId || undefined}
+              onChange={(val) => { setFloorId(val ?? ""); setSuiteId(""); setRoomId(""); }}
+              style={{ width: isMobile ? "100%" : 180 }}
+            >
+              {floors.map((f) => (
+                <Option key={f.UniversityFloorId} value={f.UniversityFloorId}>
+                  {f.UniversityFloorName}
+                </Option>
+              ))}
+            </Select>
+
+            {floorId && (
+              <Select
+                allowClear
+                placeholder="اختر الجناح"
+                value={suiteId || undefined}
+                onChange={(val) => { setSuiteId(val ?? ""); setRoomId(""); }}
+                style={{ width: isMobile ? "100%" : 180 }}
+              >
+                {suites.map((s) => (
+                  <Option key={s.SuiteId} value={s.SuiteId}>
+                    {s.SuiteNameAr}
+                  </Option>
+                ))}
+              </Select>
+            )}
+
+            {suiteId && (
+              <Select
+                allowClear
+                placeholder="اختر الغرفة"
+                value={roomId || undefined}
+                onChange={(val) => setRoomId(val ?? "")}
+                style={{ width: isMobile ? "100%" : 180 }}
+              >
+                {rooms.map((r) => (
+                  <Option key={r.RoomId} value={r.RoomId}>
+                    {r.RoomName}
+                  </Option>
+                ))}
+              </Select>
+            )}
+          </>
+        )}
+{/* ── حالة الأصل — فلتر مستقل ── */}
         <Select
           allowClear
-          placeholder="اختر نوع الاصل"
-          onChange={(e) => {
-            setCategoryId(e);
-            setAssetTypeId("");
-            setModelId("");
-          }}
-          value={CategoryId || undefined}
-          style={{ width: isMobile ? "100%" : 200 }}
+          placeholder="حالة الأصل"
+          value={selectedStatusId || undefined}
+          onChange={(val) => setSelectedStatusId(val ?? "")}
+          style={{ width: isMobile ? "100%" : 180 }}
         >
-          {cats.map((client) => (
-            <Option key={client.CategoryId} value={client.CategoryId}>
-              {client.CategoryName}
+          {statuses.map((s) => (
+            <Option key={s.StatusId} value={s.StatusId}>
+              {s.StatusNameAr}
             </Option>
           ))}
         </Select>
-        <Select
-          allowClear
-          placeholder="اختر تصنيف الاصل"
-          value={AssetTypeId || undefined}
-          onChange={(e) => {
-            setAssetTypeId(e);
-            setModelId("");
-          }}
-          style={{ width: isMobile ? "100%" : 200 }}
-        >
-          {AssetType.map((client) => (
-            <Option key={client.AssetTypeId} value={client.AssetTypeId}>
-              {client.AssetTypeName}
-            </Option>
-          ))}
-        </Select>
-        {/* <Select
-          allowClear
-          showSearch
-          placeholder="اختر موديل الاصل"
-          value={modelId || undefined}
-          onChange={setModelId}
-          filterOption={(input, option) =>
-    (option?.children as unknown as string)
-      ?.toLowerCase()
-      .includes(input.toLowerCase())
-  }
-          style={{ width: isMobile ? "100%" : 320 }}
-        >
-          {Models.map((client) => (
-            <Option key={client.AssetModelId} value={client.AssetModelId}>
-              {client.Brand} - {client.ModelName} - {client.ModelNumber} - عدد{" "}
-              {client.AssetTotalCount} قطعه
-            </Option>
-          ))}
-        </Select>
-         */}
-         <Select
-  allowClear
-  showSearch
-  placeholder="اختر موديل الاصل"
-  value={modelId || undefined}
-  onChange={setModelId}
-  optionFilterProp="label"
-  filterOption={(input, option) =>
-    String(option?.label ?? "")
-      .toLowerCase()
-      .includes(input.toLowerCase())
-  }
-  style={{ width: isMobile ? "100%" : 380 }}
-  options={Models.map((client) => ({
-    value: client.AssetModelId,
-    label: `${client.Brand ?? ""} - ${client.ModelName ?? ""} - ${client.ModelNumber ?? ""} - عدد ${client.AssetTotalCount ?? 0} قطعه`,
-  }))}
-/>
+
+        {/* عدد السجلات */}
         <div className="assets-page-size">
           <span>عرض</span>
           <Select
             defaultValue={"50"}
-            onChange={(e) => handleshowPage(e)}
+            onChange={handleshowPage}
             style={{ width: isMobile ? 80 : 80 }}
           >
             <Option value="10">10</Option>
@@ -932,7 +958,7 @@ const handleDamaged = async (assetId: number) => {
         </div>
       </div>
 
-      {/* === الجدول === */}
+      {/* ── الجدول ── */}
       <div style={{ overflowX: "auto" }}>
         <Table
           columns={columns}
@@ -947,28 +973,16 @@ const handleDamaged = async (assetId: number) => {
 
       <Pagination
         pageSize={pageSize}
-        style={{
-          justifyContent: "center",
-          display: "flex",
-          marginTop: "16px",
-          flexWrap: "wrap",
-        }}
+        style={{ justifyContent: "center", display: "flex", marginTop: "16px", flexWrap: "wrap" }}
         pageSizeOptions={[10, 20, 50, 100, 200]}
-        onChange={(page, pageSize) => {
-          setPageNumber(page);
-          setPageSize(pageSize);
-        }}
-        total={
-          rowData && rowData?.PageCount
-            ? rowData?.PageCount * rowData?.PageSize
-            : 1
-        }
+        onChange={(page, ps) => { setPageNumber(page); setPageSize(ps); }}
+        total={rowData?.PageCount ? rowData.PageCount * rowData.PageSize : 1}
         current={pageNumber}
         size={isMobile ? "small" : "default"}
         simple={isMobile}
       />
 
-      {/* === Modal الإضافة/التعديل === */}
+      {/* ── Modal الإضافة/التعديل ── */}
       {openFormModel && (
         <Modal
           width={isMobile ? "95%" : "52%"}
@@ -977,34 +991,32 @@ const handleDamaged = async (assetId: number) => {
           title={toEdit ? "تعديل اصل موجود" : "اضافة أصل جديد"}
           footer={false}
           onCancel={handleCloseFormModel}
-          onOk={handleCloseFormModel}
         >
           <UniversityAssetsForm />
         </Modal>
       )}
 
-      {/* === Modal إضافة موديل === */}
+      {/* ── Modal إضافة موديل ── */}
       {openFormModelAddingModel && (
         <Modal
           width={isMobile ? "95%" : "52%"}
           style={{ top: isMobile ? 10 : undefined, maxWidth: 800 }}
           open={openFormModelAddingModel}
-          title={toEdit ? "اضافه موديل للاصل" : "اضافة موديل للاصل"}
+          title="اضافه موديل للاصل"
           footer={false}
           onCancel={() => { setOpenFormModelAddingModel(false); setToEdit(null); }}
-          onOk={() => { setOpenFormModelAddingModel(false); setToEdit(null); }}
         >
           <UniversityModelForm />
         </Modal>
       )}
 
-      {/* === Modal رفع الصور === */}
+      {/* ── Modal رفع الصور ── */}
       {imageUploadAssetId && (
         <AssetImageUploadModal
           assetId={imageUploadAssetId}
           open={imageUploadOpen}
           onClose={handleCloseImageUpload}
-          onSuccess={() => setdetectChanges((prev) => prev + 1)}  
+          onSuccess={() => setdetectChanges((prev) => prev + 1)}
         />
       )}
     </div>
