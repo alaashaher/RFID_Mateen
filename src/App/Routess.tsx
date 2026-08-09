@@ -35,6 +35,7 @@ import CampAdjustmentPage from "../pages/Campadjustmentpage/CampAdjustmentPage"
 import ReturnOrders from "../pages/ReturnOrdersPage/ReturnOrders";
 import InventoryReport from "../pages/InventoryReport/InventoryReport";
 import Suites from "../pages/Suites/Suites"
+import InventoryOrdersPage from "../pages/InventoryOrdersPage/InventoryOrdersPage";
 
 
 const Routess = () => {
@@ -100,6 +101,12 @@ const Routess = () => {
        <Route path={routerLinks.CampOrdersPage} element={
         <ProtectedRoute requiredPermission="ViewCampOrders">
           <CampOrdersPage />
+        </ProtectedRoute>}>
+      </Route>
+      {/* ViewInventoryOrders */}
+       <Route path={routerLinks.InventoryOrdersPage} element={
+        <ProtectedRoute requiredPermission="ViewCampOrders">
+          <InventoryOrdersPage />
         </ProtectedRoute>}>
       </Route>
        <Route path={routerLinks.CampsManagement} element={

@@ -992,7 +992,7 @@ const columns = [
     render: (_, record) => {
       return (
         <div className="act-btns">
-          {user.user.Permissions.includes("EditCategory") && (
+          {user.user.Permissions.includes("EditModels") && (
             <Tooltip title="تعديل">
               <Button
                 onClick={() => { handleEditMod(record); }}

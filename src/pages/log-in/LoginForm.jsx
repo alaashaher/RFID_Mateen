@@ -15,6 +15,27 @@ import { postToApi } from '../../apis/apis';
 import { useNavigate } from 'react-router-dom';
 import RouterLinks from '../../App/RouterLinks';
 
+function decodeBase64(base64EncodedUserData) {
+  try {
+    
+    // const parsedData = JSON.parse(base64EncodedUserData);
+    // const base64User = parsedData.user;
+
+    if (base64EncodedUserData) {
+      const decodedUserString = decodeURIComponent(escape(atob(base64EncodedUserData)));
+      const decodedUserObject = JSON.parse(decodedUserString);
+
+      // ////console.log("New Decoded User Object:", decodedUserObject);
+      return decodedUserObject;
+    } else {
+      console.error("No 'user' field found in the base64-encoded data.");
+    }
+
+  } catch (error) {
+    console.error("Failed to decode base64 string", error);
+    return null;
+  }
+}
 const schema = Yup.object().shape({
   Username: Yup.string().required('ادخل اسم المستخدم'),
   Password: Yup.string().required('ادخل كلمه السر')
@@ -58,17 +79,20 @@ const LoginForm = () => {
           }
         });
       } else if (Object.keys(res).length !== 0) {
-        // if (data.remember) setCurrentUser({ ...res });
-        // else {
-        if (res.user.RoleName === "فنى") {
+        const user  = decodeBase64(res.user)
+        console.log("🚀 ~ onSubmit ~ res:", user)
+        if (user.RoleName === "فنى") {
           navigate(RouterLinks.techOrders);
+          setUserToState({ ...res });
+          location.reload();
+        } else if(user.RoleName === "أدمن النظام") {
+          navigate(RouterLinks.InventoryReport);
           setUserToState({ ...res });
           location.reload();
         } else {
           setUserToState({ ...res });
           location.reload();
         }
-        // }
       }
     } catch (error) {
       // //console.log(error);
