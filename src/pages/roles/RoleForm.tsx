@@ -1,12 +1,13 @@
 import './Roles.scss';
-import { useEffect } from 'react';
-import { postToApi, putToApi } from '../../apis/apis.tsx';
-import { Button, Form, Input, Checkbox, Flex } from "antd";
+import { useEffect, useState } from 'react';
+import { getFromApi, postToApi, putToApi } from '../../apis/apis.tsx';
+import { Button, Form, Input, Checkbox, Flex, Select } from "antd";
 import { useContext } from "react";
 import RoleContext from '../../contexts/pages-context/RolesProvider.tsx';
 import { Store } from 'react-notifications-component';
 import CustomizeRequiredMark from '../customizeRequiredMark/CustomizeRequiredMark.tsx';
 import React from 'react';
+const { Option } = Select;
 
 const RoleForm = () => {
   const {
@@ -21,19 +22,35 @@ const RoleForm = () => {
   } = useContext(RoleContext);
 
   const [form] = Form.useForm();
+  const [classificationList, setClassificationList] = useState<any[]>([]);
 
   useEffect(() => {
+    const getAllClassifications = async () => {
+      try {
+        const allClassifications = await getFromApi('Roles/get-role-types-ddl');
+        setClassificationList(allClassifications.map((ele: any) => ({
+          label: ele.RoleTypeName,
+          value: ele.RoleTypeId,
+          IsCampSupervisor: ele.IsCampSupervisor
+        })));
+      } catch (error) {
+        console.error("Error fetching classifications:", error);
+      }
+    };
+    getAllClassifications();
+  }, [])
+  useEffect(() => {
     if (toEdit) {
-  const { Name, IsCampSupervisor } = toEdit;
-  form.setFieldValue('Name', Name);
-  form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
-}
+      const { Name, IsCampSupervisor } = toEdit;
+      form.setFieldValue('Name', Name);
+      form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+    }
 
-if (viewRSTData) {
-  const { Name, IsCampSupervisor } = viewRSTData;
-  form.setFieldValue('Name', Name);
-  form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
-}
+    if (viewRSTData) {
+      const { Name, IsCampSupervisor } = viewRSTData;
+      form.setFieldValue('Name', Name);
+      form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+    }
 
   }, [toEdit, viewRSTData])
 
@@ -153,13 +170,44 @@ if (viewRSTData) {
           <Input disabled={viewRSTData ? true : false} />
         </Form.Item>
         <Form.Item
-  name="IsCampSupervisor"
-  valuePropName="checked"
->
-  <Checkbox disabled={viewRSTData ? true : false}>
-    صلاحية لمشرف مخيم
-  </Checkbox>
-</Form.Item>
+          label="نوع الصلاحية"
+          name="RoleTypeId"
+          rules={[{ required: true, message: 'الرجاء اختيار الصلاحية' }]}
+        >
+          <Select
+            showSearch
+            onChange={(value) => {
+              form.setFieldsValue({ RoleTypeId: value });
+              const selectedRole = classificationList.find((item) => item.value == value);
+              if (selectedRole.IsCampSupervisor) {
+                form.setFieldsValue({ IsCampSupervisor: true });
+
+              } else {
+                form.setFieldsValue({ IsCampSupervisor: false });
+
+              }
+            }}
+            filterOption={false}
+            placeholder={"الصلاحية"}
+            size="large"
+            allowClear
+            disabled={viewRSTData ? true : false}
+          >
+            {classificationList.map((op, index) => (
+              <Option key={index} value={op.value}>
+                {op.label}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+        {/* <Form.Item
+          name="IsCampSupervisor"
+          valuePropName="checked"
+        >
+          <Checkbox disabled={viewRSTData ? true : false}>
+            صلاحية لمشرف مخيم
+          </Checkbox>
+        </Form.Item> */}
         <Form.Item  >
           <Flex gap="small" justify='end'>
             {!viewRSTData && <Button type="primary" htmlType="submit">

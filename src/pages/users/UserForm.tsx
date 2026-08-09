@@ -28,21 +28,21 @@ const UserForm = () => {
   } = useContext(UserContext);
   const [classificationList, setClassificationList] = useState<ClassificationItem[]>([]);
   const [roleName, setRoleName] = useState("");
-  const [campManagerList, setCampManagerList] = useState<{label: string; value: number}[]>([]);
-const [showCampManager, setShowCampManager] = useState(false);
+  const [campManagerList, setCampManagerList] = useState<{ label: string; value: number }[]>([]);
+  const [showCampManager, setShowCampManager] = useState(false);
   const getAllClassifications = async () => {
     try {
       const allClassifications = await getFromApi('Roles/get-roles-ddl');
-      setClassificationList(allClassifications.map((ele: any) => ({ 
-        label: ele.Name, 
+      setClassificationList(allClassifications.map((ele: any) => ({
+        label: ele.Name,
         value: ele.Id,
-        IsCampSupervisor: ele.IsCampSupervisor 
+        IsCampSupervisor: ele.IsCampSupervisor
       })));
     } catch (error) {
       console.error("Error fetching classifications:", error);
     }
   };
-const getCampManagers = async () => {
+  const getCampManagers = async () => {
     try {
       const managers = await getFromApi('DispatchOrder/get-camp-managers');
       setCampManagerList(managers.map((m: any) => ({ label: m.ManagerName, value: m.CampManagerId })));
@@ -52,15 +52,15 @@ const getCampManagers = async () => {
   };
   const [form] = Form.useForm();
 
- useEffect(() => {
+  useEffect(() => {
     if (toEdit) {
       setRoleName(toEdit.RoleName);
-      form.setFieldsValue({ 
-        UserId: toEdit.User.UserId, 
+      form.setFieldsValue({
+        UserId: toEdit.User.UserId,
         OdooJobNumber: toEdit.User.OdooJobNumber,
-        UserName: toEdit.User.UserName, 
-        Email: toEdit.User.Email, 
-        PhoneNumber: toEdit.User.PhoneNumber, 
+        UserName: toEdit.User.UserName,
+        Email: toEdit.User.Email,
+        PhoneNumber: toEdit.User.PhoneNumber,
         RoleId: toEdit.RoleId,
         CampManagerId: toEdit.User.CampManagerId || undefined
       });
@@ -69,12 +69,12 @@ const getCampManagers = async () => {
     }
 
     if (viewRSTData) {
-      form.setFieldsValue({ 
-        UserId: viewRSTData.User.UserId, 
-        OdooJobNumber: viewRSTData.User.OdooJobNumber, 
-        UserName: viewRSTData.User.UserName, 
-        Email: viewRSTData.User.Email, 
-        RoleId: viewRSTData.RoleId, 
+      form.setFieldsValue({
+        UserId: viewRSTData.User.UserId,
+        OdooJobNumber: viewRSTData.User.OdooJobNumber,
+        UserName: viewRSTData.User.UserName,
+        Email: viewRSTData.User.Email,
+        RoleId: viewRSTData.RoleId,
         PhoneNumber: viewRSTData.User.PhoneNumber,
         CampManagerId: viewRSTData.User.CampManagerId || undefined
       });
@@ -88,15 +88,15 @@ const getCampManagers = async () => {
   const onFinish = async (values: any) => {
     //console.log('Form Values:', values, toEdit); 
     const payload = {
-  UserId: (toEdit != null && toEdit.User.UserId) ? toEdit.User.UserId.toString() : undefined,
-  UserName: values.UserName,
-  OdooJobNumber: values.OdooJobNumber,
-  Email: values.Email,
-  RoleId: values.RoleId,
-  PhoneNumber: values.PhoneNumber,
-  RoleName: roleName,
-  CampManagerId: values.CampManagerId || null
-};
+      UserId: (toEdit != null && toEdit.User.UserId) ? toEdit.User.UserId.toString() : undefined,
+      UserName: values.UserName,
+      OdooJobNumber: values.OdooJobNumber,
+      Email: values.Email,
+      RoleId: values.RoleId,
+      PhoneNumber: values.PhoneNumber,
+      RoleName: roleName,
+      CampManagerId: values.CampManagerId || null
+    };
     if (values.Password) {
       payload.Password = values.Password
     }
@@ -193,15 +193,15 @@ const getCampManagers = async () => {
           <Select
             showSearch
             onChange={(value) => {
-  form.setFieldsValue({ RoleId: value });
-  const selectedRole = classificationList.find((item) => item.value == value);
-  setRoleName(selectedRole?.label || "");
-  const isCamp = selectedRole?.IsCampSupervisor || false;
-  setShowCampManager(isCamp);
-  if (!isCamp) {
-    form.setFieldsValue({ CampManagerId: undefined });
-  }
-}}
+              form.setFieldsValue({ RoleId: value });
+              const selectedRole = classificationList.find((item) => item.value == value);
+              setRoleName(selectedRole?.label || "");
+              const isCamp = selectedRole?.IsCampSupervisor || false;
+              setShowCampManager(isCamp);
+              if (!isCamp) {
+                form.setFieldsValue({ CampManagerId: undefined });
+              }
+            }}
             filterOption={false}
             placeholder={"الصلاحية"}
             size="large"
@@ -216,29 +216,29 @@ const getCampManagers = async () => {
           </Select>
         </Form.Item>
         {showCampManager && (
-  <Form.Item
-    label="اختار مشرف"
-    name="CampManagerId"
-    rules={[{ required: true, message: 'الرجاء اختيار المشرف' }]}
-  >
-    <Select
-      showSearch
-      placeholder="اختار مشرف المخيم"
-      size="large"
-      allowClear
-      disabled={viewRSTData ? true : false}
-      filterOption={(input, option) =>
-        (option?.children as unknown as string)?.includes(input)
-      }
-    >
-      {campManagerList.map((m) => (
-        <Option key={m.value} value={m.value}>
-          {m.label}
-        </Option>
-      ))}
-    </Select>
-  </Form.Item>
-)}
+          <Form.Item
+            label="اختار مشرف"
+            name="CampManagerId"
+            rules={[{ required: true, message: 'الرجاء اختيار المشرف' }]}
+          >
+            <Select
+              showSearch
+              placeholder="اختار مشرف المخيم"
+              size="large"
+              allowClear
+              disabled={viewRSTData ? true : false}
+              filterOption={(input, option) =>
+                (option?.children as unknown as string)?.includes(input)
+              }
+            >
+              {campManagerList.map((m) => (
+                <Option key={m.value} value={m.value}>
+                  {m.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item
           label="اسم المستخدم"
           name="UserName"

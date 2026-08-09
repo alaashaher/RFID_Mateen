@@ -512,7 +512,7 @@ const UniversityAssetsPage = () => {
     const fetchRooms = async () => {
       try {
         const res = await getFromApi(
-          `Room/get-room-ddl?suiteId=${suiteId}`
+          `Room/get-room-ddl-by-SuiteId?suiteId=${suiteId}`
         );
         const roomData = res?.Data ?? res;
         setRooms(toArray(roomData));

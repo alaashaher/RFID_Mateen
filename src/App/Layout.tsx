@@ -133,13 +133,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       icon: <CiOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewCampOrders")) ? false : true
     },
-    {
-      key: 212,
-      path: routerLinks.InventoryOrdersPage,
-      name: " طلبات المستودع",
-      icon: <CiOutlined />,
-      // hidden: (user?.user?.Permissions?.includes("ViewInventoryOrders")) ? false : true
-    },
+    // {
+    //   key: 212,
+    //   path: routerLinks.InventoryOrdersPage,
+    //   name: " طلبات المستودع",
+    //   icon: <CiOutlined />,
+    //   // hidden: (user?.user?.Permissions?.includes("ViewInventoryOrders")) ? false : true
+    // },
     {
       key: 113,
       path: routerLinks.CampAdjustmentPage,
@@ -223,7 +223,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
     {
       key: 15,
       path: routerLinks.ScsnnedUniversityAssetsPage,
-      name: "الجرد",
+      name: "جرد المباني الأدارية",
       icon: <ScanOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewAdjustmentUniversityAssets")) ? false : true
 

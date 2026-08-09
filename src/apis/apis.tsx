@@ -48,6 +48,8 @@ export function setAuthorizationToken(token?: string) {
     // ////console.log("c-user-Id", decodedUser.UserId)
 
     axios.defaults.headers.common["userid"] = decodedUser.UserId;
+    axios.defaults.headers.common["RoleTypeId"] = decodedUser.RoleTypeId  ? decodedUser.RoleTypeId : null;
+    
     axios.defaults.headers.common["alaa"] = "alaa";
     axios.defaults.headers.common["Authorization"] = `Bearer ${JSON.parse(sessionStorage.getItem('currentUser')).token}`;
     return;
