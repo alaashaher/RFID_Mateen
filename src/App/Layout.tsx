@@ -99,6 +99,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
       path: routerLinks.InventoryReport,
       name: "الصفحة الرئيسية - المستودع",
       icon: <HomeOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewInventoryReport")) ? false : true
     },
     
     

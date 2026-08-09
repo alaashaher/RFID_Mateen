@@ -92,29 +92,29 @@ const Routess = () => {
       </Route>
 
 
-        <Route path={routerLinks.OutOrders} element={
+      <Route path={routerLinks.OutOrders} element={
         <ProtectedRoute requiredPermission=
-"ViewDispatchOrders">
+          "ViewDispatchOrders">
           <OutOrders />
         </ProtectedRoute>}>
       </Route>
-       <Route path={routerLinks.CampOrdersPage} element={
+      <Route path={routerLinks.CampOrdersPage} element={
         <ProtectedRoute requiredPermission="ViewCampOrders">
           <CampOrdersPage />
         </ProtectedRoute>}>
       </Route>
       {/* ViewInventoryOrders */}
-       <Route path={routerLinks.InventoryOrdersPage} element={
+      <Route path={routerLinks.InventoryOrdersPage} element={
         <ProtectedRoute requiredPermission="ViewCampOrders">
           <InventoryOrdersPage />
         </ProtectedRoute>}>
       </Route>
-       <Route path={routerLinks.CampsManagement} element={
+      <Route path={routerLinks.CampsManagement} element={
         <ProtectedRoute requiredPermission="ViewCampManagers">
           <CampsManagement />
         </ProtectedRoute>}>
       </Route>
-      
+
       <Route path={routerLinks.UniversityAssetsAdjustment} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <UniversityAssetsAdjustmentInfo />
@@ -154,13 +154,13 @@ const Routess = () => {
           <Users />
         </ProtectedRoute>
       }></Route>
-<Route path={routerLinks.returnOrders} element={
+      <Route path={routerLinks.returnOrders} element={
         <ProtectedRoute requiredPermission="ViewReturnOrders">
           <ReturnOrders />
         </ProtectedRoute>
       }></Route>
-<Route path={routerLinks.InventoryReport} element={
-        <ProtectedRoute requiredPermission="ViewReturnOrders">
+      <Route path={routerLinks.InventoryReport} element={
+        <ProtectedRoute requiredPermission="ViewInventoryReport">
           <InventoryReport />
         </ProtectedRoute>
       }></Route>
