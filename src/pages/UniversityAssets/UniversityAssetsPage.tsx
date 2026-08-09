@@ -12,7 +12,9 @@ import {
   PlusOutlined,
   DeleteOutlined as DeleteIcon,
   WarningOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
+import AssetRelocationModal from "./AssetRelocationModal";
 import { deleteFromApi, getFromApi, postToApi, putToApi } from "../../apis/apis";
 import {
   Button,
@@ -177,8 +179,16 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
         formData.append("Images", compressedFile);
       }
       const token = localStorage.getItem("token");
+      // const response = await fetch(
+      //   "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
+      //   {
+      //     method: "POST",
+      //     headers: { Authorization: `Bearer ${token}` },
+      //     body: formData,
+      //   }
+      // );
       const response = await fetch(
-        "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
+        "https://mosandarajihirfidapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -332,19 +342,23 @@ const UniversityAssetsPage = () => {
   const [rooms, setRooms] = useState<any[]>([]);
   const [roomId, setRoomId] = useState<any>("");
 
-    // ── فلتر حالة الأصل (مستقل) ──
+  // ── فلتر حالة الأصل (مستقل) ──
   const [statuses, setStatuses] = useState<any[]>([]);
   const [selectedStatusId, setSelectedStatusId] = useState<any>("");
-  
+
   // ── رفع الصور ──
   const [imageUploadOpen, setImageUploadOpen] = useState(false);
   const [imageUploadAssetId, setImageUploadAssetId] = useState<number | null>(null);
+
+  // ── إعادة التسكين ──
+  const [relocationOpen, setRelocationOpen] = useState(false);
+  const [relocationAsset, setRelocationAsset] = useState<any | null>(null);
 
   // هل الـ building type المختار هو مستودع؟
   const isWarehouseType = selectedBuildingTypeId === WAREHOUSE_BUILDING_TYPE_ID;
 
   // ── تحديد الـ API query parameters بناءً على نوع المبنى ──
-   const buildApiParams = () => {
+  const buildApiParams = () => {
     const base = `isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}`;
     if (isWarehouseType) {
       return `${base}&buildingId=${buildingId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
@@ -368,6 +382,7 @@ const UniversityAssetsPage = () => {
     fetchBuildingTypes();
   }, []);
 
+  
   // ── جلب حالات الأصل عند التحميل (مستقل) ──
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -378,7 +393,7 @@ const UniversityAssetsPage = () => {
     };
     fetchStatuses();
   }, []);
- 
+
   // ── جلب المباني عند تغيير نوع المبنى ──
   useEffect(() => {
     setModelFilter(null);
@@ -531,7 +546,7 @@ const UniversityAssetsPage = () => {
   }, [
     pageNumber, pageSize, keyword, detectChanges,
     buildingId, CategoryId, AssetTypeId, modelId,
-    floorId, suiteId, roomId,selectedStatusId,
+    floorId, suiteId, roomId, selectedStatusId,
     selectedBuildingTypeId,
   ]);
 
@@ -656,6 +671,16 @@ const UniversityAssetsPage = () => {
     setImageUploadAssetId(null);
   };
 
+  const handleOpenRelocation = (record: any) => {
+    setRelocationAsset(record);
+    setRelocationOpen(true);
+  };
+
+  const handleCloseRelocation = () => {
+    setRelocationOpen(false);
+    setRelocationAsset(null);
+  };
+
   const handleCloseFormModel = () => {
     setOpenFormModel(false);
     setToEdit(null);
@@ -732,9 +757,21 @@ const UniversityAssetsPage = () => {
       fixed: "right" as const,
       render: (_, record) => (
         <div className="act-btns">
-          {user.user.Permissions.includes("EditUniversityAssets") && (
+          {/* {user.user.Permissions.includes("EditUniversityAssets") && (
             <Tooltip title="تعديل">
               <Button onClick={() => handleEditMod(record.UniversityAssetId)} icon={<EditOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
+            </Tooltip>
+          )} */}
+          {user.user.Permissions.includes("EditUniversityAssets") &&
+            record.BuildingId !== 1 && (
+            <Tooltip title="إعادة تسكين">
+              <Button
+                onClick={() => handleOpenRelocation(record)}
+                icon={<SwapOutlined />}
+                shape="circle"
+                size={isMobile ? "small" : "middle"}
+                style={{ color: "#722ed1" }}
+              />
             </Tooltip>
           )}
           {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
@@ -759,6 +796,7 @@ const UniversityAssetsPage = () => {
               </Popconfirm>
             </Tooltip>
           )}
+          
         </div>
       ),
     },
@@ -820,7 +858,7 @@ const UniversityAssetsPage = () => {
               setCategoryId(""); setAssetTypeId(""); setModelId("");
               setFloorId(""); setSuiteId(""); setRoomId("");
             }}
-            style={{ width: isMobile ? "100%" : 400 }}
+            style={{ width: isMobile ? "100%" : 200 }}
           >
             {buildings.map((b) => (
               <Option key={b.BuildingId} value={b.BuildingId}>
@@ -926,7 +964,8 @@ const UniversityAssetsPage = () => {
             )}
           </>
         )}
-{/* ── حالة الأصل — فلتر مستقل ── */}
+
+        {/* ── حالة الأصل — فلتر مستقل ── */}
         <Select
           allowClear
           placeholder="حالة الأصل"
@@ -1019,6 +1058,14 @@ const UniversityAssetsPage = () => {
           onSuccess={() => setdetectChanges((prev) => prev + 1)}
         />
       )}
+
+      {/* ── Modal إعادة التسكين ── */}
+      <AssetRelocationModal
+        open={relocationOpen}
+        onClose={handleCloseRelocation}
+        onSuccess={() => setdetectChanges((prev) => prev + 1)}
+        asset={relocationAsset}
+      />
     </div>
   );
 };

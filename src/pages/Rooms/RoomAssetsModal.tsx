@@ -57,13 +57,12 @@ interface RoomAssetRow {
   IsNew: boolean;
 }
 
-const WAKF_IMAGES_BASE_URL =   (window as any)?.__RAJHI_IMAGES_BASE__ || "https://rfidrajhiapi.sirumaps.net/";
-
-const Mosanda_IMAGES_BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/";
+//const IMAGES_BASE_URL = "https://rfidrajhiapi.sirumaps.net/";
+const IMAGES_BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/";
 
 const buildImgSrc = (path?: string | null, CompanyId?: number | 1) => {
   console.log("companyId____", CompanyId);
-  const IMG_BASE_URL = CompanyId == 1 ? WAKF_IMAGES_BASE_URL : Mosanda_IMAGES_BASE_URL;
+  const IMG_BASE_URL = IMAGES_BASE_URL;
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   const sss =  `${IMG_BASE_URL}${path.replace(/^\/+/, "")}`;
