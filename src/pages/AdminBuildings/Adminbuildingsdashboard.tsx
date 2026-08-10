@@ -38,7 +38,7 @@ const AdminBuildingsDashboard: React.FC = () => {
       setBuildings(buildingsData);
       // Auto-select first building
       if (buildingsData.length > 0) {
-        setSelection({ buildingId: buildingsData[0].buildingId, floorId: null });
+        setSelection({ buildingId: buildingsData[0].BuildingId, floorId: null });
       }
     } catch {
       setError("حدث خطأ أثناء تحميل البيانات");
@@ -53,7 +53,7 @@ const AdminBuildingsDashboard: React.FC = () => {
     setSelection({ buildingId, floorId });
   };
 
-  const selectedBuilding = buildings.find(b => b.buildingId === selection.buildingId) ?? null;
+  const selectedBuilding = buildings.find(b => b.buildingId === selection.BuildingId) ?? null;
 
   if (loading) {
     return (

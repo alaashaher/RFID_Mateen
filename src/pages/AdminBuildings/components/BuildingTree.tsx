@@ -10,8 +10,8 @@ interface Props {
 
 const RoomNode: React.FC<{ room: RoomNodeDTO }> = ({ room }) => (
   <div className="tree-room">
-    <span className="tree-room-name">🚪 {room.roomName}</span>
-    <span className="tree-room-count">{room.assetCount}</span>
+    <span className="tree-room-name">🚪 {room.RoomName}</span>
+    <span className="tree-room-count">{room.AssetCount}</span>
   </div>
 );
 
@@ -21,12 +21,12 @@ const SuiteNode: React.FC<{ suite: SuiteNodeDTO }> = ({ suite }) => {
     <div className="tree-suite">
       <div className="tree-suite-header" onClick={() => setOpen(o => !o)}>
         <span>{open ? <CaretDownOutlined /> : <CaretLeftOutlined />}</span>
-        <span className="tree-suite-name">🏢 {suite.suiteName}</span>
-        <span className="tree-badge">{suite.assetCount}</span>
+        <span className="tree-suite-name">🏢 {suite.SuiteName}</span>
+        <span className="tree-badge">{suite.AssetCount}</span>
       </div>
       {open && (
         <div className="tree-suite-rooms">
-          {suite.rooms.map(r => <RoomNode key={r.roomId} room={r} />)}
+          {suite.Rooms.map(r => <RoomNode key={r.RoomId} room={r} />)}
         </div>
       )}
     </div>
@@ -48,13 +48,13 @@ const FloorNode: React.FC<{
         onClick={() => { setOpen(o => !o); onSelect(buildingId, floor.floorId); }}
       >
         <span className="tree-toggle">{open ? <CaretDownOutlined /> : <CaretLeftOutlined />}</span>
-        <span className="tree-floor-name">الدور {floor.floorName}</span>
-        <span className="tree-badge">{floor.assetCount} أصل</span>
+        <span className="tree-floor-name">الدور {floor.FloorName}</span>
+        <span className="tree-badge">{floor.AssetCount} أصل</span>
       </div>
       {open && (
         <div className="tree-floor-children">
-          {floor.suites.map(s => <SuiteNode key={s.suiteId} suite={s} />)}
-          {floor.rooms.map(r => <RoomNode key={r.roomId} room={r} />)}
+          {floor.Suites.map(s => <SuiteNode key={s.SuiteId} suite={s} />)}
+          {floor.Rooms.map(r => <RoomNode key={r.RoomId} room={r} />)}
         </div>
       )}
     </div>
@@ -80,31 +80,31 @@ const BuildingTree: React.FC<Props> = ({ buildings, selection, onSelect }) => {
         <span>هيكل المباني</span>
       </div>
       {buildings.map(b => (
-        <div key={b.buildingId} className="tree-building">
+        <div key={b.لآuildingId} className="tree-building">
           <div
-            className={`tree-building-header ${selection.buildingId === b.buildingId && selection.floorId === null ? "selected" : ""}`}
-            onClick={() => { toggleBuilding(b.buildingId); onSelect(b.buildingId, null); }}
+            className={`tree-building-header ${selection.buildingId === b.BuildingId && selection.floorId === null ? "selected" : ""}`}
+            onClick={() => { toggleBuilding(b.BuildingId); onSelect(b.BuildingId, null); }}
           >
             <BankOutlined className="tree-building-icon" />
-            <span className="tree-building-name">{b.buildingName}</span>
+            <span className="tree-building-name">{b.BuildingName}</span>
             <div className="tree-building-meta">
-              <span className="tree-badge primary">{b.totalAssets} أصل</span>
+              <span className="tree-badge primary">{b.TotalAssets} أصل</span>
               {b.unassignedAssets > 0 && (
-                <span className="tree-badge warning">{b.unassignedAssets} غير مسكّن</span>
+                <span className="tree-badge warning">{b.UnassignedAssets} غير مسكّن</span>
               )}
             </div>
             <span className="tree-toggle-icon">
-              {openBuildings.has(b.buildingId) ? <CaretDownOutlined /> : <CaretLeftOutlined />}
+              {openBuildings.has(b.BuildingId) ? <CaretDownOutlined /> : <CaretLeftOutlined />}
             </span>
           </div>
-          {openBuildings.has(b.buildingId) && (
+          {openBuildings.has(b.BuildingId) && (
             <div className="tree-building-floors">
-              {b?.floors?.map(f => (
+              {b?.Floors?.map(f => (
                 <FloorNode
-                  key={f.floorId}
+                  key={f.FloorId}
                   floor={f}
-                  buildingId={b.buildingId}
-                  isSelected={selection.buildingId === b.buildingId && selection.floorId === f.floorId}
+                  buildingId={b.BuildingId}
+                  isSelected={selection.buildingId === b.BuildingId && selection.floorId === f.FloorId}
                   onSelect={onSelect}
                 />
               ))}

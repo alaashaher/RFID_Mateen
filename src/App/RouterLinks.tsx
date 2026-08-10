@@ -7,7 +7,7 @@ const RouterLinks = {
   // UnassignedAssets: "/UnassignedAssets",
   // AssetMovements: "/AssetMovements",
 
-  UnassignedAssets: "/unassigned-assets",  // الصفحة الموجودة بالفعل
+  UnassignedAssets: "/UniversityAssetsRelocation",  // الصفحة الموجودة بالفعل
   AssetMovements: "/asset-movements",       // صفحة سجل النقل
   AdminBuildings: "/admin-buildings",       // الصفحة الجديدة
 
