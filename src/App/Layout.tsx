@@ -209,7 +209,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
       key: 2,
       path: routerLinks.AdminBuildings,
       name: "المباني الأدارية",
-      icon: <DatabaseOutlined />,
+      icon: <BankOutlined  />,
       hidden: (user?.user?.Permissions?.includes("ViewBuildings")) ? false : true
     },
     {
