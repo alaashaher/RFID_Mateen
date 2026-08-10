@@ -99,7 +99,7 @@ const BuildingTree: React.FC<Props> = ({ buildings, selection, onSelect }) => {
           </div>
           {openBuildings.has(b.buildingId) && (
             <div className="tree-building-floors">
-              {b.floors.map(f => (
+              {b?.floors?.map(f => (
                 <FloorNode
                   key={f.floorId}
                   floor={f}

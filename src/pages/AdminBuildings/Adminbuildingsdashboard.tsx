@@ -2,26 +2,26 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spin, Alert } from "antd";
 import { getFromApi } from "../../apis/apis";
-import { routerLinks } from "../../routes/routerLinks";
 import AdminKPICards from "./components/AdminKPICards";
 import BuildingTree from "./components/BuildingTree";
 import FloorCards from "./components/FloorCards";
-import {
-  AdminBuildingsSummaryDTO,
-  BuildingNodeDTO,
-  SelectionState,
-} from "./types/adminBuildings.types";
+// import {
+//   AdminBuildingsSummaryDTO,
+//   BuildingNodeDTO,
+//   SelectionState,
+// } from "./types/adminBuildings.types";
 import "./AdminBuildingsDashboard.scss";
+import RouterLinks from "../../App/RouterLinks";
 
 const AdminBuildingsDashboard: React.FC = () => {
   const navigate = useNavigate();
 
-  const [summary, setSummary] = useState<AdminBuildingsSummaryDTO | null>(null);
-  const [buildings, setBuildings] = useState<BuildingNodeDTO[]>([]);
+  const [summary, setSummary] = useState<any | null>(null);
+  const [buildings, setBuildings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [selection, setSelection] = useState<SelectionState>({
+  const [selection, setSelection] = useState<any>({
     buildingId: null,
     floorId: null,
   });
@@ -91,8 +91,8 @@ const AdminBuildingsDashboard: React.FC = () => {
       {summary && (
         <AdminKPICards
           summary={summary}
-          onUnassignedClick={() => navigate(routerLinks.UnassignedAssets)}
-          onMovementsClick={() => navigate(routerLinks.AssetMovements)}
+          onUnassignedClick={() => navigate(RouterLinks.UnassignedAssets)}
+          onMovementsClick={() => navigate(RouterLinks.AssetMovements)}
         />
       )}
 

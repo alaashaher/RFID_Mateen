@@ -36,6 +36,9 @@ import ReturnOrders from "../pages/ReturnOrdersPage/ReturnOrders";
 import InventoryReport from "../pages/InventoryReport/InventoryReport";
 import Suites from "../pages/Suites/Suites"
 import InventoryOrdersPage from "../pages/InventoryOrdersPage/InventoryOrdersPage";
+import EptyDashboard from "../pages/log-in/EptyDashboard";
+import MultiDashBoard from "../pages/log-in/MultiDashBoard";
+import AdminBuildingsDashboard from "../pages/AdminBuildings/Adminbuildingsdashboard";
 
 
 const Routess = () => {
@@ -44,11 +47,20 @@ const Routess = () => {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       <Route path={routerLinks.homePage} element={<HomePage />}></Route>
+      <Route path={routerLinks.EptyDashboard} element={<EptyDashboard />}></Route>
+      <Route path={routerLinks.MultiDashBoard} element={<MultiDashBoard />}></Route>
+      {/* <Route path={routerLinks.UnassignedAssets} element={< />}></Route> */}
+
       <Route path={routerLinks.Buildings} element={<ProtectedRoute requiredPermission="ViewBuildings"> <BuildingsPage /> </ProtectedRoute>} />
 
       <Route path={routerLinks.category} element={
         <ProtectedRoute requiredPermission="ViewCategory">
           <AssetsTypePage />
+        </ProtectedRoute>
+      }></Route>
+      <Route path={routerLinks.AdminBuildings} element={
+        <ProtectedRoute requiredPermission="ViewBuildings">
+          <AdminBuildingsDashboard />
         </ProtectedRoute>
       }></Route>
       <Route path={routerLinks.models} element={

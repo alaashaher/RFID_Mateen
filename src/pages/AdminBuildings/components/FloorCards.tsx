@@ -31,7 +31,7 @@ const FloorCards: React.FC<Props> = ({ building, selectedFloorId }) => {
       </div>
 
       <div className="floor-cards-grid">
-        {floorsToShow.map(floor => (
+        {floorsToShow?.map(floor => (
           <div key={floor.floorId} className="floor-card">
             <div className="floor-card-header">
               <span className="floor-card-name">الدور {floor.floorName}</span>
@@ -42,11 +42,11 @@ const FloorCards: React.FC<Props> = ({ building, selectedFloorId }) => {
             </div>
 
             {/* Suites */}
-            {floor.suites.map(suite => (
+            {floor?.suites?.map(suite => (
               <div key={suite.suiteId} className="suite-section">
                 <div className="suite-label">🏢 {suite.suiteName}</div>
                 <div className="rooms-grid">
-                  {suite.rooms.map(room => (
+                  {suite?.rooms?.map(room => (
                     <div key={room.roomId} className={`room-chip ${room.assetCount === 0 ? "empty" : ""}`}>
                       <span className="room-chip-name">{room.roomName}</span>
                       <span className="room-chip-count">{room.assetCount}</span>

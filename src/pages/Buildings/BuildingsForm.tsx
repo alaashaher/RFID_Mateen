@@ -62,7 +62,22 @@ const CityArchitecturalStyleForm = () => {
       setValue("BuildingTypeId", String(toEdit.BuildingTypeId));
     }
   }, [toEdit, setValue]);
+  const [classificationList, setClassificationList] = useState<any[]>([]);
 
+  useEffect(() => {
+    const getAllClassifications = async () => {
+      try {
+        const allClassifications = await getFromApi('BuildingType/get-buildingType-ddl');
+        setClassificationList(allClassifications.map((ele: any) => ({
+          title: ele.BuildingTypeName,
+          value: ele.BuildingTypeId,
+        })));
+      } catch (error) {
+        console.error("Error fetching classifications:", error);
+      }
+    };
+    getAllClassifications();
+  }, [])
   const onFinish = async (data) => {
     ////console.log("Form submitted:", data);
 
@@ -152,7 +167,7 @@ const CityArchitecturalStyleForm = () => {
               errorMsg={errors.BuildingTypeId?.message}
               label={<span>  نوع المبني<span style={{ color: '#252627' }}>*</span></span>}
               placeholder=" نوع المبني"
-              options={[{ title: "مستودع", value: "1" }, { title: "مبني أدري", value: "2" }]}
+              options={classificationList}
             />
           </Col>
           <Col xs={24} sm={24} md={24} lg={24} xl={24} xxl={24} >

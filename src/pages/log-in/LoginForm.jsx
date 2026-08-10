@@ -17,7 +17,7 @@ import RouterLinks from '../../App/RouterLinks';
 
 function decodeBase64(base64EncodedUserData) {
   try {
-    
+
     // const parsedData = JSON.parse(base64EncodedUserData);
     // const base64User = parsedData.user;
 
@@ -79,17 +79,31 @@ const LoginForm = () => {
           }
         });
       } else if (Object.keys(res).length !== 0) {
-        const user  = decodeBase64(res.user)
+        const user = decodeBase64(res.user)
         console.log("🚀 ~ onSubmit ~ res:", user)
         if (user.RoleName === "فنى") {
           navigate(RouterLinks.techOrders);
           setUserToState({ ...res });
           location.reload();
-        } else if(user.RoleName === "أدمن النظام") {
+        } else if (user.RoleTypeId === 1) {
           navigate(RouterLinks.InventoryReport);
           setUserToState({ ...res });
           location.reload();
-        } else {
+        }
+        else if (user.RoleTypeId === 2) {
+          navigate(RouterLinks.AdminBuildings);
+          setUserToState({ ...res });
+          location.reload();
+        } else if (user.RoleTypeId === 3) {
+          navigate(RouterLinks.EptyDashboard);
+          setUserToState({ ...res });
+          location.reload();
+        } else if (user.RoleTypeId === 4) {
+          navigate(RouterLinks.MultiDashBoard);
+          setUserToState({ ...res });
+          location.reload();
+        }
+        else {
           setUserToState({ ...res });
           location.reload();
         }

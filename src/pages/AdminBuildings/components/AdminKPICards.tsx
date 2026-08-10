@@ -75,7 +75,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
         >
           <div className="kpi-icon">{card.icon}</div>
           <div className="kpi-body">
-            <div className="kpi-value">{card.value.toLocaleString("ar-SA")}</div>
+            <div className="kpi-value">{card?.value?.toLocaleString("ar-SA")}</div>
             <div className="kpi-label">{card.label}</div>
           </div>
           {card.clickable && (
