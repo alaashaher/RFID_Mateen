@@ -36,8 +36,8 @@ import { Store } from "react-notifications-component";
 import { useNavigate } from "react-router-dom";
 import RouterLinks from "../../App/RouterLinks";
 const { Option } = Select;
-//const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
-const BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/api";
+const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
+//const BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/api";
 //const BASE_URL = "http://localhost:7228/api";
 const ModelsPage = () => {
   const navigate = useNavigate();

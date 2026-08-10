@@ -179,22 +179,22 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
         formData.append("Images", compressedFile);
       }
       const token = localStorage.getItem("token");
-      // const response = await fetch(
-      //   "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
-      //   {
-      //     method: "POST",
-      //     headers: { Authorization: `Bearer ${token}` },
-      //     body: formData,
-      //   }
-      // );
       const response = await fetch(
-        "https://mosandarajihirfidapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
+        "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
+      // const response = await fetch(
+      //   "https://mosandarajihirfidapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
+      //   {
+      //     method: "POST",
+      //     headers: { Authorization: `Bearer ${token}` },
+      //     body: formData,
+      //   }
+      // );
       const result = await response.json();
       if (response.ok && result?.Item1 !== false) {
         Store.addNotification({

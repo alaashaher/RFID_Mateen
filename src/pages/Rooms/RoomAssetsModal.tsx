@@ -57,8 +57,8 @@ interface RoomAssetRow {
   IsNew: boolean;
 }
 
-//const IMAGES_BASE_URL = "https://rfidrajhiapi.sirumaps.net/";
-const IMAGES_BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/";
+const IMAGES_BASE_URL = "https://rfidrajhiapi.sirumaps.net/";
+//const IMAGES_BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/";
 
 const buildImgSrc = (path?: string | null, CompanyId?: number | 1) => {
   console.log("companyId____", CompanyId);

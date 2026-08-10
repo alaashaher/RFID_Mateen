@@ -1,0 +1,412 @@
+// ═══════════════════════════════════════════
+// Admin Buildings Dashboard — Styles
+// هوية: أزرق داكن + ذهبي خفيف (الراجحي)
+// ═══════════════════════════════════════════
+
+$primary:     #1a3c5e;
+$primary-mid: #2c6fad;
+$gold:        #c5a028;
+$gold-light:  #fef9ed;
+$success:     #1b7a4a;
+$warning:     #c0392b;
+$border:      #e0e7ef;
+$text-main:   #1a2332;
+$text-muted:  #6b7a8d;
+$bg-page:     #f4f6fa;
+$bg-white:    #ffffff;
+$radius:      10px;
+$radius-sm:   6px;
+
+// ─── Page Shell ───
+.admin-buildings-page {
+  padding: 24px;
+  background: $bg-page;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Tajawal', sans-serif;
+}
+
+.admin-buildings-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+// ─── Page Header ───
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+
+  .page-header-text {
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: $primary;
+      margin: 0 0 4px;
+    }
+    p {
+      font-size: 13px;
+      color: $text-muted;
+      margin: 0;
+    }
+  }
+
+  .btn-refresh {
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: $primary;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover { background: $primary; color: #fff; }
+  }
+}
+
+// ─── KPI Cards ───
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.admin-kpi-card {
+  background: $bg-white;
+  border-radius: $radius;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid $border;
+  transition: all 0.2s;
+  position: relative;
+
+  &.clickable {
+    cursor: pointer;
+    &:hover {
+      border-color: var(--card-color);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+  }
+
+  &.has-badge::before {
+    content: '!';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $warning;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-sm;
+    background: var(--card-bg);
+    color: var(--card-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .kpi-body {
+    flex: 1;
+    .kpi-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--card-color);
+      line-height: 1.1;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: $text-muted;
+      margin-top: 2px;
+    }
+  }
+
+  .kpi-arrow {
+    color: var(--card-color);
+    opacity: 0.6;
+    font-size: 16px;
+  }
+}
+
+// ─── Main Layout ───
+.admin-buildings-main {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+// ─── Tree Panel ───
+.admin-tree-panel {
+  background: $bg-white;
+  border-radius: $radius;
+  border: 1px solid $border;
+  overflow: hidden;
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.building-tree {
+  .tree-header {
+    padding: 14px 16px;
+    background: $primary;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+}
+
+.tree-building {
+  border-bottom: 1px solid $border;
+
+  .tree-building-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover { background: #f0f4f8; }
+    &.selected { background: #e8f0fe; border-right: 3px solid $primary-mid; }
+
+    .tree-building-icon { color: $primary; font-size: 16px; }
+    .tree-building-name { flex: 1; font-size: 13px; font-weight: 600; color: $text-main; }
+    .tree-building-meta { display: flex; gap: 6px; }
+    .tree-toggle-icon { color: $text-muted; font-size: 11px; }
+  }
+
+  .tree-building-floors { padding: 4px 0 8px 12px; }
+}
+
+.tree-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  &.primary { background: #e8f0fe; color: $primary-mid; }
+  &.warning  { background: #fdecea; color: $warning; }
+  // default (no modifier)
+  background: #f0f4f8;
+  color: $text-muted;
+}
+
+.tree-floor {
+  margin: 2px 0;
+
+  .tree-floor-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover { background: #f5f7fa; }
+    &.selected { background: #e3f2fd; color: $primary-mid; font-weight: 600; }
+
+    .tree-toggle { font-size: 10px; color: $text-muted; }
+    .tree-floor-name { flex: 1; font-size: 12.5px; color: $text-main; }
+  }
+
+  .tree-floor-children { padding-right: 14px; }
+}
+
+.tree-suite {
+  margin: 2px 0;
+  .tree-suite-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: $radius-sm;
+    font-size: 12px;
+    color: $text-muted;
+    &:hover { background: #f9fafb; }
+    .tree-suite-name { flex: 1; }
+  }
+  .tree-suite-rooms { padding-right: 16px; }
+}
+
+.tree-room {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: $text-muted;
+  .tree-room-count {
+    background: #f0f4f8;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: $primary-mid;
+    font-weight: 600;
+  }
+}
+
+// ─── Cards Panel ───
+.admin-cards-panel {
+  min-height: 400px;
+}
+
+.floor-cards-empty {
+  background: $bg-white;
+  border-radius: $radius;
+  border: 1px dashed $border;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px;
+  color: $text-muted;
+  font-size: 14px;
+}
+
+.floor-cards-section {
+  .floor-cards-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: $primary;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .floor-filter-note {
+      font-size: 13px;
+      color: $text-muted;
+      font-weight: 400;
+    }
+  }
+}
+
+.floor-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.floor-card {
+  background: $bg-white;
+  border-radius: $radius;
+  border: 1px solid $border;
+  overflow: hidden;
+
+  .floor-card-header {
+    background: linear-gradient(135deg, $primary 0%, $primary-mid 100%);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .floor-card-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .floor-card-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      opacity: 0.9;
+      span { display: flex; align-items: center; gap: 4px; }
+    }
+  }
+
+  .floor-card-empty {
+    padding: 20px;
+    text-align: center;
+    color: $text-muted;
+    font-size: 13px;
+  }
+}
+
+.suite-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f4f8;
+  &:last-child { border-bottom: none; }
+
+  .suite-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $primary-mid;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed $border;
+  }
+}
+
+.rooms-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f4f8;
+  border-radius: 20px;
+  padding: 5px 12px;
+  border: 1px solid $border;
+  transition: all 0.15s;
+
+  &:hover { background: #e3f2fd; border-color: $primary-mid; }
+
+  &.empty {
+    background: #fafafa;
+    opacity: 0.6;
+    .room-chip-count { color: $text-muted; }
+  }
+
+  .room-chip-name {
+    font-size: 12px;
+    color: $text-main;
+    font-weight: 500;
+  }
+  .room-chip-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: $primary-mid;
+    background: $bg-white;
+    border-radius: 10px;
+    padding: 1px 6px;
+    min-width: 22px;
+    text-align: center;
+  }
+}
+
+// ─── Responsive ───
+@media (max-width: 900px) {
+  .admin-buildings-main {
+    grid-template-columns: 1fr;
+  }
+  .admin-tree-panel {
+    position: static;
+    max-height: 350px;
+  }
+}
