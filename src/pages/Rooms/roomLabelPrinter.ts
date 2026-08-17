@@ -264,14 +264,14 @@ async function renderLabelToCanvas(
 
    const textRightEdge = LABEL_WIDTH_DOTS - borderInsetX - 10; 
   // // بداية النصوص من اليسار ستكون بعد اللوجو بمسافة بسيطة
-   const textLeftEdge = (LABEL_WIDTH_DOTS / 2) + (logoWidth / 2) + 15;
+   const textLeftEdge = (LABEL_WIDTH_DOTS / 2) + (logoWidth / 2) + 10;
    const textWidth = textRightEdge - textLeftEdge;
 
   const lines: { text: string; size: number; isLtr: boolean; weight: string }[] = [];
   // الغرفة 
   lines.push({
     text: `${room.RoomName}`,
-    size: room.BuildingId == 7 ? 24 : 15, 
+    size: room.BuildingId == 7 ? 24 : 20, 
     isLtr: false,
     weight: room.BuildingId == 7 ? "900" : "750", // أوزان Cairo (700, 900) ممتازة
   });
@@ -281,7 +281,7 @@ async function renderLabelToCanvas(
     console.log("rpppppppppppms", room)
     lines.push({
       text: `${room.UniversityFloorName}`,
-      size: room.BuildingId == 7 ? 24 : 18, 
+      size: room.BuildingId == 7 ? 24 : 22, 
       isLtr: false,
       weight: room.BuildingId == 7 ? "900" : "800",
     });

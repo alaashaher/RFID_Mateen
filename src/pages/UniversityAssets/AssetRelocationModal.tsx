@@ -129,7 +129,7 @@ const AssetRelocationModal: React.FC<AssetRelocationModalProps> = ({
     const fetch = async () => {
       try {
         const res = await getFromApi(
-          `Room/get-room-ddl-withSuiteId?suiteId=${target.suiteId}`
+          `Room/get-room-ddl-by-SuiteId?suiteId=${target.suiteId}`
         );
         const data = res?.Data ?? res;
         setRooms(toArray(data));
