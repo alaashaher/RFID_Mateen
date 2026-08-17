@@ -12,13 +12,17 @@ import {
   Tag,
   Image,
   Grid,
+  Form,
 } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
   SaveOutlined,
   PictureOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
+import { Select as AntSelect } from "antd";
+
 import { Store } from "react-notifications-component";
 import { getFromApi, postToApi } from "../../apis/apis";
 import urls from "../../urls";
@@ -65,7 +69,7 @@ const buildImgSrc = (path?: string | null, CompanyId?: number | 1) => {
   const IMG_BASE_URL = IMAGES_BASE_URL;
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const sss =  `${IMG_BASE_URL}${path.replace(/^\/+/, "")}`;
+  const sss = `${IMG_BASE_URL}${path.replace(/^\/+/, "")}`;
   console.log("path path path", sss);
   return `${IMG_BASE_URL}${path.replace(/^\/+/, "")}`;
 };
@@ -79,17 +83,34 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
   // ✅ كشف حجم الشاشه
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const [mosandaList, setMosandaList] = useState<any[]>([]);
+  const [correctionLoading, setCorrectionLoading] = useState(false);
 
+
+
+  const [correctionModelName, setCorrectionModelName] = useState<string>("");
+  const [correctionMosandaId, setCorrectionMosandaId] = useState<number | undefined>(undefined);
+
+
+ 
+
+  const [openModelOdoo, setOpenModelOdoo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [allModels, setAllModels] = useState<AssetModel[]>([]);
   const [rows, setRows] = useState<RoomAssetRow[]>([]);
+  const [assetsId, setassetsId] = useState<number | any>(undefined);
 
   const [newModelId, setNewModelId] = useState<number | undefined>(undefined);
   const [newCount, setNewCount] = useState<number>(1);
 
   const fetchAllModels = async () => {
+    const [mosandaResp] = await Promise.all([
+      getFromApi(`AssetModel/get-mosandaAssets-ddl`),
+    ]);
+
+    setMosandaList(mosandaResp || []);
     try {
       const res = await getFromApi(`AssetModel/get-buildingAssetModel-ddl`);
       const data: AssetModel[] = Array.isArray(res) ? res : res?.Data || [];
@@ -98,7 +119,15 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       setAllModels([]);
     }
   };
+  const onCloseModelOdoo = () => {
+    setOpenModelOdoo(false)
+    setassetsId(null)
 
+  }
+  const handleUpdateRow = (id: any) => {
+    setassetsId(id)
+    setOpenModelOdoo(true)
+  }
   const fetchRoomAssets = async (roomId: number) => {
     try {
       const res = await getFromApi(
@@ -118,7 +147,59 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       return [];
     }
   };
+ const handleSaveCorrection = async () => {
+    if (!correctionMosandaId) {
+      Store.addNotification({
+        title: "تنبيه",
+        message: "برجاء اختيار موديل اودو",
+        type: "warning",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      return;
+    }
+    try {
+      setCorrectionLoading(true);
 
+      const payload = {
+        AssetModelId: assetsId,
+        CategoryId: correctionMosandaId,
+        roomId: room?.RoomId
+      };
+
+      await postToApi(`AssetModel/correct-assetModel-info`, payload);
+
+      Store.addNotification({
+        title: "تم بنجاح",
+        message: "تم أضافه الأصل لموديل اودو بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+
+      fetchAllModels();
+      onCloseModelOdoo();
+    } catch (error) {
+      Store.addNotification({
+        title: "خطأ",
+        message: "حدث خطأ أثناء حفظ التصحيح",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setCorrectionLoading(false);
+    }
+  }
   useEffect(() => {
     if (open && room?.RoomId) {
       (async () => {
@@ -378,21 +459,35 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       title: "إجراءات",
       key: "act",
       width: 100,
-      render: (_: any, rec: RoomAssetRow) =>
-        rec.IsNew ? (
-          <Popconfirm
-            title="إزالة الموديل من القائمة؟"
-            onConfirm={() => handleRemoveRow(rec.AssetModelId)}
-            okText="نعم"
-            cancelText="لا"
-          >
-            <Tooltip title="إزالة">
-              <Button shape="circle" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        ) : (
-          <Tag color="default">موجود</Tag>
-        ),
+      render: (_: any, rec: RoomAssetRow) => {
+        return (
+          <>
+            <div>
+              <Tooltip title="ربط الاصل بموديل Odoo">
+                <Button
+                  shape="circle"
+                  icon={<ReloadOutlined />}
+                  onClick={() => handleUpdateRow(rec.AssetModelId)}
+                />
+              </Tooltip>
+            </div>
+            {rec.IsNew ? (
+              <Popconfirm
+                title="إزالة الموديل من القائمة؟"
+                onConfirm={() => handleRemoveRow(rec.AssetModelId)}
+                okText="نعم"
+                cancelText="لا"
+              >
+                <Tooltip title="إزالة">
+                  <Button shape="circle" danger icon={<DeleteOutlined />} />
+                </Tooltip>
+              </Popconfirm>
+            ) : (
+              <Tag color="default">موجود</Tag>
+            )}
+          </>
+        )
+      }
     },
   ];
 
@@ -544,134 +639,192 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       `}</style>
 
       <Modal
-      open={open}
-      onCancel={onClose}
-      // ✅ responsive width
-      width={isMobile ? "100%" : "85%"}
-      style={
-        isMobile
-          ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
-          : { top: 20 }
-      }
-      // ✅ على الموبايل ياخد كل الشاشه
-      styles={{
-        body: {
-          padding: isMobile ? 12 : 24,
-          maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
-          overflowY: "auto",
-        },
-      }}
-      footer={null}
-      title={
-        <div>
-          <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
-            جرد / إنشاء أصول الغرفة
-          </span>
-          {room && (
-            <div
-              style={{
-                color: "#666",
-                fontSize: isMobile ? 11 : 13,
-                marginTop: 2,
-              }}
-            >
-              {room.BuildingName ? `${room.BuildingName} — ` : ""}
-              {room.UniversityFloorName ? `${room.UniversityFloorName} — ` : ""}
-              {room.SuiteName ? `جناح ${room.SuiteName} — ` : ""}
-              {room.RoomName} ({room.RoomCode})
-            </div>
-          )}
-        </div>
-      }
-      destroyOnClose
-      centered={!isMobile}
-    >
-      <Spin spinning={loading}>
-        {/* ────────── Section 1: اضافة موديل جديد ────────── */}
-        <div
-          style={{
-            background: "#fafafa",
-            border: "1px solid #f0f0f0",
-            borderRadius: 8,
-            padding: isMobile ? 10 : 16,
-            marginBottom: 14,
-          }}
-        >
-          <div
-            style={{
-              marginBottom: 10,
-              fontWeight: 600,
-              fontSize: isMobile ? 13 : 14,
-            }}
-          >
-            إضافة موديل جديد للغرفة
-          </div>
-
-          {/* ✅ على الموبايل: عمود واحد. على الديسكتوب: row */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              gap: 10,
-              alignItems: isMobile ? "stretch" : "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* اختيار الموديل */}
-            <div
-              style={{
-                flex: isMobile ? "unset" : "1 1 280px",
-                minWidth: isMobile ? "100%" : 240,
-                width: isMobile ? "100%" : undefined,
-              }}
-            >
-              <label
+        open={open}
+        onCancel={onClose}
+        // ✅ responsive width
+        width={isMobile ? "100%" : "85%"}
+        style={
+          isMobile
+            ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
+            : { top: 20 }
+        }
+        // ✅ على الموبايل ياخد كل الشاشه
+        styles={{
+          body: {
+            padding: isMobile ? 12 : 24,
+            maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
+            overflowY: "auto",
+          },
+        }}
+        footer={null}
+        title={
+          <div>
+            <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+              جرد / إنشاء أصول الغرفة
+            </span>
+            {room && (
+              <div
                 style={{
-                  display: "block",
-                  marginBottom: 4,
-                  fontSize: 12,
+                  color: "#666",
+                  fontSize: isMobile ? 11 : 13,
+                  marginTop: 2,
                 }}
               >
-                الموديل
-              </label>
-              <Select
-                showSearch
-                allowClear
-                placeholder="ابحث واختر موديل..."
-                value={newModelId}
-                onChange={(v) => setNewModelId(v)}
-                style={{ width: "100%" }}
-                optionFilterProp="label"
-                // ✅ فيكس scrolling على الموبايل
-                virtual={false}
-                listHeight={isMobile ? 320 : 280}
-                popupMatchSelectWidth={isMobile ? false : true}
-                popupClassName="rajhi-asset-model-dropdown"
-                getPopupContainer={() => document.body}
-                filterOption={(input, option) =>
-                  String(option?.label ?? "")
-                    .toLowerCase()
-                    .includes(input.toLowerCase())
+                {room.BuildingName ? `${room.BuildingName} — ` : ""}
+                {room.UniversityFloorName ? `${room.UniversityFloorName} — ` : ""}
+                {room.SuiteName ? `جناح ${room.SuiteName} — ` : ""}
+                {room.RoomName} ({room.RoomCode})
+              </div>
+            )}
+          </div>
+        }
+        destroyOnClose
+        centered={!isMobile}
+
+      >
+
+
+        <Modal
+          open={openModelOdoo}
+          onCancel={onCloseModelOdoo}
+          // ✅ responsive width
+          width={isMobile ? "100%" : "85%"}
+          style={
+            isMobile
+              ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
+              : { top: 20 }
+          }
+          // ✅ على الموبايل ياخد كل الشاشه
+          styles={{
+            body: {
+              padding: isMobile ? 12 : 24,
+              maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
+              overflowY: "auto",
+            },
+          }}
+          footer={[
+            <div style={{display: "flex", justifyContent: "flex-end", gap: 8, width: "100%"}}>
+
+            <Button key="cancel" onClick={onCloseModelOdoo} disabled={correctionLoading}>
+              إلغاء
+            </Button>,
+            <Button
+              key="save"
+              type="primary"
+              loading={correctionLoading}
+              onClick={handleSaveCorrection}
+            >
+              أضافه الاصل لموديل اودو
+            </Button>
+            </div>,
+          ]}
+          title={
+            <div>
+              <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+                أضافه الاصل لموديل Odoo
+              </span>
+
+            </div>
+          }
+          destroyOnClose
+          centered={!isMobile}
+        >
+          <Form.Item
+            label={
+              <span style={{ fontWeight: 600 }}>
+                الموديل المرجعي (Odoo Models)
+                {/* <span style={{ color: "#888", fontSize: "12px", marginRight: "6px" }}>(اختياري)</span> */}
+              </span>
+            }
+            extra={
+              <span style={{ color: "#888", fontSize: "12px" }}>
+                ابحث في القائمة واختر الموديل المطابق إن وجد
+              </span>
+            }
+          >
+            <AntSelect
+              showSearch
+              allowClear
+              placeholder="ابحث واختر الموديل المرجعي..."
+              value={correctionMosandaId}
+              onChange={(value) => {
+                setCorrectionMosandaId(value);
+                // ============ NEW: تحديث اسم الموديل تلقائياً ============
+                if (value) {
+                  const selected = mosandaList.find(
+                    (item: any) => item.MosandaOdooAssetId === value
+                  );
+                  if (selected) {
+                    setCorrectionModelName(selected.MosandaOdooAssetModelName);
+                  }
                 }
-                options={availableModels.map((m) => ({
-                  label: m.ModelName,
-                  value: m.AssetModelId,
-                }))}
-              />
+                // =========================================================
+              }}
+              loading={correctionLoading}
+              filterOption={(input, option) => {
+                const text = (option?.label as string) || "";
+                return text.toLowerCase().includes(input.toLowerCase());
+              }}
+              optionFilterProp="label"
+              optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+              style={{ width: "100%" }}
+            >
+              {mosandaList?.map((item: any) => (
+                <Option
+                  key={item.MosandaOdooAssetId}
+                  value={item.MosandaOdooAssetId}
+                  label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
+                >
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
+                    <span style={{ fontSize: "11px", color: "#888" }}>
+                      {item.MosandaOdooAssetCategoryName}
+                    </span>
+                  </div>
+                </Option>
+              ))}
+            </AntSelect>
+          </Form.Item>
+        </Modal>
+        <Spin spinning={loading}>
+          {/* ────────── Section 1: اضافة موديل جديد ────────── */}
+          <div
+            style={{
+              background: "#fafafa",
+              border: "1px solid #f0f0f0",
+              borderRadius: 8,
+              padding: isMobile ? 10 : 16,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                marginBottom: 10,
+                fontWeight: 600,
+                fontSize: isMobile ? 13 : 14,
+              }}
+            >
+              إضافة موديل جديد للغرفة
             </div>
 
-            {/* صف فيه: العدد + الصوره + الزرار - على الموبايل سطر واحد */}
+            {/* ✅ على الموبايل: عمود واحد. على الديسكتوب: row */}
             <div
               style={{
                 display: "flex",
+                flexDirection: isMobile ? "column" : "row",
                 gap: 10,
-                alignItems: "flex-end",
+                alignItems: isMobile ? "stretch" : "flex-start",
                 flexWrap: "wrap",
-                width: isMobile ? "100%" : "auto",
               }}
             >
-              {/* العدد */}
-              <div style={{ width: isMobile ? 90 : 110 }}>
+              {/* اختيار الموديل */}
+              <div
+                style={{
+                  flex: isMobile ? "unset" : "1 1 280px",
+                  minWidth: isMobile ? "100%" : 240,
+                  width: isMobile ? "100%" : undefined,
+                }}
+              >
                 <label
                   style={{
                     display: "block",
@@ -679,151 +832,198 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
                     fontSize: 12,
                   }}
                 >
-                  العدد
+                  الموديل
                 </label>
-                <InputNumber
-                  min={1}
-                  value={newCount}
-                  onChange={(v) => setNewCount((v as number) || 1)}
+                <Select
+                  showSearch
+                  allowClear
+                  placeholder="ابحث واختر موديل..."
+                  value={newModelId}
+                  onChange={(v) => setNewModelId(v)}
                   style={{ width: "100%" }}
+                  optionFilterProp="label"
+                  // ✅ فيكس scrolling على الموبايل
+                  virtual={false}
+                  listHeight={isMobile ? 320 : 280}
+                  popupMatchSelectWidth={isMobile ? false : true}
+                  popupClassName="rajhi-asset-model-dropdown"
+                  getPopupContainer={() => document.body}
+                  filterOption={(input, option) =>
+                    String(option?.label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                  options={availableModels.map((m) => ({
+                    label: m.ModelName,
+                    value: m.AssetModelId,
+                  }))}
                 />
               </div>
 
-              {/* صورة الموديل المختار */}
+              {/* صف فيه: العدد + الصوره + الزرار - على الموبايل سطر واحد */}
               <div
                 style={{
-                  width: isMobile ? 70 : 90,
-                  height: isMobile ? 70 : 90,
-                  border: "1px dashed #d9d9d9",
-                  borderRadius: 8,
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "#fff",
-                  overflow: "hidden",
+                  gap: 10,
+                  alignItems: "flex-end",
+                  flexWrap: "wrap",
+                  width: isMobile ? "100%" : "auto",
                 }}
               >
-                {selectedModel?.ModelImagePath ? (
-                  <Image
-                    src={buildImgSrc(selectedModel.ModelImagePath, selectedModel.CompanyId) as string}
-                    alt={selectedModel.ModelName}
-                    width={isMobile ? 68 : 88}
-                    height={isMobile ? 68 : 88}
-                    style={{ objectFit: "cover" }}
-                    fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-                  />
-                ) : (
-                  <div
+                {/* العدد */}
+                <div style={{ width: isMobile ? 90 : 110 }}>
+                  <label
                     style={{
-                      color: "#bbb",
-                      textAlign: "center",
-                      fontSize: 10,
+                      display: "block",
+                      marginBottom: 4,
+                      fontSize: 12,
                     }}
                   >
-                    <PictureOutlined style={{ fontSize: 18 }} />
-                    <div>لا صورة</div>
-                  </div>
-                )}
-              </div>
+                    العدد
+                  </label>
+                  <InputNumber
+                    min={1}
+                    value={newCount}
+                    onChange={(v) => setNewCount((v as number) || 1)}
+                    style={{ width: "100%" }}
+                  />
+                </div>
 
-              {/* زر اضافه */}
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleAddModel}
-                disabled={!newModelId}
-                style={{ flex: isMobile ? 1 : "unset" }}
-              >
-                {isMobile ? "إضافة" : "إضافة للقائمة"}
-              </Button>
+                {/* صورة الموديل المختار */}
+                <div
+                  style={{
+                    width: isMobile ? 70 : 90,
+                    height: isMobile ? 70 : 90,
+                    border: "1px dashed #d9d9d9",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#fff",
+                    overflow: "hidden",
+                  }}
+                >
+                  {selectedModel?.ModelImagePath ? (
+                    <Image
+                      src={buildImgSrc(selectedModel.ModelImagePath, selectedModel.CompanyId) as string}
+                      alt={selectedModel.ModelName}
+                      width={isMobile ? 68 : 88}
+                      height={isMobile ? 68 : 88}
+                      style={{ objectFit: "cover" }}
+                      fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        color: "#bbb",
+                        textAlign: "center",
+                        fontSize: 10,
+                      }}
+                    >
+                      <PictureOutlined style={{ fontSize: 18 }} />
+                      <div>لا صورة</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* زر اضافه */}
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddModel}
+                  disabled={!newModelId}
+                  style={{ flex: isMobile ? 1 : "unset" }}
+                >
+                  {isMobile ? "إضافة" : "إضافة للقائمة"}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ────────── Section 2: عرض الموديلات ────────── */}
-        {/* على الموبايل: كروت. على الديسكتوب: جدول */}
-        {isMobile ? (
-          <div>
-            {rows.length === 0 ? (
-              <Empty description="لا توجد موديلات في هذه الغرفة بعد" />
-            ) : (
-              rows.map((r, i) => (
-                <MobileCard key={r.AssetModelId} rec={r} idx={i} />
-              ))
-            )}
-          </div>
-        ) : (
-          <Table
-            rowKey={(r) => r.AssetModelId}
-            columns={columns as any}
-            dataSource={rows}
-            pagination={false}
-            locale={{
-              emptyText: (
-                <Empty description="لا توجد موديلات في هذه الغرفة بعد. أضف موديلاً من الأعلى." />
-              ),
-            }}
-            scroll={{ x: "max-content", y: 380 }}
-          />
-        )}
+          {/* ────────── Section 2: عرض الموديلات ────────── */}
+          {/* على الموبايل: كروت. على الديسكتوب: جدول */}
+          {isMobile ? (
+            <div>
+              {rows.length === 0 ? (
+                <Empty description="لا توجد موديلات في هذه الغرفة بعد" />
+              ) : (
+                rows.map((r, i) => (
+                  <MobileCard key={r.AssetModelId} rec={r} idx={i} />
+                ))
+              )}
+            </div>
+          ) : (
+            <Table
+              rowKey={(r) => r.AssetModelId}
+              columns={columns as any}
+              dataSource={rows}
+              pagination={false}
+              locale={{
+                emptyText: (
+                  <Empty description="لا توجد موديلات في هذه الغرفة بعد. أضف موديلاً من الأعلى." />
+                ),
+              }}
+              scroll={{ x: "max-content", y: 380 }}
+            />
+          )}
 
-        {/* ────────── Footer ────────── */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "stretch" : "center",
-            gap: 10,
-            marginTop: 16,
-            paddingTop: 12,
-            borderTop: "1px solid #f0f0f0",
-            position: isMobile ? "sticky" : undefined,
-            bottom: isMobile ? 0 : undefined,
-            background: "#fff",
-          }}
-        >
-          <div
-            style={{
-              color: "#555",
-              fontSize: isMobile ? 13 : 14,
-              textAlign: isMobile ? "center" : "right",
-            }}
-          >
-            إجمالى الأصول الجديدة:{" "}
-            <strong style={{ color: "#1a56db", fontSize: 16 }}>
-              {totalToAdd}
-            </strong>
-          </div>
-
+          {/* ────────── Footer ────────── */}
           <div
             style={{
               display: "flex",
-              gap: 8,
-              width: isMobile ? "100%" : "auto",
+              flexDirection: isMobile ? "column" : "row",
+              justifyContent: "space-between",
+              alignItems: isMobile ? "stretch" : "center",
+              gap: 10,
+              marginTop: 16,
+              paddingTop: 12,
+              borderTop: "1px solid #f0f0f0",
+              position: isMobile ? "sticky" : undefined,
+              bottom: isMobile ? 0 : undefined,
+              background: "#fff",
             }}
           >
-            <Button
-              onClick={onClose}
-              disabled={saving}
-              style={{ flex: isMobile ? 1 : "unset" }}
+            <div
+              style={{
+                color: "#555",
+                fontSize: isMobile ? 13 : 14,
+                textAlign: isMobile ? "center" : "right",
+              }}
             >
-              إلغاء
-            </Button>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={saving}
-              onClick={handleSave}
-              disabled={totalToAdd === 0}
-              style={{ flex: isMobile ? 2 : "unset" }}
+              إجمالى الأصول الجديدة:{" "}
+              <strong style={{ color: "#1a56db", fontSize: 16 }}>
+                {totalToAdd}
+              </strong>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                width: isMobile ? "100%" : "auto",
+              }}
             >
-              حفظ وإنشاء
-            </Button>
+              <Button
+                onClick={onClose}
+                disabled={saving}
+                style={{ flex: isMobile ? 1 : "unset" }}
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                loading={saving}
+                onClick={handleSave}
+                disabled={totalToAdd === 0}
+                style={{ flex: isMobile ? 2 : "unset" }}
+              >
+                حفظ وإنشاء
+              </Button>
+            </div>
           </div>
-        </div>
-      </Spin>
-    </Modal>
+        </Spin>
+      </Modal>
     </>
   );
 };
