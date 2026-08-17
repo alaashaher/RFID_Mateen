@@ -12,7 +12,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
   const cards = [
     {
       label: "المباني الإدارية",
-      value: summary.totalBuildings,
+      value: summary.TotalBuildings,
       icon: <BankOutlined />,
       color: "#1a3c5e",
       bg: "#e8f0fe",
@@ -20,7 +20,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
     },
     {
       label: "الأدوار",
-      value: summary.totalFloors,
+      value: summary.TotalFloors,
       icon: <AppstoreOutlined />,
       color: "#2c6fad",
       bg: "#e3f2fd",
@@ -28,7 +28,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
     },
     {
       label: "الغرف",
-      value: summary.totalRooms,
+      value: summary.TotalRooms,
       icon: <HomeOutlined />,
       color: "#1b7a4a",
       bg: "#e8f5e9",
@@ -36,7 +36,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
     },
     {
       label: "إجمالي الأصول",
-      value: summary.totalAssets,
+      value: summary.TotalAssets,
       icon: <TagsOutlined />,
       color: "#5c3d99",
       bg: "#ede7f6",
@@ -44,17 +44,17 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
     },
     {
       label: "أصول غير مسكّنة",
-      value: summary.unassignedAssets,
+      value: summary.UnassignedAssets,
       icon: <WarningOutlined />,
-      color: summary.unassignedAssets > 0 ? "#c0392b" : "#1b7a4a",
-      bg: summary.unassignedAssets > 0 ? "#fdecea" : "#e8f5e9",
+      color: summary.UnassignedAssets > 0 ? "#c0392b" : "#1b7a4a",
+      bg: summary.UnassignedAssets > 0 ? "#fdecea" : "#e8f5e9",
       clickable: true,
       onClick: onUnassignedClick,
-      badge: summary.unassignedAssets > 0,
+      badge: summary.UnassignedAssets > 0,
     },
     {
       label: "حركات النقل — هذا الشهر",
-      value: summary.movementsThisMonth,
+      value: summary.MovementsThisMonth,
       icon: <SwapOutlined />,
       color: "#e67e22",
       bg: "#fff3e0",
@@ -75,7 +75,7 @@ const AdminKPICards: React.FC<Props> = ({ summary, onUnassignedClick, onMovement
         >
           <div className="kpi-icon">{card.icon}</div>
           <div className="kpi-body">
-            <div className="kpi-value">{card.value.toLocaleString("ar-SA")}</div>
+            <div className="kpi-value">{card?.value?.toLocaleString("ar-SA")}</div>
             <div className="kpi-label">{card.label}</div>
           </div>
           {card.clickable && (

@@ -41,15 +41,19 @@ const RoleForm = () => {
   }, [])
   useEffect(() => {
     if (toEdit) {
-      const { Name, IsCampSupervisor } = toEdit;
+      const { Name, IsCampSupervisor, RoleTypeId } = toEdit;
       form.setFieldValue('Name', Name);
       form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+      form.setFieldValue('RoleTypeId', RoleTypeId ?? false);
+
     }
 
     if (viewRSTData) {
-      const { Name, IsCampSupervisor } = viewRSTData;
+      const { Name, IsCampSupervisor, RoleTypeId } = viewRSTData;
       form.setFieldValue('Name', Name);
       form.setFieldValue('IsCampSupervisor', IsCampSupervisor ?? false);
+      form.setFieldValue('RoleTypeId', RoleTypeId ?? false);
+
     }
 
   }, [toEdit, viewRSTData])

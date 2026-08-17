@@ -31,25 +31,25 @@ const FloorCards: React.FC<Props> = ({ building, selectedFloorId }) => {
       </div>
 
       <div className="floor-cards-grid">
-        {floorsToShow.map(floor => (
-          <div key={floor.floorId} className="floor-card">
+        {floorsToShow?.map(floor => (
+          <div key={floor.FloorId} className="floor-card">
             <div className="floor-card-header">
-              <span className="floor-card-name">الدور {floor.floorName}</span>
+              <span className="floor-card-name">الدور {floor.FloorName}</span>
               <div className="floor-card-stats">
-                <span><HomeOutlined /> {floor.rooms.length + floor.suites.reduce((acc, s) => acc + s.rooms.length, 0)} غرفة</span>
-                <span><TagsOutlined /> {floor.assetCount} أصل</span>
+                <span><HomeOutlined /> {floor.Rooms.length + floor.Suites.reduce((acc, s) => acc + s.rooms.length, 0)} غرفة</span>
+                <span><TagsOutlined /> {floor.AssetCount} أصل</span>
               </div>
             </div>
 
             {/* Suites */}
-            {floor.suites.map(suite => (
-              <div key={suite.suiteId} className="suite-section">
-                <div className="suite-label">🏢 {suite.suiteName}</div>
+            {floor?.suites?.map(suite => (
+              <div key={suite.SuiteId} className="suite-section">
+                <div className="suite-label">🏢 {suite.SuiteName}</div>
                 <div className="rooms-grid">
-                  {suite.rooms.map(room => (
-                    <div key={room.roomId} className={`room-chip ${room.assetCount === 0 ? "empty" : ""}`}>
-                      <span className="room-chip-name">{room.roomName}</span>
-                      <span className="room-chip-count">{room.assetCount}</span>
+                  {suite?.Rooms?.map(room => (
+                    <div key={room.RoomId} className={`room-chip ${room.AssetCount === 0 ? "empty" : ""}`}>
+                      <span className="room-chip-name">{room.RoomName}</span>
+                      <span className="room-chip-count">{room.AssetCount}</span>
                     </div>
                   ))}
                 </div>
