@@ -124,9 +124,10 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
     setassetsId(null)
 
   }
-  const handleUpdateRow = (id: any) => {
-    setassetsId(id)
+  const handleUpdateRow = (roomAssets: any) => {
+    setassetsId(roomAssets.AssetModelId)
     setOpenModelOdoo(true)
+    // setCorrectionMosandaId(roomAssets?.)
   }
   const fetchRoomAssets = async (roomId: number) => {
     try {
@@ -164,13 +165,14 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
     try {
       setCorrectionLoading(true);
 
-      const payload = {
-        AssetModelId: assetsId,
-        CategoryId: correctionMosandaId,
-        roomId: room?.RoomId
-      };
+        console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId)
+      // const payload = {
+      //   AssetModelId: assetsId,
+      //   CategoryId: correctionMosandaId,
+      //   roomId: room?.RoomId
+      // };
 
-      await postToApi(`AssetModel/correct-assetModel-info`, payload);
+      // await postToApi(`AssetModel/correct-assetModel-info`, payload);
 
       Store.addNotification({
         title: "تم بنجاح",
@@ -183,8 +185,9 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
         dismiss: { duration: 2000, onScreen: true },
       });
 
-      fetchAllModels();
+      fetchRoomAssets(room?.RoomId || 0);
       onCloseModelOdoo();
+      setCorrectionMosandaId(undefined);
     } catch (error) {
       Store.addNotification({
         title: "خطأ",
