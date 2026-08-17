@@ -37,6 +37,7 @@ import { saveAs } from "file-saver";
 import UniversityModelForm from "./UniversityModelForm";
 import CategoryContext from "../../contexts/pages-context/CategoryProvider";
 import "./UniversityAssets.css";
+import urls from "../../urls";
 
 // ============================
 // Responsive helper
@@ -180,7 +181,8 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
       }
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
+        `${urls.baseUrl}/UniversityAsset/upload-asset-images`,
+        // "https://rfidrajhiapi.sirumaps.net/api/UniversityAsset/upload-asset-images",
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },

@@ -35,10 +35,11 @@ import ModelsForm from "./ModelsForm";
 import { Store } from "react-notifications-component";
 import { useNavigate } from "react-router-dom";
 import RouterLinks from "../../App/RouterLinks";
+import urls from "../../urls";
 const { Option } = Select;
-const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
-//const BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/api";
-//const BASE_URL = "http://localhost:7228/api";
+// const BASE_URL = "https://rfidrajhiapi.sirumaps.net/api";
+const BASE_URL = urls.baseUrl;
+
 const ModelsPage = () => {
   const navigate = useNavigate();
   const [categoryType, setcategoryType] = useState([]);

@@ -21,6 +21,7 @@ import {
   ModelInventoryRow,
 } from "./inventoryReport.types";
 import "./InventoryReport.scss";
+import urls from "../../urls";
 
 const { Title } = Typography;
 
@@ -83,7 +84,7 @@ const InventoryReport: React.FC = () => {
     try {
       const baseUrl =
         // (window as any)?.BASE_URL ?? "http://localhost:7228/api";
-        (window as any)?.BASE_URL ?? "https://rfidrajhiapi.sirumaps.net/api";
+        (window as any)?.BASE_URL ?? urls.baseUrl;;
       const token = localStorage.getItem("token");
       const res = await fetch(`${baseUrl}/InventoryReport/export-excel`, {
         method: "POST",

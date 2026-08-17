@@ -3,10 +3,10 @@ import { getFromApi, postToApi, deleteFromApi } from "../../apis/apis";
 import UesrContext from "../../contexts/user-context/UserProvider";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 import { Col, Select } from "antd";
+import urls from "../../urls";
 
-//const BASE_URL = "http://localhost:7228";
-const BASE_URL = "https://rfidrajhiapi.sirumaps.net";
-
+// const BASE_URL = "https://rfidrajhiapi.sirumaps.net";
+const BASE_URL = urls.basicUrl;
 const api = {
   getCampOrders: (status, createdBy) => {
     const params = new URLSearchParams();

@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { Store } from "react-notifications-component";
 import { getFromApi, postToApi } from "../../apis/apis";
+import urls from "../../urls";
 
 const { Option } = Select;
 const { useBreakpoint } = Grid;
@@ -57,9 +58,8 @@ interface RoomAssetRow {
   IsNew: boolean;
 }
 
-const IMAGES_BASE_URL = "https://rfidrajhiapi.sirumaps.net/";
-//const IMAGES_BASE_URL = "https://mosandarajihirfidapi.sirumaps.net/";
-
+// const IMAGES_BASE_URL = "https://rfidrajhiapi.sirumaps.net/";
+const IMAGES_BASE_URL = urls.basicUrl;
 const buildImgSrc = (path?: string | null, CompanyId?: number | 1) => {
   console.log("companyId____", CompanyId);
   const IMG_BASE_URL = IMAGES_BASE_URL;
