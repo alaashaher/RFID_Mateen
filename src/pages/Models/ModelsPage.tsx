@@ -1030,7 +1030,7 @@ const ModelsPage = () => {
                 }}
               />
             </Tooltip>
-            {(record?.CompanyId === 2 || record?.TagType === null) && (
+            {/* {(record?.CompanyId === 2 || record?.TagType === null) && (
               <Tooltip title="تصحيح معلومات الأصل">
                 <Button
                   onClick={() => handleOpenCorrectionModal(record)}
@@ -1057,7 +1057,7 @@ const ModelsPage = () => {
                   />
                 </Tooltip>
               </Popconfirm>
-            )}
+            )} */}
 
             {user.user.Permissions.includes("DeleteCategory") && (
               <Popconfirm
