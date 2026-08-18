@@ -209,7 +209,7 @@ const ModelsPage = () => {
       const [categoriesResp, assetTypesResp, mosandaResp] = await Promise.all([
         getFromApi(`Category/get-category-ddl`),
         getFromApi(`AssetType/get-assetType-ddl`),
-        getFromApi(`AssetModel/get-mosandaAssets-ddl`),
+        getFromApi(`AssetModel/get-odooAssets-ddl`),
       ]);
 
       setAllCategoriesList(categoriesResp || []);

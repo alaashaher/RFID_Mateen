@@ -107,7 +107,7 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
 
   const fetchAllModels = async () => {
     const [mosandaResp] = await Promise.all([
-      getFromApi(`AssetModel/get-mosandaAssets-ddl`),
+      getFromApi(`AssetModel/get-odooAssets-ddl`),
     ]);
 
     setMosandaList(mosandaResp || []);
