@@ -92,7 +92,7 @@ const AdminBuildingsDashboard: React.FC = () => {
         <AdminKPICards
           summary={summary}
           onUnassignedClick={() => navigate(RouterLinks.UnassignedAssets)}
-          onMovementsClick={() => navigate(RouterLinks.AssetMovements)}
+          onMovementsClick={() => navigate(RouterLinks.Relocationhistory)}
         />
       )}
 

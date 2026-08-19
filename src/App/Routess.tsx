@@ -39,6 +39,7 @@ import InventoryOrdersPage from "../pages/InventoryOrdersPage/InventoryOrdersPag
 import EptyDashboard from "../pages/log-in/EptyDashboard";
 import MultiDashBoard from "../pages/log-in/MultiDashBoard";
 import AdminBuildingsDashboard from "../pages/AdminBuildings/Adminbuildingsdashboard";
+import RelocationhistoryPage from "../pages/Relocationhistory/RelocationHistory";
 
 
 const Routess = () => {
@@ -133,11 +134,17 @@ const Routess = () => {
         </ProtectedRoute>}>
       </Route>
 
-      <Route path={routerLinks.UniversityAssetsRelocation} element={
+      <Route path={routerLinks.UnassignedAssets} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <UniversityAssetsPageRelocation />
         </ProtectedRoute>}>
       </Route>
+      <Route path={routerLinks.Relocationhistory} element={
+        <ProtectedRoute requiredPermission="ViewUniversityAssets">
+          <RelocationhistoryPage />
+        </ProtectedRoute>}>
+      </Route>
+      
       <Route path={routerLinks.UniversityAssetsScanned} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssetsScanned">
           <UniversityAssetsPage />

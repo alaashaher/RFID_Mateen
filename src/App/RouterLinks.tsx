@@ -3,12 +3,9 @@ const RouterLinks = {
   homePage: "/",
   EptyDashboard: "/EptyDashboard",
   MultiDashBoard: "/MultiDashBoard",
-  // AdminBuildings: "/AdminBuildings",
-  // UnassignedAssets: "/UnassignedAssets",
-  // AssetMovements: "/AssetMovements",
 
   UnassignedAssets: "/UniversityAssetsRelocation",  // الصفحة الموجودة بالفعل
-  AssetMovements: "/asset-movements",       // صفحة سجل النقل
+  Relocationhistory: "/Relocationhistory",       // صفحة سجل النقل
   AdminBuildings: "/admin-buildings",       // الصفحة الجديدة
 
   logIn: "/login",
@@ -22,7 +19,7 @@ const RouterLinks = {
   UniversityAssetsPrinted: "/UniversityAssetsPrinted",
   WarehouseAdjustmentScsnnedUniversityAssets: "/WarehouseAdjustmentScsnnedUniversityAssets",
   ScsnnedUniversityAssetsPage: "/ScsnnedUniversityAssetsPage",
-  UniversityAssetsRelocation: "/UniversityAssetsRelocation",
+  //UnassignedAssets: "/UniversityAssetsRelocation",
   OutOrders: '/OutOrders',
   CampOrdersPage: '/CampOrdersPage',
   InventoryOrdersPage: '/InventoryOrdersPage',

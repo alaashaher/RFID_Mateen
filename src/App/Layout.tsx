@@ -227,12 +227,21 @@ const AppLayout: React.FC<any> = ({ children }) => {
     },
     {
       key: 10,
-      path: routerLinks.UniversityAssetsRelocation,
+      path: routerLinks.UnassignedAssets,
       name: "أصول مؤرشفة مؤقتا",
       icon: <FileMarkdownFilled />,
       hidden: (user?.user?.Permissions?.includes("ViewUniversityAssetsRelocation")) ? false : true
 
     },
+    {
+      key: 8,
+      path: routerLinks.Relocationhistory,
+      name: "الأصول التى تم نقلها",
+      icon: <FileMarkdownFilled />,
+      hidden: (user?.user?.Permissions?.includes("ViewUniversityAssetsRelocation")) ? false : true
+
+    },
+    
     {
       key: 15,
       path: routerLinks.ScsnnedUniversityAssetsPage,
