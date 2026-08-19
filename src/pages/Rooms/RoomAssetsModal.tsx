@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useContext } from "react";
+import UserContext from "../../contexts/user-context/UserProvider";
+
 import {
   Modal,
   Select,
@@ -24,7 +26,7 @@ import {
 import { Select as AntSelect } from "antd";
 
 import { Store } from "react-notifications-component";
-import { getFromApi, postToApi } from "../../apis/apis";
+import { getFromApi, postToApi, putToApi } from "../../apis/apis";
 import urls from "../../urls";
 
 const { Option } = Select;
@@ -82,6 +84,8 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
 }) => {
   // ✅ كشف حجم الشاشه
   const screens = useBreakpoint();
+    const { user } = useContext(UserContext);
+  
   const isMobile = !screens.md;
   const [mosandaList, setMosandaList] = useState<any[]>([]);
   const [correctionLoading, setCorrectionLoading] = useState(false);
@@ -121,11 +125,12 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
   };
   const onCloseModelOdoo = () => {
     setOpenModelOdoo(false)
-    setassetsId(null)
+    setassetsId(undefined)
 
   }
   const handleUpdateRow = (roomAssets: any) => {
-    setassetsId(roomAssets.AssetModelId)
+    console.log("🚀 ~ handleUpdateRow ~ roomAssets:", roomAssets)
+    setassetsId(roomAssets)
     setOpenModelOdoo(true)
     // setCorrectionMosandaId(roomAssets?.)
   }
@@ -166,13 +171,13 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       setCorrectionLoading(true);
 
         console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId)
-      // const payload = {
-      //   AssetModelId: assetsId,
-      //   CategoryId: correctionMosandaId,
-      //   roomId: room?.RoomId
-      // };
+      const payload = {
+        ModelId: assetsId?.AssetModelId,
+        OdooId: correctionMosandaId,
+        RoomId: assetsId?.RoomId
+      };
 
-      // await postToApi(`AssetModel/correct-assetModel-info`, payload);
+      await putToApi(`UniversityAsset/update-roomAssets-odooId`, payload);
 
       Store.addNotification({
         title: "تم بنجاح",
@@ -462,19 +467,24 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       title: "إجراءات",
       key: "act",
       width: 100,
-      render: (_: any, rec: RoomAssetRow) => {
+      render: (_: any, rec: RoomAssetRow | any) => {
         return (
-          <>
+          <div style={{display: "flex", gap:"4px", alignItems: "center"}}>
+          {
+           user.user.Permissions.includes("SetOdooIdUniversityAssets") && (rec?.OdooId === null || rec?.OdooId === undefined || rec?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
                   shape="circle"
                   icon={<ReloadOutlined />}
-                  onClick={() => handleUpdateRow(rec.AssetModelId)}
+                  onClick={() => handleUpdateRow(rec)}
                 />
               </Tooltip>
             </div>
+          }
             {rec.IsNew ? (
+              <div>
+
               <Popconfirm
                 title="إزالة الموديل من القائمة؟"
                 onConfirm={() => handleRemoveRow(rec.AssetModelId)}
@@ -485,10 +495,14 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
                   <Button shape="circle" danger icon={<DeleteOutlined />} />
                 </Tooltip>
               </Popconfirm>
+              </div>
             ) : (
-              <Tag color="default">موجود</Tag>
+              <div>
+
+                <Tag color="default">موجود</Tag>
+              </div>
             )}
-          </>
+          </div>
         )
       }
     },

@@ -13,7 +13,11 @@ import {
   DeleteOutlined as DeleteIcon,
   WarningOutlined,
   SwapOutlined,
+  PictureOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
+import { Select as AntSelect, Form } from "antd";
+
 import AssetRelocationModal from "./AssetRelocationModal";
 import { deleteFromApi, getFromApi, postToApi, putToApi } from "../../apis/apis";
 import {
@@ -27,6 +31,7 @@ import {
   Select,
   Upload,
   message,
+  Image,
 } from "antd";
 import UniversityAssetsForm from "./UniversityAssetsForm";
 import UserContext from "../../contexts/user-context/UserProvider";
@@ -369,6 +374,98 @@ const UniversityAssetsPage = () => {
     }
   };
 
+
+  const [mosandaList, setMosandaList] = useState<any[]>([]);
+  const [correctionLoading, setCorrectionLoading] = useState(false);
+
+
+
+  const [correctionModelName, setCorrectionModelName] = useState<string>("");
+  const [correctionMosandaId, setCorrectionMosandaId] = useState<number | undefined>(undefined);
+
+
+
+
+  const [openModelOdoo, setOpenModelOdoo] = useState(false);
+  const [assetsId, setassetsId] = useState<number | any>(undefined);
+
+  useEffect(() => {
+    fetchAllModels()
+  }, [])
+  const fetchAllModels = async () => {
+    const [mosandaResp] = await Promise.all([
+      getFromApi(`AssetModel/get-odooAssets-ddl`),
+    ]);
+
+    setMosandaList(mosandaResp || []);
+
+  };
+  const onCloseModelOdoo = () => {
+    setOpenModelOdoo(false)
+    setassetsId(undefined)
+
+  }
+  const handleUpdateRow = (roomAssets: any) => {
+    console.log("🚀 ~ handleUpdateRow ~ roomAssets:", roomAssets)
+    setassetsId(roomAssets)
+    setOpenModelOdoo(true)
+    // setCorrectionMosandaId(roomAssets?.)
+  }
+  const handleSaveCorrection = async () => {
+    if (!correctionMosandaId) {
+      Store.addNotification({
+        title: "تنبيه",
+        message: "برجاء اختيار موديل اودو",
+        type: "warning",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      return;
+    }
+    try {
+      setCorrectionLoading(true);
+
+      console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId)
+      const payload = {
+        AssetId: assetsId?.UniversityAssetId,
+        OdooId: correctionMosandaId,
+        // RoomId: assetsId?.RoomId
+      };
+
+      await putToApi(`UniversityAsset/update-Asset-odooId?AssetId=${assetsId?.UniversityAssetId}&odooId=${correctionMosandaId}`, null);
+
+      Store.addNotification({
+        title: "تم بنجاح",
+        message: "تم أضافه الأصل لموديل اودو بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      getAllData()
+      // fetchRoomAssets(room?.RoomId || 0);
+      onCloseModelOdoo();
+      setCorrectionMosandaId(undefined);
+    } catch (error) {
+      Store.addNotification({
+        title: "خطأ",
+        message: "حدث خطأ أثناء حفظ التصحيح",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setCorrectionLoading(false);
+    }
+  }
   // helper — يضمن إن الـ response دايماً array
   const toArray = (res: any): any[] => (Array.isArray(res) ? res : []);
 
@@ -384,7 +481,7 @@ const UniversityAssetsPage = () => {
     fetchBuildingTypes();
   }, []);
 
-  
+
   // ── جلب حالات الأصل عند التحميل (مستقل) ──
   useEffect(() => {
     const fetchStatuses = async () => {
@@ -535,15 +632,15 @@ const UniversityAssetsPage = () => {
   }, [modelFilter]);
 
   // ── جلب البيانات الرئيسية ──
+  const getAllData = async () => {
+    try {
+      const resp = await getFromApi(
+        `UniversityAsset/get-all-universityAsset-pager?${buildApiParams()}`
+      );
+      setRowData(resp);
+    } catch (error) { }
+  };
   useEffect(() => {
-    const getAllData = async () => {
-      try {
-        const resp = await getFromApi(
-          `UniversityAsset/get-all-universityAsset-pager?${buildApiParams()}`
-        );
-        setRowData(resp);
-      } catch (error) {}
-    };
     getAllData();
   }, [
     pageNumber, pageSize, keyword, detectChanges,
@@ -559,7 +656,7 @@ const UniversityAssetsPage = () => {
         `UniversityAsset/get-universityAsset-by-id?universityAssetId=${TableId}`
       );
       if (response) { setToEdit(response); setOpenFormModel(true); }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleDamaged = async (assetId: number) => {
@@ -598,7 +695,7 @@ const UniversityAssetsPage = () => {
         `UniversityAsset/get-universityAsset-by-id?universityAssetId=${TableId}`
       );
       if (response) { setToEdit(response); setOpenFormModelAddingModel(true); }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleDelete = async (TableId) => {
@@ -736,8 +833,8 @@ const UniversityAssetsPage = () => {
     { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber", width: 100 },
     { title: "البراند", dataIndex: "Brand", key: "Brand", width: 100 },
     { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName", responsive: ["xl"] as any },
-    { title: "المبنى", dataIndex: "BuildingName", key: "BuildingName", responsive: ["lg"] as any },
-    { title: "تصنيف الاصل", dataIndex: "CategoryName", key: "CategoryName", responsive: ["lg"] as any },
+    { title: "المبنى", dataIndex: "BuildingName", key: "BuildingName", width: 100, responsive: ["lg"] as any },
+    { title: "تصنيف الاصل", dataIndex: "CategoryName", key: "CategoryName", width: 100, responsive: ["lg"] as any },
     { title: "باركود الأصل", dataIndex: "AssetBarcode", key: "AssetBarcode", ellipsis: true, width: isMobile ? 160 : 160 },
     { title: "Serial Number", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
     { title: "حالة الاصل", dataIndex: "AssetStatus", key: "AssetStatus", ellipsis: true, width: 160 },
@@ -752,6 +849,28 @@ const UniversityAssetsPage = () => {
         : <CloseCircleFilled style={{ color: "red" }} />,
     },
     {
+      title: "صورة الموديل",
+      dataIndex: "ModelImagePath",
+      key: "ModelImagePath",
+      width: 100,
+      render: (imagePath: string) => {
+        if (!imagePath || imagePath.trim() === "") {
+          return <span style={{ color: "#bbb" }}>—</span>;
+        }
+        return (
+          <Image
+            src={imagePath}
+            alt="model"
+            width={50}
+            height={50}
+            style={{ objectFit: "cover", borderRadius: "6px", border: "1px solid #eee", cursor: "pointer" }}
+            preview={{ mask: <PictureOutlined style={{ fontSize: 18 }} /> }}
+            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEXMzMyWqznOAAAAC0lEQVR4nGNgAAIAAAUAAarVyFEAAAAASUVORK5CYII="
+          />
+        );
+      },
+    },
+    {
       title: "إجراءات",
       dataIndex: "Actions",
       key: "Actions",
@@ -764,18 +883,30 @@ const UniversityAssetsPage = () => {
               <Button onClick={() => handleEditMod(record.UniversityAssetId)} icon={<EditOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
             </Tooltip>
           )} */}
+          {
+          (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+            <div>
+              <Tooltip title="ربط الاصل بموديل Odoo">
+                <Button
+                  shape="circle"
+                  icon={<ReloadOutlined />}
+                  onClick={() => handleUpdateRow(record)}
+                />
+              </Tooltip>
+            </div>
+          }
           {user.user.Permissions.includes("EditUniversityAssets") &&
             record.BuildingId !== 1 && (
-            <Tooltip title="إعادة تسكين">
-              <Button
-                onClick={() => handleOpenRelocation(record)}
-                icon={<SwapOutlined />}
-                shape="circle"
-                size={isMobile ? "small" : "middle"}
-                style={{ color: "#722ed1" }}
-              />
-            </Tooltip>
-          )}
+              <Tooltip title="إعادة تسكين">
+                <Button
+                  onClick={() => handleOpenRelocation(record)}
+                  icon={<SwapOutlined />}
+                  shape="circle"
+                  size={isMobile ? "small" : "middle"}
+                  style={{ color: "#722ed1" }}
+                />
+              </Tooltip>
+            )}
           {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
             <Tooltip title="أضافه موديل">
               <Button onClick={() => handleModelPopUp(record.UniversityAssetId)} icon={<SettingFilled />} shape="circle" size={isMobile ? "small" : "middle"} />
@@ -798,7 +929,7 @@ const UniversityAssetsPage = () => {
               </Popconfirm>
             </Tooltip>
           )}
-          
+
         </div>
       ),
     },
@@ -983,19 +1114,25 @@ const UniversityAssetsPage = () => {
         </Select>
 
         {/* عدد السجلات */}
-        <div className="assets-page-size">
-          <span>عرض</span>
-          <Select
-            defaultValue={"50"}
-            onChange={handleshowPage}
-            style={{ width: isMobile ? 80 : 80 }}
-          >
-            <Option value="10">10</Option>
-            <Option value="20">20</Option>
-            <Option value="50">50</Option>
-            <Option value="100">100</Option>
-            <Option value="200">200</Option>
-          </Select>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+          <div className="assets-page-size">
+            <span>عرض</span>
+            <Select
+              defaultValue={"50"}
+              onChange={handleshowPage}
+              style={{ width: isMobile ? 80 : 80 }}
+            >
+              <Option value="10">10</Option>
+              <Option value="20">20</Option>
+              <Option value="50">50</Option>
+              <Option value="100">100</Option>
+              <Option value="200">200</Option>
+            </Select>
+          </div>
+          <div >
+            عدد الصفوف: {rowData?.RowCount}
+          </div>
         </div>
       </div>
 
@@ -1022,6 +1159,109 @@ const UniversityAssetsPage = () => {
         size={isMobile ? "small" : "default"}
         simple={isMobile}
       />
+
+      <Modal
+        open={openModelOdoo}
+        onCancel={onCloseModelOdoo}
+        // ✅ responsive width
+        width={isMobile ? "100%" : "85%"}
+        style={
+          isMobile
+            ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
+            : { top: 20 }
+        }
+        // ✅ على الموبايل ياخد كل الشاشه
+        styles={{
+          body: {
+            padding: isMobile ? 12 : 24,
+            maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
+            overflowY: "auto",
+          },
+        }}
+        footer={[
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, width: "100%" }}>
+
+            <Button key="cancel" onClick={onCloseModelOdoo} disabled={correctionLoading}>
+              إلغاء
+            </Button>,
+            <Button
+              key="save"
+              type="primary"
+              loading={correctionLoading}
+              onClick={handleSaveCorrection}
+            >
+              أضافه الاصل لموديل اودو
+            </Button>
+          </div>,
+        ]}
+        title={
+          <div>
+            <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+              أضافه الاصل لموديل Odoo
+            </span>
+
+          </div>
+        }
+        destroyOnClose
+        centered={!isMobile}
+      >
+        <Form.Item
+          label={
+            <span style={{ fontWeight: 600 }}>
+              الموديل المرجعي (Odoo Models)
+              {/* <span style={{ color: "#888", fontSize: "12px", marginRight: "6px" }}>(اختياري)</span> */}
+            </span>
+          }
+          extra={
+            <span style={{ color: "#888", fontSize: "12px" }}>
+              ابحث في القائمة واختر الموديل المطابق إن وجد
+            </span>
+          }
+        >
+          <AntSelect
+            showSearch
+            allowClear
+            placeholder="ابحث واختر الموديل المرجعي..."
+            value={correctionMosandaId}
+            onChange={(value) => {
+              setCorrectionMosandaId(value);
+              // ============ NEW: تحديث اسم الموديل تلقائياً ============
+              if (value) {
+                const selected = mosandaList.find(
+                  (item: any) => item.MosandaOdooAssetId === value
+                );
+                if (selected) {
+                  setCorrectionModelName(selected.MosandaOdooAssetModelName);
+                }
+              }
+              // =========================================================
+            }}
+            loading={correctionLoading}
+            filterOption={(input, option) => {
+              const text = (option?.label as string) || "";
+              return text.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="label"
+            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            style={{ width: "100%" }}
+          >
+            {mosandaList?.map((item: any) => (
+              <Option
+                key={item.MosandaOdooAssetId}
+                value={item.MosandaOdooAssetId}
+                label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
+              >
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
+                  <span style={{ fontSize: "11px", color: "#888" }}>
+                    {item.MosandaOdooAssetCategoryName}
+                  </span>
+                </div>
+              </Option>
+            ))}
+          </AntSelect>
+        </Form.Item>
+      </Modal>
 
       {/* ── Modal الإضافة/التعديل ── */}
       {openFormModel && (
