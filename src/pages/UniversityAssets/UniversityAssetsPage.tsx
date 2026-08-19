@@ -884,7 +884,7 @@ const UniversityAssetsPage = () => {
             </Tooltip>
           )} */}
           {
-          (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+          user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
