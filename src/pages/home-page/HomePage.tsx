@@ -35,7 +35,7 @@ const HomePage = () => {
   return (
     <div className="" >
 
-      <div className="home-statistics">
+      {/* <div className="home-statistics">
         <div className="statistics-ul">
           <div className="li">
             <div className="img-wrap">
@@ -113,7 +113,7 @@ const HomePage = () => {
             <PieChart />
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
