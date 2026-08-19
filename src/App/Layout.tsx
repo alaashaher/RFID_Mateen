@@ -210,13 +210,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       hidden: (user?.user?.Permissions?.includes("ViewRooms")) ? false : true
 
     },
-    {
-      key: 2,
-      path: routerLinks.AdminBuildings,
-      name: "المباني الأدارية",
-      icon: <BankOutlined  />,
-      hidden: (user?.user?.Permissions?.includes("ViewBuildings")) ? false : true
-    },
+    // {
+    //   key: 2,
+    //   path: routerLinks.AdminBuildings,
+    //   name: "المباني الأدارية",
+    //   icon: <BankOutlined  />,
+    //   hidden: (user?.user?.Permissions?.includes("ViewBuildings")) ? false : true
+    // },
     {
       key: 5,
       path: routerLinks.UniversityAssets,
