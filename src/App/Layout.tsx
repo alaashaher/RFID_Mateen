@@ -101,8 +101,13 @@ const AppLayout: React.FC<any> = ({ children }) => {
       icon: <HomeOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewInventoryReport")) ? false : true
     },
-    
-    
+    {
+      key: 2,
+      path: routerLinks.AdminBuildings,
+      name: "الصفحة الرئيسية - المبانى الادارية",
+      icon: <HomeOutlined />,
+      hidden: (user?.user?.Permissions?.includes("ViewAdminBuildings")) ? false : true
+    },
     {
       key: 110,
       path: routerLinks.OutOrders,
@@ -517,7 +522,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
           }}
         >
           {/* <Logo className="logo-link" /> */}
-          <RouterLink className={"logo-link"} to={RouterLinks.homePage}>
+          <RouterLink className={"logo-link"} to={RouterLinks.EptyDashboard}>
             <img
               src="assets/imgs/favicon.png"
               alt="app logo"
