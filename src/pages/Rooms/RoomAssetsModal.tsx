@@ -470,7 +470,7 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
       render: (_: any, rec: RoomAssetRow | any) => {
         return (
           <div style={{display: "flex", gap:"4px", alignItems: "center"}}>
-          {
+          {/* {
            user.user.Permissions.includes("SetOdooIdUniversityAssets") && (rec?.OdooId === null || rec?.OdooId === undefined || rec?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
@@ -481,7 +481,7 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
                 />
               </Tooltip>
             </div>
-          }
+          } */}
             {rec.IsNew ? (
               <div>
 

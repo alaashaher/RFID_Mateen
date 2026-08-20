@@ -832,22 +832,9 @@ const UniversityAssetsPage = () => {
     { title: "موديل الأصل", dataIndex: "ModelName", key: "ModelName", ellipsis: true, width: 100 },
     { title: "رقم الموديل", dataIndex: "ModelNumber", key: "ModelNumber", width: 100 },
     { title: "البراند", dataIndex: "Brand", key: "Brand", width: 100 },
-    { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName", responsive: ["xl"] as any },
+    { title: "نوع مبنى الأصول", dataIndex: "BuildingTypeName", key: "BuildingTypeName", width: 100 },
     { title: "المبنى", dataIndex: "BuildingName", key: "BuildingName", width: 100, responsive: ["lg"] as any },
     { title: "تصنيف الاصل", dataIndex: "CategoryName", key: "CategoryName", width: 100, responsive: ["lg"] as any },
-    { title: "باركود الأصل", dataIndex: "AssetBarcode", key: "AssetBarcode", ellipsis: true, width: isMobile ? 160 : 160 },
-    { title: "Serial Number", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
-    { title: "حالة الاصل", dataIndex: "AssetStatus", key: "AssetStatus", ellipsis: true, width: 160 },
-    { title: "طباعه", dataIndex: "PrintedNumber", key: "PrintedNumber", width: 60, responsive: ["sm"] as any },
-    {
-      title: "موديل",
-      dataIndex: "AssetTypeId",
-      key: "AssetTypeId",
-      width: 60,
-      render: (_, value) => value.AssetModelId != null
-        ? <CheckCircleFilled style={{ color: "#52c41a" }} />
-        : <CloseCircleFilled style={{ color: "red" }} />,
-    },
     {
       title: "صورة الموديل",
       dataIndex: "ModelImagePath",
@@ -870,6 +857,20 @@ const UniversityAssetsPage = () => {
         );
       },
     },
+    { title: "باركود الأصل", dataIndex: "AssetBarcode", key: "AssetBarcode", ellipsis: true, width: isMobile ? 160 : 160 },
+    { title: "Serial Number", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
+    { title: "حالة الاصل", dataIndex: "AssetStatus", key: "AssetStatus", ellipsis: true, width: 160 },
+    { title: "طباعه", dataIndex: "PrintedNumber", key: "PrintedNumber", width: 60, responsive: ["sm"] as any },
+    {
+      title: "موديل",
+      dataIndex: "AssetTypeId",
+      key: "AssetTypeId",
+      width: 60,
+      render: (_, value) => value.AssetModelId != null
+        ? <CheckCircleFilled style={{ color: "#52c41a" }} />
+        : <CloseCircleFilled style={{ color: "red" }} />,
+    },
+    
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -991,7 +992,7 @@ const UniversityAssetsPage = () => {
               setCategoryId(""); setAssetTypeId(""); setModelId("");
               setFloorId(""); setSuiteId(""); setRoomId("");
             }}
-            style={{ width: isMobile ? "100%" : 200 }}
+            style={{ width: isMobile ? "100%" : 400 }}
           >
             {buildings.map((b) => (
               <Option key={b.BuildingId} value={b.BuildingId}>
