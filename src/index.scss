@@ -874,3 +874,8 @@ $transition: 200ms ease;
   transform-origin: left;
   transition: transform $transition;
 }
+.hide-row-selection {
+    .ant-checkbox {
+        display: none;
+    }
+}

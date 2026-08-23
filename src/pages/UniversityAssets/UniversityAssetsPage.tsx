@@ -311,8 +311,8 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
 const WAREHOUSE_BUILDING_TYPE_ID = 1;
 
 const UniversityAssetsPage = () => {
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
   const {
     rowData, setRowData, pageSize, setPageSize,
     pageNumber, setPageNumber, keyword, setkeyword,
@@ -436,15 +436,17 @@ const UniversityAssetsPage = () => {
           odooId: correctionMosandaId
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+        setSelectedRowKeys([])
       }
-      if(selectedRowKeys.length > 0){
+      if (selectedRowKeys.length > 0) {
         const value = {
           AssetId: selectedRowKeys.map((item: any) => item),
           odooId: correctionMosandaId
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+        setSelectedRowKeys([])
       }
-      
+
 
       Store.addNotification({
         title: "تم بنجاح",
@@ -879,7 +881,7 @@ const UniversityAssetsPage = () => {
         ? <CheckCircleFilled style={{ color: "#52c41a" }} />
         : <CloseCircleFilled style={{ color: "red" }} />,
     },
-    
+
     {
       title: "إجراءات",
       dataIndex: "Actions",
@@ -892,9 +894,12 @@ const UniversityAssetsPage = () => {
             <Tooltip title="تعديل">
               <Button onClick={() => handleEditMod(record.UniversityAssetId)} icon={<EditOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
             </Tooltip>
-          )} */}
+          )}
+          
+          user.user.Permissions.includes("SetOdooIdUniversityAssets") &&
+          */}
           {
-          (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+            (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
@@ -1140,9 +1145,26 @@ const UniversityAssetsPage = () => {
               <Option value="200">200</Option>
             </Select>
           </div>
-          <div >
-            عدد الأصول: {rowData?.RowCount}
+          <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+            <div >
+
+              عدد الأصول: {rowData?.RowCount}
+            </div>
+            <div>
+              {selectedRowKeys.length > 0 && (
+                <Button
+                  // shape="circle"
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    setOpenModelOdoo(true);
+                  }}
+                >
+                  ربط الاصول ب Odoo
+                </Button>
+              )}
+            </div>
           </div>
+
         </div>
       </div>
 
@@ -1156,16 +1178,22 @@ const UniversityAssetsPage = () => {
           scroll={{ x: isMobile ? 500 : 1200 }}
           size={isMobile ? "small" : "middle"}
           rowKey="UniversityAssetId"
+          rowClassName={(record) => {
+          console.log("🚀 ~ UniversityAssetsPage ~ record:", record.OdooId)
+
+            return (record.OdooId > 0 ? 'hide-row-selection' : '')
+          }}
+
           rowSelection={
-          true
-            ? {
-              selectedRowKeys,
-              onChange: (keys) => setSelectedRowKeys(keys),
-              // الـ checkbox يبقى ثابت لما نـ scroll
-              fixed: true,
-            }
-            : undefined
-        }
+            true
+              ? {
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+                // الـ checkbox يبقى ثابت لما نـ scroll
+                fixed: true,
+              }
+              : undefined
+          }
         />
       </div>
 
