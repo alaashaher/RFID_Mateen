@@ -311,6 +311,8 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
 const WAREHOUSE_BUILDING_TYPE_ID = 1;
 
 const UniversityAssetsPage = () => {
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  
   const {
     rowData, setRowData, pageSize, setPageSize,
     pageNumber, setPageNumber, keyword, setkeyword,
@@ -427,15 +429,22 @@ const UniversityAssetsPage = () => {
     }
     try {
       setCorrectionLoading(true);
-
-      console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId)
-      const payload = {
-        AssetId: assetsId?.UniversityAssetId,
-        OdooId: correctionMosandaId,
-        // RoomId: assetsId?.RoomId
-      };
-
-      await putToApi(`UniversityAsset/update-Asset-odooId?AssetId=${assetsId?.UniversityAssetId}&odooId=${correctionMosandaId}`, null);
+      console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId, selectedRowKeys.map((item: any) => item))
+      if (selectedRowKeys.length === 0) {
+        const value = {
+          AssetId: [assetsId?.UniversityAssetId],
+          odooId: correctionMosandaId
+        }
+        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+      }
+      if(selectedRowKeys.length > 0){
+        const value = {
+          AssetId: selectedRowKeys.map((item: any) => item),
+          odooId: correctionMosandaId
+        }
+        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+      }
+      
 
       Store.addNotification({
         title: "تم بنجاح",
@@ -885,7 +894,7 @@ const UniversityAssetsPage = () => {
             </Tooltip>
           )} */}
           {
-          user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+          (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
@@ -1147,6 +1156,16 @@ const UniversityAssetsPage = () => {
           scroll={{ x: isMobile ? 500 : 1200 }}
           size={isMobile ? "small" : "middle"}
           rowKey="UniversityAssetId"
+          rowSelection={
+          true
+            ? {
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys),
+              // الـ checkbox يبقى ثابت لما نـ scroll
+              fixed: true,
+            }
+            : undefined
+        }
         />
       </div>
 
