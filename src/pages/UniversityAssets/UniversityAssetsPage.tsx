@@ -1132,7 +1132,7 @@ const UniversityAssetsPage = () => {
             </Select>
           </div>
           <div >
-            عدد الصفوف: {rowData?.RowCount}
+            عدد الأصول: {rowData?.RowCount}
           </div>
         </div>
       </div>
