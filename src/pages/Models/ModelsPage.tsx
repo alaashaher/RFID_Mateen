@@ -444,7 +444,7 @@ const ModelsPage = () => {
       }
 
       const token = localStorage.getItem("token");
-      const res = await fetch(`${BASE_URL}/AssetModel/upload-model-images`, {
+      const res = await fetch(`${BASE_URL}AssetModel/upload-model-images`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
