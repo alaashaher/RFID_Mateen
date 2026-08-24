@@ -870,8 +870,8 @@ const RoomAssetsModal: React.FC<RoomAssetsModalProps> = ({
                       .toLowerCase()
                       .includes(input.toLowerCase())
                   }
-                  options={availableModels.map((m) => ({
-                    label: m.ModelName,
+                  options={availableModels.map((m: any) => ({
+                    label: `${m.ModelName} ${m?.ModelNumber ? `- ${m?.ModelNumber}` : ""}`,
                     value: m.AssetModelId,
                   }))}
                 />

@@ -3,7 +3,7 @@ import { Store } from "react-notifications-component";
 import {
   EditOutlined,
   DeleteOutlined,
-  AppstoreAddOutlined,PrinterOutlined,
+  AppstoreAddOutlined, PrinterOutlined,
 } from "@ant-design/icons";
 import { deleteFromApi, getFromApi } from "../../apis/apis";
 import {
@@ -68,12 +68,12 @@ const RoomsPage = () => {
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
 
   // ✅ State لمودل الطباعه
-const [printModalOpen, setPrintModalOpen] = useState(false);
-const [printRoomId, setPrintRoomId] = useState<number | null>(null);
-const [printRoomIds, setPrintRoomIds] = useState<number[]>([]);
- 
-// ✅ Selected rows فى الجدول (للطباعه الجماعيه)
-const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [printRoomId, setPrintRoomId] = useState<number | null>(null);
+  const [printRoomIds, setPrintRoomIds] = useState<number[]>([]);
+
+  // ✅ Selected rows فى الجدول (للطباعه الجماعيه)
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   // جلب المباني
   useEffect(() => {
@@ -81,7 +81,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
       try {
         const res = await getFromApi(`Building/get-building-ddl?buildingTypeId=2`);
         setBuildings(res);
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchBuildings();
   }, []);
@@ -94,7 +94,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
           `UniversityFloor/get-universityFloor-ddl?buildingId=${buildingId ? buildingId : ""}`
         );
         setFloor(res);
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchFloors();
     setFloorId("");
@@ -129,7 +129,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
           `Room/get-all-room-pager?isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&buildingId=${buildingId ? buildingId : ""}&floorId=${floorId ? floorId : ""}&suiteId=${suiteId ? suiteId : ""}`
         );
         setRowData(resp);
-      } catch (error) {}
+      } catch (error) { }
     };
     getAllData();
   }, [pageNumber, pageSize, keyword, detectChanges, floorId, buildingId, suiteId]);
@@ -141,7 +141,7 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
         setToEdit(response);
         setOpenFormModel(true);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleDelete = async (TableId) => {
@@ -197,38 +197,38 @@ const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   };
 
   // طباعة غرفة واحدة (من زرار الصف)
-const handlePrintSingle = (record: any) => {
-  setPrintRoomId(record.RoomId);
-  setPrintRoomIds([]);
-  setPrintModalOpen(true);
-};
- 
-// طباعة الغرف المختاره (من الزرار العلوى)
-const handlePrintBulk = () => {
-  if (selectedRowKeys.length === 0) {
-    Store.addNotification({
-      title: "",
-      message: "اختر غرفة أو أكثر للطباعة",
-      type: "warning",
-      insert: "top",
-      container: "top-right",
-      animationIn: ["animate__animated", "animate__fadeIn"],
-      animationOut: ["animate__animated", "animate__fadeOut"],
-      dismiss: { duration: 2000, onScreen: true },
-    });
-    return;
-  }
-  setPrintRoomId(null);
-  setPrintRoomIds(selectedRowKeys.map((k) => Number(k)));
-  setPrintModalOpen(true);
-};
- 
-const handleClosePrintModal = () => {
-  setPrintModalOpen(false);
-  setPrintRoomId(null);
-  setPrintRoomIds([]);
-};
- 
+  const handlePrintSingle = (record: any) => {
+    setPrintRoomId(record.RoomId);
+    setPrintRoomIds([]);
+    setPrintModalOpen(true);
+  };
+
+  // طباعة الغرف المختاره (من الزرار العلوى)
+  const handlePrintBulk = () => {
+    if (selectedRowKeys.length === 0) {
+      Store.addNotification({
+        title: "",
+        message: "اختر غرفة أو أكثر للطباعة",
+        type: "warning",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      return;
+    }
+    setPrintRoomId(null);
+    setPrintRoomIds(selectedRowKeys.map((k) => Number(k)));
+    setPrintModalOpen(true);
+  };
+
+  const handleClosePrintModal = () => {
+    setPrintModalOpen(false);
+    setPrintRoomId(null);
+    setPrintRoomIds([]);
+  };
+
   const columns = [
     {
       title: "#",
@@ -284,20 +284,20 @@ const handleClosePrintModal = () => {
             {(user.user.Permissions.includes("AddRoomAssets") ||
               user.user.Permissions.includes("ViewRoomAssets") ||
               user.user.Permissions.includes("EditRooms")) && (
-              <Tooltip title="جرد / إنشاء أصول الغرفة">
-                <Button
-                  onClick={() => handleOpenAssetsModal(record)}
-                  icon={<AppstoreAddOutlined />}
-                  shape="circle"
-                  style={{
-                    background: "#1a56db",
-                    color: "#fff",
-                    borderColor: "#1a56db",
-                  }}
-                />
-              </Tooltip>
+                <Tooltip title="جرد / إنشاء أصول الغرفة">
+                  <Button
+                    onClick={() => handleOpenAssetsModal(record)}
+                    icon={<AppstoreAddOutlined />}
+                    shape="circle"
+                    style={{
+                      background: "#1a56db",
+                      color: "#fff",
+                      borderColor: "#1a56db",
+                    }}
+                  />
+                </Tooltip>
 
-            )}
+              )}
 
             {user.user.Permissions.includes("EditRooms") && (
               <Tooltip title="تعديل">
@@ -307,20 +307,20 @@ const handleClosePrintModal = () => {
                   shape="circle"
                 />
               </Tooltip>
-              
+
             )}
             <Tooltip title="طباعة لاصق الغرفة">
-    <Button
-      onClick={() => handlePrintSingle(record)}
-      icon={<PrinterOutlined />}
-      shape="circle"
-      style={{
-        background: "#16a34a",
-        color: "#fff",
-        borderColor: "#16a34a",
-      }}
-    />
-  </Tooltip>
+              <Button
+                onClick={() => handlePrintSingle(record)}
+                icon={<PrinterOutlined />}
+                shape="circle"
+                style={{
+                  background: "#16a34a",
+                  color: "#fff",
+                  borderColor: "#16a34a",
+                }}
+              />
+            </Tooltip>
             {user.user.Permissions.includes("DeleteRooms") && (
               <Popconfirm
                 title="هل أنت متأكد من الحذف؟"
@@ -419,21 +419,21 @@ const handleClosePrintModal = () => {
         )}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {/* ✅ جديد - زرار طباعة المختار */}
-  {user.user.Permissions.includes("PrintRooms") && (
-    <Button
-      icon={<PrinterOutlined />}
-      onClick={handlePrintBulk}
-      disabled={selectedRowKeys.length === 0}
-      type="primary"
-      ghost
-      size={isMobile ? "small" : "middle"}
-    >
-      {isMobile
-        ? `طباعة (${selectedRowKeys.length})`
-        : `طباعة المختار (${selectedRowKeys.length})`}
-    </Button>
-  )}
-  
+          {user.user.Permissions.includes("PrintRooms") && (
+            <Button
+              icon={<PrinterOutlined />}
+              onClick={handlePrintBulk}
+              disabled={selectedRowKeys.length === 0}
+              type="primary"
+              ghost
+              size={isMobile ? "small" : "middle"}
+            >
+              {isMobile
+                ? `طباعة (${selectedRowKeys.length})`
+                : `طباعة المختار (${selectedRowKeys.length})`}
+            </Button>
+          )}
+
           <Button onClick={exportToExcel} size={isMobile ? "small" : "middle"}>
             {isMobile ? "Excel" : "Export to Excel"}
           </Button>
@@ -544,16 +544,16 @@ const handleClosePrintModal = () => {
         size={isMobile ? "small" : "middle"}
         rowKey={(r: any) => r.RoomId}
         // ✅ جديد - rowSelection
-  rowSelection={
-    user.user.Permissions.includes("PrintRooms")
-      ? {
-          selectedRowKeys,
-          onChange: (keys) => setSelectedRowKeys(keys),
-          // الـ checkbox يبقى ثابت لما نـ scroll
-          fixed: true,
+        rowSelection={
+          user.user.Permissions.includes("PrintRooms")
+            ? {
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys),
+              // الـ checkbox يبقى ثابت لما نـ scroll
+              fixed: true,
+            }
+            : undefined
         }
-      : undefined
-  }
       />
       <Pagination
         pageSize={pageSize}
@@ -601,11 +601,11 @@ const handleClosePrintModal = () => {
         onSaved={handleAssetsSaved}
       />
       <RoomPrintModal
-  open={printModalOpen}
-  onClose={handleClosePrintModal}
-  roomId={printRoomId}
-  roomIds={printRoomIds}
-/>
+        open={printModalOpen}
+        onClose={handleClosePrintModal}
+        roomId={printRoomId}
+        roomIds={printRoomIds}
+      />
     </div>
   );
 };
