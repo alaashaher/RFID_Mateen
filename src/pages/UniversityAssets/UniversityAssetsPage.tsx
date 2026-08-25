@@ -373,9 +373,9 @@ const UniversityAssetsPage = () => {
   const buildApiParams = () => {
     const base = `isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}`;
     if (isWarehouseType) {
-      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
+      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&EmployeeId=${EmployeeId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
     } else {
-      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&universityFloorId=${floorId || 0}&suiteId=${suiteId || 0}&roomId=${roomId || 0}&StatusId=${selectedStatusId || 0}`;
+      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&EmployeeId=${EmployeeId || 0}&universityFloorId=${floorId || 0}&suiteId=${suiteId || 0}&roomId=${roomId || 0}&StatusId=${selectedStatusId || 0}`;
     }
   };
 
@@ -395,7 +395,7 @@ const UniversityAssetsPage = () => {
   const [openModelOdoo, setOpenModelOdoo] = useState(false);
   const [openModelEmp, setOpenModelEmp] = useState(false);
   const [EmpData, setEmpData] = useState<any>([]);
-
+  const [EmployeeId, setEmployeeId] = useState<number | undefined>(undefined);
   const [assetsId, setassetsId] = useState<number | any>(undefined);
 
   useEffect(() => {
@@ -471,7 +471,7 @@ const UniversityAssetsPage = () => {
       //   setSelectedRowKeys([])
       // }
 
-        await putToApi(`/UniversityAsset/assign-asset-toEmployee?EmployeeId=${EmpId}&AssetId=${assetsId?.UniversityAssetId}`, null);
+      await putToApi(`/UniversityAsset/assign-asset-toEmployee?EmployeeId=${EmpId}&AssetId=${assetsId?.UniversityAssetId}`, null);
 
       Store.addNotification({
         title: "تم بنجاح",
@@ -503,68 +503,68 @@ const UniversityAssetsPage = () => {
     }
     // Implement the save logic for Emp here
   };
-    const handleSaveCorrection = async () => {
-      if (!correctionMosandaId) {
-        Store.addNotification({
-          title: "تنبيه",
-          message: "برجاء اختيار موديل اودو",
-          type: "warning",
-          insert: "top",
-          container: "top-right",
-          animationIn: ["animate__animated", "animate__fadeIn"],
-          animationOut: ["animate__animated", "animate__fadeOut"],
-          dismiss: { duration: 2000, onScreen: true },
-        });
-        return;
+  const handleSaveCorrection = async () => {
+    if (!correctionMosandaId) {
+      Store.addNotification({
+        title: "تنبيه",
+        message: "برجاء اختيار موديل اودو",
+        type: "warning",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      return;
+    }
+    try {
+      setCorrectionLoading(true);
+      if (selectedRowKeys.length === 0) {
+        const value = {
+          AssetId: [assetsId?.UniversityAssetId],
+          odooId: correctionMosandaId
+        }
+        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+        setSelectedRowKeys([])
       }
-      try {
-        setCorrectionLoading(true);
-        if (selectedRowKeys.length === 0) {
-          const value = {
-            AssetId: [assetsId?.UniversityAssetId],
-            odooId: correctionMosandaId
-          }
-          await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-          setSelectedRowKeys([])
+      if (selectedRowKeys.length > 0) {
+        const value = {
+          AssetId: selectedRowKeys.map((item: any) => item),
+          odooId: correctionMosandaId
         }
-        if (selectedRowKeys.length > 0) {
-          const value = {
-            AssetId: selectedRowKeys.map((item: any) => item),
-            odooId: correctionMosandaId
-          }
-          await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-          setSelectedRowKeys([])
-        }
+        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+        setSelectedRowKeys([])
+      }
 
 
-        Store.addNotification({
-          title: "تم بنجاح",
-          message: "تم أضافه الأصل لموديل اودو بنجاح",
-          type: "success",
-          insert: "top",
-          container: "top-right",
-          animationIn: ["animate__animated", "animate__fadeIn"],
-          animationOut: ["animate__animated", "animate__fadeOut"],
-          dismiss: { duration: 2000, onScreen: true },
-        });
-        getAllData()
-        // fetchRoomAssets(room?.RoomId || 0);
-        onCloseModelOdoo();
-        setCorrectionMosandaId(undefined);
-      } catch (error) {
-        Store.addNotification({
-          title: "خطأ",
-          message: "حدث خطأ أثناء حفظ التصحيح",
-          type: "danger",
-          insert: "top",
-          container: "top-right",
-          animationIn: ["animate__animated", "animate__fadeIn"],
-          animationOut: ["animate__animated", "animate__fadeOut"],
-          dismiss: { duration: 2000, onScreen: true },
-        });
-      } finally {
-        setCorrectionLoading(false);
-      }
+      Store.addNotification({
+        title: "تم بنجاح",
+        message: "تم أضافه الأصل لموديل اودو بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      getAllData()
+      // fetchRoomAssets(room?.RoomId || 0);
+      onCloseModelOdoo();
+      setCorrectionMosandaId(undefined);
+    } catch (error) {
+      Store.addNotification({
+        title: "خطأ",
+        message: "حدث خطأ أثناء حفظ التصحيح",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setCorrectionLoading(false);
+    }
   }
   // helper — يضمن إن الـ response دايماً array
   const toArray = (res: any): any[] => (Array.isArray(res) ? res : []);
@@ -747,7 +747,7 @@ const UniversityAssetsPage = () => {
     buildingId, CategoryId, AssetTypeId, modelId,
     floorId, suiteId, roomId, selectedStatusId,
     selectedBuildingTypeId,
-    OdooId
+    OdooId, EmployeeId
   ]);
 
   // ── Handlers ──
@@ -989,7 +989,7 @@ const UniversityAssetsPage = () => {
           user.user.Permissions.includes("SetOdooIdUniversityAssets") &&
           */}
           {
-             (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+           user.user.Permissions.includes("SetOdooIdUniversityAssets") &&  (record?.EmployeeId === null || record?.EmployeeId === undefined || record?.EmployeeId === 0) &&
             <div>
               <Tooltip title="تعيين كعهده">
                 <Button
@@ -1057,13 +1057,42 @@ const UniversityAssetsPage = () => {
       <h5 style={{ textAlign: "center", marginBottom: "16px" }}>اصول المستودع</h5>
 
       {/* ── شريط الأزرار العلوي ── */}
-      <div className="assets-top-bar">
-        {user.user.Permissions.includes("AddUniversityAssets") && (
-          <Button type="primary" onClick={() => setOpenFormModel(true)} icon={<PlusOutlined />}>
-            إضافة جديد
-          </Button>
-        )}
-        <div className="assets-export-btns">
+      <div className="assets-top-bar" style={{ display: "flex", gap: "5px", flexWrap: "wrap", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", alignItems: "center" }}>
+          {user.user.Permissions.includes("AddUniversityAssets") && (
+            <Button type="primary" onClick={() => setOpenFormModel(true)} icon={<PlusOutlined />}>
+              إضافة جديد
+            </Button>
+          )}
+          {/* ── حالة أودوو — فلتر مستقل ── */}
+          <Select
+            allowClear
+            placeholder="أودوو"
+            value={OdooId || undefined}
+            onChange={(val) => setOdooId(val ?? "")}
+            style={{ width: isMobile ? "100%" : 180 }}
+          >
+            {mosandaList.map((o) => (
+              <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
+                {o.MosandaOdooAssetModelName}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            allowClear
+            placeholder="الموظف"
+            value={EmployeeId || undefined}
+            onChange={(val) => setEmployeeId(val ?? "")}
+            style={{ width: isMobile ? "100%" : 180 }}
+          >
+            {EmpData.map((o: any) => (
+              <Option key={o.EmployeeId} value={o.EmployeeId}>
+                {o.EmployeeName}
+              </Option>
+            ))}
+          </Select>
+        </div>
+        <div className="assets-export-btns" style={{ display: "flex", gap: "5px" }}>
           <Button onClick={exportToExcel}>Export Excel</Button>
           <Button onClick={exportToCSV}>Export CSV</Button>
         </div>
@@ -1230,20 +1259,7 @@ const UniversityAssetsPage = () => {
           ))}
         </Select>
 
-        {/* ── حالة أودوو — فلتر مستقل ── */}
-        <Select
-          allowClear
-          placeholder="أودوو"
-          value={OdooId || undefined}
-          onChange={(val) => setOdooId(val ?? "")}
-          style={{ width: isMobile ? "100%" : 180 }}
-        >
-          {mosandaList.map((o) => (
-            <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
-              {o.MosandaOdooAssetModelName}
-            </Option>
-          ))}
-        </Select>
+
 
         {/* عدد السجلات */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1418,7 +1434,7 @@ const UniversityAssetsPage = () => {
               >
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <span style={{ fontWeight: 500 }}>{item.EmployeeName}</span>
-                  
+
                 </div>
               </Option>
             ))}
