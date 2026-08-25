@@ -15,6 +15,7 @@ import {
   SwapOutlined,
   PictureOutlined,
   ReloadOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import { Select as AntSelect, Form } from "antd";
 
@@ -311,6 +312,8 @@ const AssetImageUploadModal: React.FC<AssetImageUploadProps> = ({
 const WAREHOUSE_BUILDING_TYPE_ID = 1;
 
 const UniversityAssetsPage = () => {
+  const [OdooId, setOdooId] = useState<any | undefined>(undefined);
+  const [odooList, setOdooList] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const {
@@ -370,9 +373,9 @@ const UniversityAssetsPage = () => {
   const buildApiParams = () => {
     const base = `isActive=${isActive}&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}`;
     if (isWarehouseType) {
-      return `${base}&buildingId=${buildingId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
+      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&CategoryId=${CategoryId || 0}&AssetTypeId=${AssetTypeId || 0}&ModelId=${modelId || 0}&StatusId=${selectedStatusId || 0}`;
     } else {
-      return `${base}&buildingId=${buildingId || 0}&universityFloorId=${floorId || 0}&suiteId=${suiteId || 0}&roomId=${roomId || 0}&StatusId=${selectedStatusId || 0}`;
+      return `${base}&buildingId=${buildingId || 0}&OdooId=${OdooId || 0}&universityFloorId=${floorId || 0}&suiteId=${suiteId || 0}&roomId=${roomId || 0}&StatusId=${selectedStatusId || 0}`;
     }
   };
 
@@ -385,15 +388,28 @@ const UniversityAssetsPage = () => {
   const [correctionModelName, setCorrectionModelName] = useState<string>("");
   const [correctionMosandaId, setCorrectionMosandaId] = useState<number | undefined>(undefined);
 
+  const [EmpId, setEmpId] = useState<number | undefined>(undefined);
 
 
 
   const [openModelOdoo, setOpenModelOdoo] = useState(false);
+  const [openModelEmp, setOpenModelEmp] = useState(false);
+  const [EmpData, setEmpData] = useState<any>([]);
+
   const [assetsId, setassetsId] = useState<number | any>(undefined);
 
   useEffect(() => {
+    fetchAllEmps()
     fetchAllModels()
   }, [])
+  const fetchAllEmps = async () => {
+    const [mosandaResp] = await Promise.all([
+      getFromApi(`UniversityAsset/get-employee-ddl`),
+    ]);
+
+    setEmpData(mosandaResp || []);
+
+  };
   const fetchAllModels = async () => {
     const [mosandaResp] = await Promise.all([
       getFromApi(`AssetModel/get-odooAssets-ddl`),
@@ -407,17 +423,26 @@ const UniversityAssetsPage = () => {
     setassetsId(undefined)
 
   }
+  const onCloseModelEmp = () => {
+    setOpenModelEmp(false)
+    setassetsId(undefined)
+    setEmpId(undefined)
+  }
   const handleUpdateRow = (roomAssets: any) => {
-    console.log("🚀 ~ handleUpdateRow ~ roomAssets:", roomAssets)
+    // console.log("🚀 ~ handleUpdateRow ~ roomAssets:", roomAssets)
     setassetsId(roomAssets)
     setOpenModelOdoo(true)
     // setCorrectionMosandaId(roomAssets?.)
   }
-  const handleSaveCorrection = async () => {
-    if (!correctionMosandaId) {
+  const handleUpdateUser = (roomAssets: any) => {
+    setassetsId(roomAssets)
+    setOpenModelEmp(true)
+  }
+  const handleSaveEmp = async () => {
+    if (!EmpId) {
       Store.addNotification({
         title: "تنبيه",
-        message: "برجاء اختيار موديل اودو",
+        message: "برجاء اختيار الموظف",
         type: "warning",
         insert: "top",
         container: "top-right",
@@ -429,28 +454,28 @@ const UniversityAssetsPage = () => {
     }
     try {
       setCorrectionLoading(true);
-      console.log("🚀 ~ handleSaveCorrection ~ correctionMosandaId:", correctionMosandaId, selectedRowKeys.map((item: any) => item))
-      if (selectedRowKeys.length === 0) {
-        const value = {
-          AssetId: [assetsId?.UniversityAssetId],
-          odooId: correctionMosandaId
-        }
-        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-        setSelectedRowKeys([])
-      }
-      if (selectedRowKeys.length > 0) {
-        const value = {
-          AssetId: selectedRowKeys.map((item: any) => item),
-          odooId: correctionMosandaId
-        }
-        await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-        setSelectedRowKeys([])
-      }
+      // if (selectedRowKeys.length === 0) {
+      //   const value = {
+      //     AssetId: [assetsId?.UniversityAssetId],
+      //     odooId: correctionMosandaId
+      //   }
+      //   await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+      //   setSelectedRowKeys([])
+      // }
+      // if (selectedRowKeys.length > 0) {
+      //   const value = {
+      //     AssetId: selectedRowKeys.map((item: any) => item),
+      //     odooId: correctionMosandaId
+      //   }
+      //   await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+      //   setSelectedRowKeys([])
+      // }
 
+        await putToApi(`/UniversityAsset/assign-asset-toEmployee?EmployeeId=${EmpId}&AssetId=${assetsId?.UniversityAssetId}`, null);
 
       Store.addNotification({
         title: "تم بنجاح",
-        message: "تم أضافه الأصل لموديل اودو بنجاح",
+        message: "تم أضافه الأصول للموظف بنجاح",
         type: "success",
         insert: "top",
         container: "top-right",
@@ -460,8 +485,8 @@ const UniversityAssetsPage = () => {
       });
       getAllData()
       // fetchRoomAssets(room?.RoomId || 0);
-      onCloseModelOdoo();
-      setCorrectionMosandaId(undefined);
+      onCloseModelEmp();
+      setEmpId(undefined);
     } catch (error) {
       Store.addNotification({
         title: "خطأ",
@@ -476,6 +501,70 @@ const UniversityAssetsPage = () => {
     } finally {
       setCorrectionLoading(false);
     }
+    // Implement the save logic for Emp here
+  };
+    const handleSaveCorrection = async () => {
+      if (!correctionMosandaId) {
+        Store.addNotification({
+          title: "تنبيه",
+          message: "برجاء اختيار موديل اودو",
+          type: "warning",
+          insert: "top",
+          container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: { duration: 2000, onScreen: true },
+        });
+        return;
+      }
+      try {
+        setCorrectionLoading(true);
+        if (selectedRowKeys.length === 0) {
+          const value = {
+            AssetId: [assetsId?.UniversityAssetId],
+            odooId: correctionMosandaId
+          }
+          await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+          setSelectedRowKeys([])
+        }
+        if (selectedRowKeys.length > 0) {
+          const value = {
+            AssetId: selectedRowKeys.map((item: any) => item),
+            odooId: correctionMosandaId
+          }
+          await putToApi(`UniversityAsset/update-Asset-odooId`, value);
+          setSelectedRowKeys([])
+        }
+
+
+        Store.addNotification({
+          title: "تم بنجاح",
+          message: "تم أضافه الأصل لموديل اودو بنجاح",
+          type: "success",
+          insert: "top",
+          container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: { duration: 2000, onScreen: true },
+        });
+        getAllData()
+        // fetchRoomAssets(room?.RoomId || 0);
+        onCloseModelOdoo();
+        setCorrectionMosandaId(undefined);
+      } catch (error) {
+        Store.addNotification({
+          title: "خطأ",
+          message: "حدث خطأ أثناء حفظ التصحيح",
+          type: "danger",
+          insert: "top",
+          container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: { duration: 2000, onScreen: true },
+        });
+      } finally {
+        setCorrectionLoading(false);
+      }
   }
   // helper — يضمن إن الـ response دايماً array
   const toArray = (res: any): any[] => (Array.isArray(res) ? res : []);
@@ -658,6 +747,7 @@ const UniversityAssetsPage = () => {
     buildingId, CategoryId, AssetTypeId, modelId,
     floorId, suiteId, roomId, selectedStatusId,
     selectedBuildingTypeId,
+    OdooId
   ]);
 
   // ── Handlers ──
@@ -899,7 +989,19 @@ const UniversityAssetsPage = () => {
           user.user.Permissions.includes("SetOdooIdUniversityAssets") &&
           */}
           {
-            (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+             (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
+            <div>
+              <Tooltip title="تعيين كعهده">
+                <Button
+                  shape="circle"
+                  icon={<UserAddOutlined />}
+                  onClick={() => handleUpdateUser(record)}
+                />
+              </Tooltip>
+            </div>
+          }
+          {
+            user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
             <div>
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
@@ -1128,6 +1230,21 @@ const UniversityAssetsPage = () => {
           ))}
         </Select>
 
+        {/* ── حالة أودوو — فلتر مستقل ── */}
+        <Select
+          allowClear
+          placeholder="أودوو"
+          value={OdooId || undefined}
+          onChange={(val) => setOdooId(val ?? "")}
+          style={{ width: isMobile ? "100%" : 180 }}
+        >
+          {mosandaList.map((o) => (
+            <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
+              {o.MosandaOdooAssetModelName}
+            </Option>
+          ))}
+        </Select>
+
         {/* عدد السجلات */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
 
@@ -1179,7 +1296,7 @@ const UniversityAssetsPage = () => {
           size={isMobile ? "small" : "middle"}
           rowKey="UniversityAssetId"
           rowClassName={(record) => {
-          console.log("🚀 ~ UniversityAssetsPage ~ record:", record.OdooId)
+            console.log("🚀 ~ UniversityAssetsPage ~ record:", record.OdooId)
 
             return (record.OdooId > 0 ? 'hide-row-selection' : '')
           }}
@@ -1207,6 +1324,107 @@ const UniversityAssetsPage = () => {
         size={isMobile ? "small" : "default"}
         simple={isMobile}
       />
+
+      <Modal
+        open={openModelEmp}
+        onCancel={onCloseModelEmp}
+        // ✅ responsive width
+        width={isMobile ? "100%" : "85%"}
+        style={
+          isMobile
+            ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
+            : { top: 20 }
+        }
+        // ✅ على الموبايل ياخد كل الشاشه
+        styles={{
+          body: {
+            padding: isMobile ? 12 : 24,
+            maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
+            overflowY: "auto",
+          },
+        }}
+        footer={[
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, width: "100%" }}>
+
+            <Button key="cancel" onClick={onCloseModelEmp} disabled={correctionLoading}>
+              إلغاء
+            </Button>,
+            <Button
+              key="save"
+              type="primary"
+              loading={correctionLoading}
+              onClick={handleSaveEmp}
+            >
+              تعيين كعهده
+            </Button>
+          </div>,
+        ]}
+        title={
+          <div>
+            <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+              تعيين الأصل كعهده لموظف
+            </span>
+
+          </div>
+        }
+        destroyOnClose
+        centered={!isMobile}
+      >
+        <Form.Item
+          label={
+            <span style={{ fontWeight: 600 }}>
+              الموظف
+              {/* <span style={{ color: "#888", fontSize: "12px", marginRight: "6px" }}>(اختياري)</span> */}
+            </span>
+          }
+        // extra={
+        //   // <span style={{ color: "#888", fontSize: "12px" }}>
+        //   //   ابحث في القائمة واختر الموديل المطابق إن وجد
+        //   // </span>
+        // }
+        >
+          <AntSelect
+            showSearch
+            allowClear
+            placeholder="ابحث واختر الموظف ..."
+            value={EmpId}
+            onChange={(value) => {
+              setEmpId(value);
+              // ============ NEW: تحديث اسم الموديل تلقائياً ============
+              // if (value) {
+              //   const selected = mosandaList.find(
+              //     (item: any) => item.MosandaOdooAssetId === value
+              //   );
+              //   if (selected) {
+              //     setCorrectionModelName(selected.MosandaOdooAssetModelName);
+              //   }
+              // }
+              // =========================================================
+            }}
+            loading={correctionLoading}
+            filterOption={(input, option) => {
+              const text = (option?.label as string) || "";
+              return text.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="label"
+            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            style={{ width: "100%" }}
+          >
+            {EmpData?.map((item: any) => (
+              <Option
+                key={item.EmployeeId}
+                value={item.EmployeeId}
+                label={item.EmployeeName}  // ← يظهر ده فقط بعد الاختيار
+              >
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontWeight: 500 }}>{item.EmployeeName}</span>
+                  
+                </div>
+              </Option>
+            ))}
+          </AntSelect>
+        </Form.Item>
+      </Modal>
 
       <Modal
         open={openModelOdoo}
