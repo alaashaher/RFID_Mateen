@@ -1054,7 +1054,7 @@ const UniversityAssetsPage = () => {
 
   return (
     <div className="custom-container">
-      <h5 style={{ textAlign: "center", marginBottom: "16px" }}>اصول المستودع</h5>
+      <h5 style={{ textAlign: "center", marginBottom: "16px" }}>صفحة الأصول</h5>
 
       {/* ── شريط الأزرار العلوي ── */}
       <div className="assets-top-bar" style={{ display: "flex", gap: "5px", flexWrap: "wrap", justifyContent: "space-between" }}>
@@ -1067,10 +1067,10 @@ const UniversityAssetsPage = () => {
           {/* ── حالة أودوو — فلتر مستقل ── */}
           <Select
             allowClear
-            placeholder="أودوو"
+            placeholder="بحث بسجل أصول أودوا"
             value={OdooId || undefined}
             onChange={(val) => setOdooId(val ?? "")}
-            style={{ width: isMobile ? "100%" : 180 }}
+            style={{ width: isMobile ? "100%" : 400 }}
           >
             {mosandaList.map((o) => (
               <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
@@ -1080,10 +1080,10 @@ const UniversityAssetsPage = () => {
           </Select>
           <Select
             allowClear
-            placeholder="الموظف"
+            placeholder="بحث بالموظف"
             value={EmployeeId || undefined}
             onChange={(val) => setEmployeeId(val ?? "")}
-            style={{ width: isMobile ? "100%" : 180 }}
+            style={{ width: isMobile ? "100%" : 300 }}
           >
             {EmpData.map((o: any) => (
               <Option key={o.EmployeeId} value={o.EmployeeId}>
@@ -1091,6 +1091,20 @@ const UniversityAssetsPage = () => {
               </Option>
             ))}
           </Select>
+          {/* ── حالة الأصل — فلتر مستقل ── */}
+        <Select
+          allowClear
+          placeholder="بحث بحالة الأصل"
+          value={selectedStatusId || undefined}
+          onChange={(val) => setSelectedStatusId(val ?? "")}
+          style={{ width: isMobile ? "100%" : 180 }}
+        >
+          {statuses.map((s) => (
+            <Option key={s.StatusId} value={s.StatusId}>
+              {s.StatusNameAr}
+            </Option>
+          ))}
+        </Select>
         </div>
         <div className="assets-export-btns" style={{ display: "flex", gap: "5px" }}>
           <Button onClick={exportToExcel}>Export Excel</Button>
@@ -1243,24 +1257,6 @@ const UniversityAssetsPage = () => {
             )}
           </>
         )}
-
-        {/* ── حالة الأصل — فلتر مستقل ── */}
-        <Select
-          allowClear
-          placeholder="حالة الأصل"
-          value={selectedStatusId || undefined}
-          onChange={(val) => setSelectedStatusId(val ?? "")}
-          style={{ width: isMobile ? "100%" : 180 }}
-        >
-          {statuses.map((s) => (
-            <Option key={s.StatusId} value={s.StatusId}>
-              {s.StatusNameAr}
-            </Option>
-          ))}
-        </Select>
-
-
-
         {/* عدد السجلات */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
 
