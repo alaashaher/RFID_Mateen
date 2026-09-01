@@ -12,7 +12,7 @@ import { Store } from "react-notifications-component";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 import moment from "moment";
 import AntdSelectOptionMulti from "../../common/antd-form-components/AntdSelectOptionMulti";
-import ScsnnedUniversityAssetsContext from "../../contexts/pages-context/ScsnnedUniversityAssetsProvider";
+import WarehouseAdjustmentContext from "../../contexts/pages-context/WarehouseAdjustmentProvider";
 
 const UniversityAssetsForm = () => {
   const {
@@ -22,7 +22,7 @@ const UniversityAssetsForm = () => {
     setdetectChanges,
     setOpenFormModel,
   } =
-    useContext(ScsnnedUniversityAssetsContext);
+    useContext(WarehouseAdjustmentContext);
 
   const { Option } = Select;
 
@@ -83,7 +83,7 @@ const UniversityAssetsForm = () => {
         then: (schema) => schema.required('This field is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
-      BuildingId: Yup.string().required("ادخل المبني"),
+      BuildingId: Yup.string().required("ادخل المستودع"),
       // FloorId: Yup.array().when('AdjustmentLevel', {
       //   is: (value: any) => value === 'RoomLevel' || value === 'FloorLevel',
       //   then: (schema) => schema.required('This field is required'),
@@ -238,28 +238,20 @@ const UniversityAssetsForm = () => {
     setLoading(true);
     try {
       const payload = {
-        AdjustmentId: toEdit ? toEdit.AdjustmentId : 0,
-        AdjustmentName: data.AdjustmentName,
-        AdjustmentDesc: data.AdjustmentDesc,
-
-
-        CategoryId: data.CategoryId,
-        AssetTypeId: data.AssetTypeId,
-        AssetModelId: data.AssetModelId,
-        AdjustmentLevel: data.AdjustmentLevel,
-
-        UserIds: data.UserIds.map((item) => item.value),
-        // FloorsIds: data.AdjustmentLevel === "RoomLevel" || data.AdjustmentLevel === "FloorLevel" ? data.FloorId.map((item) => item.value) : [],
-        BuildingId: data.BuildingId,
-
-        // RoomsIds: data.AdjustmentLevel === "RoomLevel" ? data.RoomId.map((item) => item.value) : [],
-
-
-      };
+  AdjustmentId: toEdit ? toEdit.AdjustmentId : 0,
+  AdjustmentName: data.AdjustmentName,
+  AdjustmentDesc: data.AdjustmentDesc,
+  AdjustmentLevel: data.AdjustmentLevel,
+  UserIds: data.UserIds.map((item) => item.value),
+  BuildingId: data.BuildingId,
+  ...(data.CategoryId && { CategoryId: data.CategoryId }),
+  ...(data.AssetTypeId && { AssetTypeId: data.AssetTypeId }),
+  ...(data.AssetModelId && { AssetModelId: data.AssetModelId }),
+};
       if (toEdit) {
-        res = await putToApi(`WarehouseAdjustment/update-warehouseAdjustmentes`, payload);
+        res = await putToApi(`WarehouseAdjustment/update-warehouseAdjustment`, payload);
       } else {
-        res = await postToApi(`WarehouseAdjustment/add-warehouseAdjustmentes`, payload);
+        res = await postToApi(`WarehouseAdjustment/add-warehouseAdjustment`, payload);
       }
       if (res) {
         setdetectChanges((prev) => prev + 1);
@@ -340,7 +332,7 @@ const UniversityAssetsForm = () => {
                   </div>
                 </div>
                 <div>
-                  مبني
+                  مستودع
                 </div>
               </div>
 
@@ -416,8 +408,8 @@ const UniversityAssetsForm = () => {
               setValue={setValue}
               formClassName="custom-form"
               errorMsg={errors.BuildingId?.message}
-              label={<span>  المبني<span style={{ color: '#252627' }}>*</span></span>}
-              placeholder=" المبني"
+              label={<span>  المستودع<span style={{ color: '#252627' }}>*</span></span>}
+              placeholder=" المستودع"
               options={buildings?.filter((item) => item.BuildingTypeId == 1)?.map((item) => ({ title: `${item.BuildingName} - ${item.BuildingCode}`, value: item.BuildingId }))}
             />
           </Col>

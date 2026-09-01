@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import UniversityAssetsForm from "./UniversityAssetsForm";
 import UserContext from "../../contexts/user-context/UserProvider";
-import ScsnnedUniversityAssetsContext from "../../contexts/pages-context/ScsnnedUniversityAssetsProvider";
+import WarehouseAdjustmentContext from "../../contexts/pages-context/WarehouseAdjustmentProvider";
 import { User } from "../../utils/user.type";
 import HandelUpdateFloors from "./HandelUpdateFloors";
 import HanadelUpdateUsers from "./HanadelUpdateUsers";
@@ -45,7 +45,7 @@ const WarehouseAdjustmentPage = () => {
         setOpenFormModel,
         isActive,
         popupType, setPopupType
-    } = useContext(ScsnnedUniversityAssetsContext);
+    } = useContext(WarehouseAdjustmentContext);
     const { user } = useContext(UserContext);
     // console.log("🚀 ~ WarehouseAdjustmentPage ~ user:", user)
     const navigate = useNavigate();
@@ -137,7 +137,7 @@ const WarehouseAdjustmentPage = () => {
     const handleEditMod = async (TableId) => {
         try {
             const response = await getFromApi(
-                `WarehouseAdjustment/get-warehouseAdjustmentes-by-id?universityAssetId=${TableId}`
+                `WarehouseAdjustment/get-warehouseAdjustment-by-id?universityAssetId=${TableId}`
             );
             if (response) {
                 setToEdit(response);
@@ -152,7 +152,7 @@ const WarehouseAdjustmentPage = () => {
         try {
             setLoading(true);
             await deleteFromApi(
-                `WarehouseAdjustment/delete-warehouseAdjustmentes?universityAssetId=${TableId}`
+                `WarehouseAdjustment/delete-warehouseAdjustment?universityAssetId=${TableId}`
             );
             setdetectChanges((prevState) => prevState + 1);
             Store.addNotification({
@@ -293,7 +293,7 @@ const WarehouseAdjustmentPage = () => {
             key: "AdjustmentDesc",
         },
         {
-            title: " اسم المبني ",
+            title: " اسم المستودع ",
             dataIndex: "BuildingName",
             key: "BuildingName",
         },
@@ -302,7 +302,10 @@ const WarehouseAdjustmentPage = () => {
             dataIndex: "AdjustmentLevel",
             key: "AdjustmentLevel",
             render: (_, record) => {
-                if (record?.AdjustmentLevel == 'CategoryLevel') {
+                if (record?.AdjustmentLevel == 'BuildingLevel') {
+                    return 'مستوي مستودع'
+                }
+                else if (record?.AdjustmentLevel == 'CategoryLevel') {
                     return 'مستوي تصنيف الاصل'
                 } else if (record?.AdjustmentLevel == 'AssetTypeLevel') {
                     return 'مستوي اصناف الاصل'
@@ -503,7 +506,7 @@ const WarehouseAdjustmentPage = () => {
                         <Flex
                             gap="4px"
                             align='center'>
-                            <Input type='text' placeholder='ابحث باسم الجرد او اسم المبنى' onChange={(e) => handleSearch(e)} />
+                            <Input type='text' placeholder='ابحث باسم الجرد او اسم المستودع' onChange={(e) => handleSearch(e)} />
                             <span> </span>
                         </Flex>
                     </div>

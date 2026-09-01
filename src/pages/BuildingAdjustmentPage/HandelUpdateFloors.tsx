@@ -9,7 +9,7 @@ import { Store } from "react-notifications-component";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 
 import AntdSelectOptionMulti from "../../common/antd-form-components/AntdSelectOptionMulti";
-import ScsnnedUniversityAssetsContext from "../../contexts/pages-context/ScsnnedUniversityAssetsProvider";
+import BuildingAdjustmentContext from "../../contexts/pages-context/BuildingAdjustmentProvider";
 
 const HandelUpdateFloors = () => {
     const {
@@ -20,7 +20,7 @@ const HandelUpdateFloors = () => {
         setOpenFormModel,
         detectChanges
     } =
-        useContext(ScsnnedUniversityAssetsContext);
+        useContext(BuildingAdjustmentContext);
 
 
     const [buildings, setBuildings] = useState([]);

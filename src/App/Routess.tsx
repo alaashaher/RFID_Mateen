@@ -27,7 +27,7 @@ import UniversityAssetsAdjustmentInfo from "../pages/UniversityAssetsScsnned/Uni
 import AssetsTypePage from "../pages/AssetsType/AssetsTypePage";
 import ModelsPage from "../pages/Models/ModelsPage";
 import WarehouseAdjustmentPage from "../pages/WarehouseAdjustmentScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
-import ScsnnedUniversityAssetsPage from "../pages/ScsnnedUniversityAssetsPage/ScsnnedUniversityAssetsPage";
+import BuildingAdjustmentPage from "../pages/BuildingAdjustmentPage/BuildingAdjustmentPage";
 import OutOrders from "../pages/out-orders/OutOrders";
 import CampOrdersPage from "../pages/CampOrdersPage/CampOrdersPage";
 import CampsManagement from "../pages/CampsManagement/CampsManagement";
@@ -93,14 +93,14 @@ const Routess = () => {
         </ProtectedRoute>}>
       </Route>
 
-      <Route path={routerLinks.WarehouseAdjustmentScsnnedUniversityAssets} element={
+      <Route path={routerLinks.WarehouseAdjustment} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
           <WarehouseAdjustmentPage />
         </ProtectedRoute>}>
       </Route>
-      <Route path={routerLinks.ScsnnedUniversityAssetsPage} element={
+      <Route path={routerLinks.BuildingAdjustment} element={
         <ProtectedRoute requiredPermission="ViewUniversityAssets">
-          <ScsnnedUniversityAssetsPage />
+          <BuildingAdjustmentPage />
         </ProtectedRoute>}>
       </Route>
 

@@ -2,9 +2,9 @@ import { createContext, useState } from "react";
 import React from "react";
 const INITIAL_STATE = {};
 
-const ScsnnedUniversityAssetsContext = createContext<any>(INITIAL_STATE);
+const WarehouseAdjustmentContext = createContext<any>(INITIAL_STATE);
 
-export const ScsnnedUniversityAssetsProvider: React.FC<any> = ({ children }) => {
+export const WarehouseAdjustmentProvider: React.FC<any> = ({ children }) => {
   const [rowData, setRowData] = useState<any>([]);
   const [pageSize, setPageSize] = useState(50);
   const [pageNumber, setPageNumber] = useState(1);
@@ -19,7 +19,7 @@ export const ScsnnedUniversityAssetsProvider: React.FC<any> = ({ children }) => 
   const [isActive, setIsActive] = useState<boolean>(true);
 
   return (
-    <ScsnnedUniversityAssetsContext.Provider
+    <WarehouseAdjustmentContext.Provider
       value={{
         rowData,
         setRowData,
@@ -42,7 +42,7 @@ export const ScsnnedUniversityAssetsProvider: React.FC<any> = ({ children }) => 
       }}
     >
       {children}
-    </ScsnnedUniversityAssetsContext.Provider>
+    </WarehouseAdjustmentContext.Provider>
   );
 };
-export default ScsnnedUniversityAssetsContext;
+export default WarehouseAdjustmentContext;

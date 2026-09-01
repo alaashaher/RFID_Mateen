@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import UniversityAssetsForm from "./UniversityAssetsForm";
 import UserContext from "../../contexts/user-context/UserProvider";
-import ScsnnedUniversityAssetsContext from "../../contexts/pages-context/ScsnnedUniversityAssetsProvider";
+import BuildingAdjustmentContext from "../../contexts/pages-context/BuildingAdjustmentProvider";
 import { User } from "../../utils/user.type";
 import HandelUpdateFloors from "./HandelUpdateFloors";
 import HanadelUpdateUsers from "./HanadelUpdateUsers";
@@ -25,7 +25,7 @@ import RouterLinks from "../../App/RouterLinks";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-const ScsnnedUniversityAssetsPage = () => {
+const BuildingAdjustmentPage = () => {
     const {
         rowData,
         setRowData,
@@ -45,9 +45,9 @@ const ScsnnedUniversityAssetsPage = () => {
         setOpenFormModel,
         isActive,
         popupType, setPopupType
-    } = useContext(ScsnnedUniversityAssetsContext);
+    } = useContext(BuildingAdjustmentContext);
     const { user } = useContext(UserContext);
-    // console.log("🚀 ~ ScsnnedUniversityAssetsPage ~ user:", user)
+    // console.log("🚀 ~ BuildingAdjustmentPage ~ user:", user)
     const navigate = useNavigate();
     const { Option } = Select;
     const [buildings, setBuildings] = useState([]);
@@ -62,7 +62,7 @@ const ScsnnedUniversityAssetsPage = () => {
     // const [yearCount, setyearCount] = useState((moment(new Date()).year() - 2025))
     const [yearOpation, setyearOpation] = useState([])
 
-    // console.log("🚀 ~ ScsnnedUniversityAssetsPage ~ yearCount:", yearCount)
+    // console.log("🚀 ~ BuildingAdjustmentPage ~ yearCount:", yearCount)
     const [year, setyear] = useState(moment(new Date()).year())
     useEffect(() => {
         setkeyword("")
@@ -634,4 +634,4 @@ const ScsnnedUniversityAssetsPage = () => {
     )
 }
 
-export default ScsnnedUniversityAssetsPage
+export default BuildingAdjustmentPage

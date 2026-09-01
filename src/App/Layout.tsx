@@ -243,8 +243,8 @@ const AppLayout: React.FC<any> = ({ children }) => {
     },
     
     {
-      key: 15,
-      path: routerLinks.ScsnnedUniversityAssetsPage,
+      key: 29,
+      path: routerLinks.BuildingAdjustment,
       name: "جرد المباني الأدارية",
       icon: <ScanOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewAdjustmentUniversityAssets")) ? false : true
@@ -252,7 +252,7 @@ const AppLayout: React.FC<any> = ({ children }) => {
     },
     {
       key: 15,
-      path: routerLinks.WarehouseAdjustmentScsnnedUniversityAssets,
+      path: routerLinks.WarehouseAdjustment,
       name: "جرد المستودعات",
       icon: <ScanOutlined />,
       hidden: (user?.user?.Permissions?.includes("ViewAdjustmentUniversityAssets")) ? false : true

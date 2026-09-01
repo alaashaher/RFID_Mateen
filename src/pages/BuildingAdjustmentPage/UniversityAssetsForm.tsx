@@ -12,7 +12,7 @@ import { Store } from "react-notifications-component";
 import AntdSelectOption from "../../common/antd-form-components/AntdSelectOption";
 import moment from "moment";
 import AntdSelectOptionMulti from "../../common/antd-form-components/AntdSelectOptionMulti";
-import ScsnnedUniversityAssetsContext from "../../contexts/pages-context/ScsnnedUniversityAssetsProvider";
+import BuildingAdjustmentContext from "../../contexts/pages-context/BuildingAdjustmentProvider";
 
 const UniversityAssetsForm = () => {
   const {
@@ -22,7 +22,7 @@ const UniversityAssetsForm = () => {
     setdetectChanges,
     setOpenFormModel,
   } =
-    useContext(ScsnnedUniversityAssetsContext);
+    useContext(BuildingAdjustmentContext);
 
   const { Option } = Select;
 

@@ -22,8 +22,9 @@ import { UniversityFloorsProvider } from "./contexts/pages-context/UniversityFlo
 import { UniversityAssetsScannedProvider } from "./contexts/pages-context/UniversityAssetsProviderScanned.js";
 import { UniversityAssetsRelocationProvider } from "./contexts/pages-context/UniversityAssetsRelocationProvider.js";
 import { CategoryListProvider } from "./contexts/pages-context/CategoryListProvider.js";
-import { ScsnnedUniversityAssetsProvider } from "./contexts/pages-context/ScsnnedUniversityAssetsProvider.js";
-// import { CampAdjustmentPage } from "./contexts/pages-context/ScsnnedUniversityAssetsProvider.js";
+import { BuildingAdjustmentProvider } from "./contexts/pages-context/BuildingAdjustmentProvider.js";
+import { WarehouseAdjustmentProvider } from "./contexts/pages-context/WarehouseAdjustmentProvider.js";
+
 
 
 
@@ -47,11 +48,13 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
                           <UniversityAssetsRelocationProvider>
                             <UniversityFloorsProvider>
                               <CategoryListProvider>
-                                <ScsnnedUniversityAssetsProvider>
+                                <BuildingAdjustmentProvider>
+                                <WarehouseAdjustmentProvider>
                                   <Router>
                                     <App />
                                   </Router>
-                                </ScsnnedUniversityAssetsProvider>
+                                </WarehouseAdjustmentProvider>
+                                </BuildingAdjustmentProvider>
                               </CategoryListProvider>
                             </UniversityFloorsProvider>
                           </UniversityAssetsRelocationProvider>
