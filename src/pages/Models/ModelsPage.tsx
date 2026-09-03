@@ -12,7 +12,7 @@ import {
   Popconfirm,
   Image,
   Tag,
-  Form, Upload,
+  Form, Upload,Radio,
 } from "antd";
 import { Select as AntSelect } from "antd";
 import * as XLSX from 'xlsx';
@@ -135,18 +135,24 @@ const ModelsPage = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    const getAllData = async () => {
-      try {
-        const resp = await getFromApi(
-          `AssetModel/get-all-assetModel-pager?isActive=true&pageSize=${pageSize}&currentPage=${pageNumber}&keyword=${keyword}&assetTypeId=${selectedCategoryId ? selectedCategoryId : ""}`
-        );
-        setRowData(resp);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    getAllData();
-  }, [pageNumber, pageSize, keyword, detectChanges, selectedCatType, selectedBuildingTypeId, selectedCategoryId]);
+  const getAllData = async () => {
+    try {
+      const resp = await getFromApi(
+        `AssetModel/get-all-assetModel-pager` +
+        `?isActive=true` +
+        `&pageSize=${pageSize}` +
+        `&currentPage=${pageNumber}` +
+        `&keyword=${keyword}` +
+        `&assetTypeId=${selectedCategoryId ? selectedCategoryId : ""}` +
+        `${selectedBuildingTypeId ? `&buildingTypeId=${selectedBuildingTypeId}` : ""}`  // ← جديد
+      );
+      setRowData(resp);
+    } catch (error) {
+      //console.log(error);
+    }
+  };
+  getAllData();
+}, [pageNumber, pageSize, keyword, detectChanges, selectedCatType, selectedBuildingTypeId, selectedCategoryId]);
 
   const handleEditMod = async (TableId) => {
     setToEdit(TableId);
@@ -1149,7 +1155,9 @@ const ModelsPage = () => {
           <Input
             type="text"
             placeholder="ابحث بالاسم (الموديل) او كود  الموديل "
+            style={{ width: 800 }}
             onChange={(e) => setkeyword(e.target.value)}
+            
           />
           <AntSelect
             allowClear
@@ -1160,7 +1168,7 @@ const ModelsPage = () => {
             filterOption={(input, option) =>
               (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
             }
-            style={{ width: 250 }}
+            style={{ width: 300 }}
           >
             {categories?.map((item) => (
               <Option key={item.AssetTypeId} value={item.AssetTypeId}>
@@ -1168,6 +1176,35 @@ const ModelsPage = () => {
               </Option>
             ))}
           </AntSelect>
+
+            {user?.user?.RoleTypeId === 4 && (
+    <div style={{ 
+      display: "flex", 
+      alignItems: "center", 
+      gap: "10px",
+      padding: "8px 12px",
+      backgroundColor: "#f9f9f9",
+      borderRadius: "8px",
+      border: "1px solid #e8e8e8"
+    }}>
+      <span style={{ fontWeight: 600, color: "#555", fontSize: "13px" }}>
+        نوع الموديل:
+      </span>
+      <Radio.Group
+        value={selectedBuildingTypeId || ""}
+        onChange={(e) => {
+          setSelectedBuildingTypeId(e.target.value);
+          setPageNumber(1); // إعادة الصفحة للأولى
+        }}
+        optionType="button"
+        buttonStyle="solid"
+      >
+        <Radio.Button value="">الكل</Radio.Button>
+        <Radio.Button value={1}>مستودع</Radio.Button>
+        <Radio.Button value={2}>مبانى إدارية</Radio.Button>
+      </Radio.Group>
+    </div>
+  )}
         </div>
 
         <Table
