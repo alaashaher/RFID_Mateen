@@ -1201,7 +1201,9 @@ const UniversityAssetsPage = () => {
               style={{ width: isMobile ? "100%" : 380 }}
               options={Models.map((m) => ({
                 value: m.AssetModelId,
-                label: `${m.Brand ?? ""} - ${m.ModelName ?? ""} - ${m.ModelNumber ?? ""} - عدد ${m.AssetTotalCount ?? 0} قطعه`,
+                //label: `${m.Brand ?? ""} - ${m.ModelName ?? ""} - ${m.ModelNumber ?? ""} - عدد ${m.AssetTotalCount ?? 0} قطعه`,
+                label: `${m.Brand ?? ""} - ${m.ModelName ?? ""} - ${m.ModelNumber ?? ""}`,
+
               }))}
             />
           </>
