@@ -318,6 +318,7 @@ const UniversityAssetsPage = () => {
   const [odooList, setOdooList] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  const [CompanyName, setCompanyName]=useState(null)
   const {
     rowData, setRowData, pageSize, setPageSize,
     pageNumber, setPageNumber, keyword, setkeyword,
@@ -561,7 +562,9 @@ const UniversityAssetsPage = () => {
       if (selectedRowKeys.length === 0) {
         const value = {
           AssetId: [assetsId?.UniversityAssetId],
-          odooId: correctionMosandaId
+          odooId: correctionMosandaId,
+          CompanyName: CompanyName
+          // CompanyName: assetsId.CompanyName 
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
         setSelectedRowKeys([])
@@ -569,7 +572,10 @@ const UniversityAssetsPage = () => {
       if (selectedRowKeys.length > 0) {
         const value = {
           AssetId: selectedRowKeys.map((item: any) => item),
-          odooId: correctionMosandaId
+          odooId: correctionMosandaId,
+          CompanyName: CompanyName
+          // CompanyName: assetsId.CompanyName 
+
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
         setSelectedRowKeys([])
@@ -1598,6 +1604,7 @@ const UniversityAssetsPage = () => {
                 );
                 if (selected) {
                   setCorrectionModelName(selected.MosandaOdooAssetModelName);
+                  setCompanyName(selected.CompanyName)
                 }
               }
               // =========================================================
