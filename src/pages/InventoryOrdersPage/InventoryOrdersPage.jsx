@@ -7,25 +7,20 @@ import urls from "../../urls";
 
 // const BASE_URL = "https://rfidrajhiapi.sirumaps.net";
 const BASE_URL = urls.basicUrl;
+
 const api = {
+
   getCampOrders: (status, createdBy) => {
     const params = new URLSearchParams();
     if (status) params.append("status", status);
     if (createdBy) params.append("createdBy", createdBy);
-    return getFromApi(`DispatchOrder/get-camp-orders?${params.toString()}`);
+    return getFromApi(`WarehouseRequest/get-all-warehouseRequests`);
   },
-  addCampOrder: (formData) => {
-    const token = localStorage.getItem("token");
-    return fetch(`${BASE_URL}/api/DispatchOrder/add-camp-order`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData, // FormData — no Content-Type header
-    }).then(r => r.json());
-  },
+ 
   setDone: (campOrderId, doneNotes) =>
-    postToApi(`DispatchOrder/set-done-camp-order`, { campOrderId, doneNotes }),
+    postToApi(`WarehouseRequest/set-done-warehouseRequest`, { campOrderId, doneNotes }),
   deleteCampOrder: (id) =>
-    deleteFromApi(`DispatchOrder/delete-camp-order?id=${id}`),
+    deleteFromApi(`WarehouseRequest/delete-warehouseReques?id=${id}`),
   getCamps: () => getFromApi(`DispatchOrder/get-camps`),
 };
 
@@ -166,7 +161,7 @@ const OrderCard = ({ order, onDone, onDelete, imagesBaseUrl }) => {
 // ─────────────────────────────────────────────
 // NEW ORDER FORM (Bottom bar — like chat input)
 // ─────────────────────────────────────────────
-const NewOrderForm = ({ camps, onSubmit }) => {
+const NewOrderForm = ({ camps, onSubmit, cats }) => {
   const [itemName, setItemName] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -179,37 +174,45 @@ const NewOrderForm = ({ camps, onSubmit }) => {
   const [AssetTypeId, setAssetTypeId] = useState(null);
   const [Models, setModels] = useState([]);
   const [modelId, setModelId] = useState("");
+  const [CategoryId, setCategoryId] = useState(null);
+
   const fileRef = useRef(null);
   const { Option } = Select;
+
+  // console.log('=================catscatscats===================');
+  // console.log(cats);
+  // console.log('====================================');
   useEffect(() => {
     // setModelFilter(null);
-    const fetchModels = async () => {
-      try {
-        const res = await getFromApi(
-          `AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId || ""}`
-        );
-        setModels(res);
-      } catch (error) { setModels([]); }
-    };
-    fetchModels();
+    if (AssetTypeId) {
+      const fetchModels = async () => {
+        try {
+          const res = await getFromApi(
+            `AssetModel/get-assetModel-by-assetTypeId?assetTypeId=${AssetTypeId || ""}`
+          );
+          setModels(res);
+        } catch (error) { setModels([]); }
+      };
+      fetchModels();
+    }
   }, [AssetTypeId]);
 
   useEffect(() => {
+    if (CategoryId != null) {
+      const fetchLanguages = async () => {
+        try {
+          const res = await getFromApi(
 
-    const fetchLanguages = async () => {
-      try {
-        const hasmode = false;
-        const res = await getFromApi(
-
-          `AssetType/get-assetType-ddl`
-        );
-        setBuildings(res);
-      } catch (error) {
-        //console.log(error);
-      }
-    };
-    fetchLanguages();
-  }, [])
+            `AssetType/get-assetType-ddl-byCategoryId?CategoryId=${CategoryId}`
+          );
+          setBuildings(res);
+        } catch (error) {
+          //console.log(error);
+        }
+      };
+      fetchLanguages();
+    }
+  }, [CategoryId])
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -227,12 +230,13 @@ const NewOrderForm = ({ camps, onSubmit }) => {
       itemName,
       description,
       quantity,
-      campId: campId || null,
+      // campId: campId || null,
       image,
       AssetTypeId: AssetTypeId || null,
-      AssetModelId: modelId
+      AssetModelId: modelId,
+      CategoryId: CategoryId ?? null,
     });
-    setItemName(""); setDescription(""); setQuantity(1); setCampId(""); removeImage(); setExpanded(false);
+    // setItemName(""); setDescription(""); setQuantity(1); setCampId(""); removeImage(); setExpanded(false);
     setSending(false);
   };
 
@@ -260,18 +264,52 @@ const NewOrderForm = ({ camps, onSubmit }) => {
             }}
           />
         </div>
-        <div style={{ flex: "2 1 200px" }}>
+      </div>
+
+      <div style={{ display: "grid", marginTop: "10px", gridTemplateColumns: "25% 25% 30% 100px", gap: 8, alignItems: "center" }}>
+
+        <div >
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#888" }}> قسم الأصل</label>
+          {/* 55555555 {cats.length > 0 && cats[0]["CategoryName"] } */}
+
+          {/* <select
+            style={{ width: "100%", padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }}
+            placeholder="اختر نوع الاصل"
+            onChange={(val) => { setCategoryId(val.target.value ?? "");  }}
+            value={CategoryId || undefined}
+          // style={{ width: isMobile ? "100%" : 200 }}
+          >
+            <option value="" disabled>اختر قسم الأصل</option>
+            {cats.map((c) => (
+              <Option key={c.CategoryId} value={c.CategoryId}>{c.CategoryName}</Option>
+            ))}
+          </select> */}
+
+          <Select
+            allowClear
+            placeholder="اختر نوع الاصل"
+            onChange={(val) => { setCategoryId(val ?? ""); setAssetTypeId(""); setModelId(""); }}
+            value={CategoryId || undefined}
+          // style={{ width: isMobile ? "100%" : 200 }}
+          >
+            {cats.length > 0 && cats.map((c) => (
+              <Option key={c.CategoryId} value={c.CategoryId}>{c.CategoryName}</Option>
+            ))}
+          </Select>
+        </div>
+        <div >
           <label style={{ fontSize: 11, fontWeight: 600, color: "#888" }}>نوع صنف الأصل</label>
 
           <select value={AssetTypeId} onChange={e => setAssetTypeId(e.target.value)}
             style={{ width: "100%", padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }}>
-            <option value="">اختر نوع صنف الأصل</option>
+            <option value="" disabled>اختر نوع صنف الأصل</option>
             {buildings.map(c => <option key={c.AssetTypeId} value={c.AssetTypeId}>{c.AssetTypeName}</option>)}
           </select>
         </div>
-        <div style={{ flex: "2 1 200px" }}>
+        <div style={{ overflow: "hidden" }}>
 
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#8880" }}>dd</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#888" }}>موديل الأصل</label>
+
 
           <Select
             allowClear
@@ -290,7 +328,7 @@ const NewOrderForm = ({ camps, onSubmit }) => {
             }))}
           />
         </div>
-        <button
+        {/* <button
           onClick={() => fileRef.current?.click()}
           style={{
             width: 40, height: 40, borderRadius: "50%", border: "1.5px solid #ddd",
@@ -298,8 +336,8 @@ const NewOrderForm = ({ camps, onSubmit }) => {
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
           title="إرفاق صورة"
-        >📷</button>
-        <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} />
+        >📷</button> */}
+        {/* <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} /> */}
         <Btn variant="primary" onClick={handleSubmit} disabled={!itemName.trim() || sending}
           style={{ borderRadius: 24, padding: "10px 20px" }}>
           {sending ? "..." : "إرسال ➤"}
@@ -320,14 +358,14 @@ const NewOrderForm = ({ camps, onSubmit }) => {
             <input type="number" min={1} value={quantity} onChange={e => setQuantity(Number(e.target.value))}
               style={{ width: "100%", padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, textAlign: "center", boxSizing: "border-box" }} />
           </div>
-          <div style={{ flex: "1 1 150px" }}>
+          {/* <div style={{ flex: "1 1 150px" }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: "#888" }}>المخيم</label>
             <select value={campId} onChange={e => setCampId(e.target.value)}
               style={{ width: "100%", padding: "6px 10px", borderRadius: 8, border: "1px solid #ddd", fontSize: 13, direction: "rtl", boxSizing: "border-box" }}>
               <option value="">عام</option>
               {camps.map(c => <option key={c.CampId} value={c.CampId}>{c.CampName}</option>)}
             </select>
-          </div>
+          </div> */}
         </div>
       )}
 
@@ -352,6 +390,13 @@ export default function InventoryOrdersPage() {
   const [filter, setFilter] = useState("all"); // all | Pending | Done
   const imagesBaseUrl = BASE_URL;
 
+  const toArray = (res) => {
+    if (Array.isArray(res)) return res;
+    if (res && Array.isArray(res.data)) return res.data;
+    if (res && Array.isArray(res.items)) return res.items;
+    return [];
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -367,16 +412,39 @@ export default function InventoryOrdersPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleSubmit = async ({ itemName, description, quantity, campId, image }) => {
-    const formData = new FormData();
-    formData.append("itemName", itemName);
-    if (description) formData.append("description", description);
-    if (quantity) formData.append("quantity", String(quantity));
-    if (campId) formData.append("campId", String(campId));
-    if (image) formData.append("image", image);
+  const [cats, setCats] = useState([]);
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await getFromApi(`Category/get-category-ddl`);
+        setCats(toArray(res));
+      } catch (error) {
+        setCats([]);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  const handleSubmit = async ({ itemName, description, quantity, campId, image, AssetTypeId, AssetModelId, CategoryId }) => {
+    const formData = {
+      // itemName,
+      Notes: description || "",
+      RequestedQuantity: quantity ? String(quantity) : "1",
+      AssetTypeId: AssetTypeId ? String(AssetTypeId) : undefined,
+      AssetModelId: AssetModelId ? String(AssetModelId) : undefined,
+      CategoryId: CategoryId ? String(CategoryId) : undefined,
+      // campId: campId ? String(campId) : undefined,
+      // image: image || null,
+    };
+    // console.log("🚀 ~ handleSubmit ~ formData:", formData);
 
     try {
-      const r = await api.addCampOrder(formData);
+      // const r = await api.addCampOrder(formData);
+      const r = postToApi(`WarehouseRequest/add-warehouseRequest`, {
+        "Priority": 1,
+        "Notes": description || "",
+        Items: [formData]
+      });
       if (r.success !== false) loadData();
       else alert(r.message || "فشل الإرسال");
     } catch (e) { alert(e.message); }
@@ -398,8 +466,9 @@ export default function InventoryOrdersPage() {
     } catch (e) { alert(e.message); }
   };
 
-  const pendingCount = orders.filter(o => o.Status === "Pending").length;
-  const doneCount = orders.filter(o => o.Status === "Done").length;
+  console.log("🚀 ~ InventoryOrdersPage ~ orders:", orders)
+  const pendingCount = orders?.data?.filter(o => o.Status === "Pending").length;
+  const doneCount = orders?.data?.filter(o => o.Status === "Done").length;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f2f7", fontFamily: "'Segoe UI', Tahoma, sans-serif" }}>
@@ -414,7 +483,7 @@ export default function InventoryOrdersPage() {
         {/* Filter tabs */}
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>
           {[
-            { id: "all", label: `الكل (${orders.length})`, color: "#555" },
+            { id: "all", label: `الكل (${orders?.data?.length || 0})`, color: "#555" },
             { id: "Pending", label: `⏳ قيد الانتظار (${pendingCount})`, color: "#E67E22" },
             { id: "Done", label: `✅ تم التعامل (${doneCount})`, color: "#27AE60" },
           ].map(t => (
@@ -432,19 +501,19 @@ export default function InventoryOrdersPage() {
 
         {/* New Order Form */}
         <div style={{ marginBottom: 20 }}>
-          <NewOrderForm camps={camps} onSubmit={handleSubmit} />
+          <NewOrderForm camps={camps} onSubmit={handleSubmit} cats={cats} />
         </div>
 
         {/* Orders List */}
         {loading ? (
           <div style={{ textAlign: "center", padding: 40, color: "#888" }}>⏳ جارٍ التحميل...</div>
-        ) : orders.length === 0 ? (
+        ) : orders?.data?.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "#aaa", direction: "rtl" }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>📭</div>
             <div>لا توجد طلبات {filter === "Pending" ? "قيد الانتظار" : filter === "Done" ? "تم التعامل معها" : ""}</div>
           </div>
         ) : (
-          orders.map(o => (
+          orders?.data?.map(o => (
             <OrderCard
               key={o.CampOrderId}
               order={o}
@@ -456,9 +525,9 @@ export default function InventoryOrdersPage() {
         )}
 
         {/* Footer count */}
-        {orders.length > 0 && (
+        {orders?.data?.length > 0 && (
           <div style={{ textAlign: "center", fontSize: 12, color: "#999", marginTop: 16, direction: "rtl" }}>
-            إجمالي: {orders.length} طلب
+            إجمالي: {orders?.data?.length} طلب
           </div>
         )}
       </div>
