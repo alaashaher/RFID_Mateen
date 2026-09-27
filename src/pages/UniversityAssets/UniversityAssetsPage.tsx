@@ -318,7 +318,7 @@ const UniversityAssetsPage = () => {
   const [odooList, setOdooList] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  const [CompanyName, setCompanyName]=useState(null)
+  const [CompanyName, setCompanyName] = useState(null)
   const {
     rowData, setRowData, pageSize, setPageSize,
     pageNumber, setPageNumber, keyword, setkeyword,
@@ -1103,12 +1103,12 @@ const UniversityAssetsPage = () => {
             )}
           {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
             <Tooltip title="أضافه موديل"  >
-              <Button   onClick={() => handleModelPopUp(record.UniversityAssetId)} icon={<SettingFilled />} shape="circle" size={isMobile ? "small" : "middle"} />
+              <Button onClick={() => handleModelPopUp(record.UniversityAssetId)} icon={<SettingFilled />} shape="circle" size={isMobile ? "small" : "middle"} />
             </Tooltip>
           )}
           {user.user.Permissions.includes("PrintRFIDUniversityAssets") && (
             <Tooltip title="طباعه الباركود">
-              <Button  onClick={() => handlePrintMod(record.UniversityAssetId)} icon={<PrinterOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
+              <Button onClick={() => handlePrintMod(record.UniversityAssetId)} icon={<PrinterOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
             </Tooltip>
           )}
           {user.user.Permissions.includes("EditUniversityAssets") && (
@@ -1159,38 +1159,41 @@ const UniversityAssetsPage = () => {
             </Button>
           )}
           {/* ── حالة أودوو — فلتر مستقل ── */}
-           <AntSelect
-            showSearch
-            allowClear
-            placeholder="ابحث واختر الموديل المرجعي..."
-            value={OdooId}
-            onChange={(value) => {
-              setOdooId(value);
-            }}
-            loading={correctionLoading}
-            filterOption={(input, option) => {
-              const text = (option?.label as string) || "";
-              return text.toLowerCase().includes(input.toLowerCase());
-            }}
-            optionFilterProp="label"
-            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
-            style={{ width: "100%" }}
-          >
-            {mosandaList?.map((item: any) => (
-              <Option
-                key={item.MosandaOdooAssetId}
-                value={item.MosandaOdooAssetId}
-                label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
-              >
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
-                  <span style={{ fontSize: "11px", color: "#888" }}>
-                    {item.MosandaOdooAssetCategoryName}
-                  </span>
-                </div>
-              </Option>
-            ))}
-          </AntSelect>
+          <div>
+
+            <AntSelect
+              showSearch
+              allowClear
+              placeholder="ابحث واختر الموديل المرجعي..."
+              value={OdooId}
+              onChange={(value) => {
+                setOdooId(value);
+              }}
+              loading={correctionLoading}
+              filterOption={(input, option) => {
+                const text = (option?.label as string) || "";
+                return text.toLowerCase().includes(input.toLowerCase());
+              }}
+              optionFilterProp="label"
+              optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+              style={{ width: "100%" }}
+            >
+              {mosandaList?.map((item: any) => (
+                <Option
+                  key={item.MosandaOdooAssetId}
+                  value={item.MosandaOdooAssetId}
+                  label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
+                >
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
+                    <span style={{ fontSize: "11px", color: "#888" }}>
+                      {item.MosandaOdooAssetCategoryName}
+                    </span>
+                  </div>
+                </Option>
+              ))}
+            </AntSelect>
+          </div>
           {/* <Select
             allowClear
             showSearch
