@@ -1159,19 +1159,62 @@ const UniversityAssetsPage = () => {
             </Button>
           )}
           {/* ── حالة أودوو — فلتر مستقل ── */}
-          <Select
+           <AntSelect
+            showSearch
             allowClear
+            placeholder="ابحث واختر الموديل المرجعي..."
+            value={OdooId}
+            onChange={(value) => {
+              setOdooId(value);
+            }}
+            loading={correctionLoading}
+            filterOption={(input, option) => {
+              const text = (option?.label as string) || "";
+              return text.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="label"
+            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            style={{ width: "100%" }}
+          >
+            {mosandaList?.map((item: any) => (
+              <Option
+                key={item.MosandaOdooAssetId}
+                value={item.MosandaOdooAssetId}
+                label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
+              >
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
+                  <span style={{ fontSize: "11px", color: "#888" }}>
+                    {item.MosandaOdooAssetCategoryName}
+                  </span>
+                </div>
+              </Option>
+            ))}
+          </AntSelect>
+          {/* <Select
+            allowClear
+            showSearch
             placeholder="بحث بسجل أصول أودوا"
             value={OdooId || undefined}
             onChange={(val) => setOdooId(val ?? "")}
             style={{ width: isMobile ? "100%" : 400 }}
+            filterOption={(input, option) => {
+              console.log("🚀 ~ UniversityAssetsPage ~ option:", option)
+              console.log("🚀 ~ UniversityAssetsPage ~ input:", input)
+              const text = (option?.children as string) || "";
+              return text.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="label"
+            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            // style={{ width: "100%" }}
+
           >
             {mosandaList.map((o) => (
               <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
                 {o.MosandaOdooAssetModelName}
               </Option>
             ))}
-          </Select>
+          </Select> */}
           <Select
             allowClear
             placeholder="بحث بالموظف"
