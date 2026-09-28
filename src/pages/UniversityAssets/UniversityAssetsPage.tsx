@@ -438,11 +438,13 @@ const UniversityAssetsPage = () => {
     // console.log("🚀 ~ handleUpdateRow ~ roomAssets:", roomAssets)
     setassetsId(roomAssets)
     setOpenModelOdoo(true)
+
     // setCorrectionMosandaId(roomAssets?.)
   }
   const handleUpdateUser = (roomAssets: any) => {
     setassetsId(roomAssets)
     setOpenModelEmp(true)
+    setEmpId(roomAssets?.EmployeeId === 0 ? undefined : roomAssets?.EmployeeId)
   }
 
   const handleSavenewStaus = async () => {
@@ -480,6 +482,40 @@ const UniversityAssetsPage = () => {
       // fetchRoomAssets(room?.RoomId || 0);
       setOpenModelnewStaus(false)
       setnewStaus(undefined);
+    } catch (error) {
+      Store.addNotification({
+        title: "خطأ",
+        message: "حدث خطأ أثناء حفظ التصحيح",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setCorrectionLoading(false);
+    }
+  }
+  const onCancelAsset = async () => {
+    try {
+      setCorrectionLoading(true);
+      await putToApi(`/UniversityAsset/assign-asset-toEmployee?EmployeeId=${0}&AssetId=${assetsId?.UniversityAssetId}`, null);
+
+      Store.addNotification({
+        title: "تم بنجاح",
+        message: "تم حذف الاًصل من العهده  بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      getAllData()
+      // fetchRoomAssets(room?.RoomId || 0);
+      onCloseModelEmp();
+      setEmpId(undefined);
     } catch (error) {
       Store.addNotification({
         title: "خطأ",
@@ -1077,6 +1113,18 @@ const UniversityAssetsPage = () => {
             </div>
           }
           {
+            user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.EmployeeId > 0) &&
+            <div >
+              <Tooltip title="تغيير حالة العهده">
+                <Button
+                  shape="circle"
+                  icon={<UserAddOutlined />}
+                  onClick={() => handleUpdateUser(record)}
+                />
+              </Tooltip>
+            </div>
+          }
+          {
             user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
             <div >
               <Tooltip title="ربط الاصل بموديل Odoo">
@@ -1181,7 +1229,7 @@ const UniversityAssetsPage = () => {
           <Button onClick={exportToCSV}>Export CSV</Button>
         </div>
       </div>
-      <div style={{display:"grid", gridTemplateColumns: "1fr 1fr", gap: "20px"}}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
         {/* ── حالة أودوو — فلتر مستقل ── */}
         <div>
 
@@ -1255,14 +1303,14 @@ const UniversityAssetsPage = () => {
         </div>
       </div>
       {/* ── الفلاتر ── */}
-      <div className="assets-filters-wrapper" style={{marginTop:"10px"}}>
+      <div className="assets-filters-wrapper" style={{ marginTop: "10px" }}>
 
         {/* بحث */}
         <Input
           placeholder="ابحث بالاسم او الباركود"
           onChange={handleSearch}
           allowClear
-          style={{ flex: isMobile ? "unset" : "1 1 160px", width: isMobile ? "100%" : undefined, marginBottom:"10px" }}
+          style={{ flex: isMobile ? "unset" : "1 1 160px", width: isMobile ? "100%" : undefined, marginBottom: "10px" }}
         />
 
         {/* نوع المبنى — أول dropdown */}
@@ -1400,7 +1448,7 @@ const UniversityAssetsPage = () => {
           </>
         )}
         {/* عدد السجلات */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop:"10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
 
           <div className="assets-page-size">
             <span>عرض</span>
@@ -1499,7 +1547,11 @@ const UniversityAssetsPage = () => {
         }}
         footer={[
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, width: "100%" }}>
+            {assetsId?.EmployeeId > 0 && (
 
+              <Button key="cancelAsset" onClick={onCancelAsset} disabled={correctionLoading}>
+                حذف الأصل من العهده
+              </Button>)}
             <Button key="cancel" onClick={onCloseModelEmp} disabled={correctionLoading}>
               إلغاء
             </Button>,
