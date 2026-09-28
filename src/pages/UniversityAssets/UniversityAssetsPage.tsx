@@ -16,6 +16,8 @@ import {
   PictureOutlined,
   ReloadOutlined,
   UserAddOutlined,
+  CheckOutlined,
+  SyncOutlined,
 } from "@ant-design/icons";
 import { Select as AntSelect, Form } from "antd";
 
@@ -316,6 +318,7 @@ const UniversityAssetsPage = () => {
   const [odooList, setOdooList] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  const [CompanyName, setCompanyName] = useState(null)
   const {
     rowData, setRowData, pageSize, setPageSize,
     pageNumber, setPageNumber, keyword, setkeyword,
@@ -397,7 +400,10 @@ const UniversityAssetsPage = () => {
   const [EmpData, setEmpData] = useState<any>([]);
   const [EmployeeId, setEmployeeId] = useState<number | undefined>(undefined);
   const [assetsId, setassetsId] = useState<number | any>(undefined);
+  const [openModelnewStaus, setOpenModelnewStaus] = useState(false);
+  const [newStaus, setnewStaus] = useState<number | undefined>(undefined);
 
+  // newStaus
   useEffect(() => {
     fetchAllEmps()
     fetchAllModels()
@@ -438,6 +444,57 @@ const UniversityAssetsPage = () => {
     setassetsId(roomAssets)
     setOpenModelEmp(true)
   }
+
+  const handleSavenewStaus = async () => {
+    if (!newStaus) {
+      Store.addNotification({
+        title: "تنبيه",
+        message: "برجاء اختيار الحاله",
+        type: "warning",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      return;
+    }
+    try {
+      setCorrectionLoading(true);
+      await putToApi(`/UniversityAsset/Update-Asset-Status`, {
+        universityAssetId: assetsId?.UniversityAssetId,
+        newStaus: newStaus
+      });
+
+      Store.addNotification({
+        title: "تم بنجاح",
+        message: "تم تعديل حالة الأصل بنجاح",
+        type: "success",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+      getAllData()
+      // fetchRoomAssets(room?.RoomId || 0);
+      setOpenModelnewStaus(false)
+      setnewStaus(undefined);
+    } catch (error) {
+      Store.addNotification({
+        title: "خطأ",
+        message: "حدث خطأ أثناء حفظ التصحيح",
+        type: "danger",
+        insert: "top",
+        container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setCorrectionLoading(false);
+    }
+  }
   const handleSaveEmp = async () => {
     if (!EmpId) {
       Store.addNotification({
@@ -454,23 +511,6 @@ const UniversityAssetsPage = () => {
     }
     try {
       setCorrectionLoading(true);
-      // if (selectedRowKeys.length === 0) {
-      //   const value = {
-      //     AssetId: [assetsId?.UniversityAssetId],
-      //     odooId: correctionMosandaId
-      //   }
-      //   await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-      //   setSelectedRowKeys([])
-      // }
-      // if (selectedRowKeys.length > 0) {
-      //   const value = {
-      //     AssetId: selectedRowKeys.map((item: any) => item),
-      //     odooId: correctionMosandaId
-      //   }
-      //   await putToApi(`UniversityAsset/update-Asset-odooId`, value);
-      //   setSelectedRowKeys([])
-      // }
-
       await putToApi(`/UniversityAsset/assign-asset-toEmployee?EmployeeId=${EmpId}&AssetId=${assetsId?.UniversityAssetId}`, null);
 
       Store.addNotification({
@@ -522,7 +562,9 @@ const UniversityAssetsPage = () => {
       if (selectedRowKeys.length === 0) {
         const value = {
           AssetId: [assetsId?.UniversityAssetId],
-          odooId: correctionMosandaId
+          odooId: correctionMosandaId,
+          CompanyName: CompanyName
+          // CompanyName: assetsId.CompanyName 
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
         setSelectedRowKeys([])
@@ -530,7 +572,10 @@ const UniversityAssetsPage = () => {
       if (selectedRowKeys.length > 0) {
         const value = {
           AssetId: selectedRowKeys.map((item: any) => item),
-          odooId: correctionMosandaId
+          odooId: correctionMosandaId,
+          CompanyName: CompanyName
+          // CompanyName: assetsId.CompanyName 
+
         }
         await putToApi(`UniversityAsset/update-Asset-odooId`, value);
         setSelectedRowKeys([])
@@ -790,6 +835,36 @@ const UniversityAssetsPage = () => {
     }
   };
 
+  const handleRepaired = async (assetId: number) => {
+    try {
+      setLoading(true);
+      const response = await putToApi(
+        `UniversityAsset/set-Asset-Maintained?universityAssetId=${assetId}`,
+        {}
+      );
+      if (response) {
+        setdetectChanges((prev) => prev + 1);
+        Store.addNotification({
+          title: "", message: "تم تحديد الأصل كمُصلح",
+          type: "success", insert: "top", container: "top-right",
+          animationIn: ["animate__animated", "animate__fadeIn"],
+          animationOut: ["animate__animated", "animate__fadeOut"],
+          dismiss: { duration: 2000, onScreen: true },
+        });
+      }
+    } catch (error) {
+      Store.addNotification({
+        title: "", message: "حدث خطأ، حاول مرة أخرى",
+        type: "danger", insert: "top", container: "top-right",
+        animationIn: ["animate__animated", "animate__fadeIn"],
+        animationOut: ["animate__animated", "animate__fadeOut"],
+        dismiss: { duration: 2000, onScreen: true },
+      });
+    } finally {
+      setLoading(false);
+    }
+
+  }
   const handleModelPopUp = async (TableId) => {
     try {
       const response = await getFromApi(
@@ -921,6 +996,7 @@ const UniversityAssetsPage = () => {
     URL.revokeObjectURL(url);
   };
 
+
   // ── أعمدة الجدول ──
   const columns = [
     {
@@ -959,7 +1035,7 @@ const UniversityAssetsPage = () => {
       },
     },
     { title: "باركود الأصل", dataIndex: "AssetBarcode", key: "AssetBarcode", ellipsis: true, width: isMobile ? 160 : 160 },
-    { title: "Serial Number", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
+    { title: "الرقم التسلسلي", dataIndex: "AssetSerialNo", key: "AssetSerialNo", ellipsis: true, width: 160 },
     { title: "حالة الاصل", dataIndex: "AssetStatus", key: "AssetStatus", ellipsis: true, width: 160 },
     { title: "طباعه", dataIndex: "PrintedNumber", key: "PrintedNumber", width: 60, responsive: ["sm"] as any },
     {
@@ -979,7 +1055,7 @@ const UniversityAssetsPage = () => {
       width: isMobile ? 100 : 160,
       fixed: "right" as const,
       render: (_, record) => (
-        <div className="act-btns">
+        <div className="act-btns" style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
           {/* {user.user.Permissions.includes("EditUniversityAssets") && (
             <Tooltip title="تعديل">
               <Button onClick={() => handleEditMod(record.UniversityAssetId)} icon={<EditOutlined />} shape="circle" size={isMobile ? "small" : "middle"} />
@@ -989,8 +1065,8 @@ const UniversityAssetsPage = () => {
           user.user.Permissions.includes("SetOdooIdUniversityAssets") &&
           */}
           {
-           user.user.Permissions.includes("SetOdooIdUniversityAssets") &&  (record?.EmployeeId === null || record?.EmployeeId === undefined || record?.EmployeeId === 0) &&
-            <div>
+            user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.EmployeeId === null || record?.EmployeeId === undefined || record?.EmployeeId === 0) &&
+            <div >
               <Tooltip title="تعيين كعهده">
                 <Button
                   shape="circle"
@@ -1002,7 +1078,7 @@ const UniversityAssetsPage = () => {
           }
           {
             user.user.Permissions.includes("SetOdooIdUniversityAssets") && (record?.OdooId === null || record?.OdooId === undefined || record?.OdooId === 0) &&
-            <div>
+            <div >
               <Tooltip title="ربط الاصل بموديل Odoo">
                 <Button
                   shape="circle"
@@ -1014,8 +1090,9 @@ const UniversityAssetsPage = () => {
           }
           {user.user.Permissions.includes("EditUniversityAssets") &&
             record.BuildingId !== 1 && (
-              <Tooltip title="إعادة تسكين">
+              <Tooltip title="إعادة تسكين" >
                 <Button
+
                   onClick={() => handleOpenRelocation(record)}
                   icon={<SwapOutlined />}
                   shape="circle"
@@ -1025,7 +1102,7 @@ const UniversityAssetsPage = () => {
               </Tooltip>
             )}
           {user.user.Permissions.includes("EditUniversityAssets") && record.AssetModelId == null && (
-            <Tooltip title="أضافه موديل">
+            <Tooltip title="أضافه موديل"  >
               <Button onClick={() => handleModelPopUp(record.UniversityAssetId)} icon={<SettingFilled />} shape="circle" size={isMobile ? "small" : "middle"} />
             </Tooltip>
           )}
@@ -1044,6 +1121,23 @@ const UniversityAssetsPage = () => {
               <Popconfirm title="هل أنت متأكد من تحديد هذا الأصل كتالف؟" onConfirm={() => handleDamaged(record.UniversityAssetId)} okText="نعم" cancelText="لا">
                 <Button icon={<WarningOutlined />} shape="circle" size={isMobile ? "small" : "middle"} danger />
               </Popconfirm>
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("EditUniversityAssets") && (record.AssetStatus === 'NeedsInspection' || record.AssetStatus === 'NeedsReplacement' || record.AssetStatus === 'Damaged') && (
+            <Tooltip title="تمت صيانته">
+              <Popconfirm title="هل أنت متأكد من تحديد هذا الأصل كتمت صيانته؟" onConfirm={() => handleRepaired(record.UniversityAssetId)} okText="نعم" cancelText="لا">
+                <Button icon={<CheckOutlined />} shape="circle" size={isMobile ? "small" : "middle"} type="primary" />
+              </Popconfirm>
+            </Tooltip>
+          )}
+          {user.user.Permissions.includes("EditUniversityAssets") && (
+            <Tooltip title="تغيير حالة الأصل">
+              {/* <Popconfirm title="هل أنت متأكد من تحديد هذا الأصل كتمت صيانته؟" onConfirm={() => handleRepaired(record.UniversityAssetId)} okText="نعم" cancelText="لا"> */}
+              <Button icon={<SyncOutlined />} onClick={() => {
+                setassetsId(record);
+                setOpenModelnewStaus(true);
+              }} shape="circle" size={isMobile ? "small" : "middle"} type="primary" />
+              {/* </Popconfirm> */}
             </Tooltip>
           )}
 
@@ -1065,19 +1159,65 @@ const UniversityAssetsPage = () => {
             </Button>
           )}
           {/* ── حالة أودوو — فلتر مستقل ── */}
-          <Select
+          <div>
+
+            <AntSelect
+              showSearch
+              allowClear
+              placeholder="ابحث واختر الموديل المرجعي..."
+              value={OdooId}
+              onChange={(value) => {
+                setOdooId(value);
+              }}
+              loading={correctionLoading}
+              filterOption={(input, option) => {
+                const text = (option?.label as string) || "";
+                return text.toLowerCase().includes(input.toLowerCase());
+              }}
+              optionFilterProp="label"
+              optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+              style={{ width: "100%" }}
+            >
+              {mosandaList?.map((item: any) => (
+                <Option
+                  key={item.MosandaOdooAssetId}
+                  value={item.MosandaOdooAssetId}
+                  label={item.MosandaOdooAssetModelName}  // ← يظهر ده فقط بعد الاختيار
+                >
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: 500 }}>{item.MosandaOdooAssetModelName}</span>
+                    <span style={{ fontSize: "11px", color: "#888" }}>
+                      {item.MosandaOdooAssetCategoryName}
+                    </span>
+                  </div>
+                </Option>
+              ))}
+            </AntSelect>
+          </div>
+          {/* <Select
             allowClear
+            showSearch
             placeholder="بحث بسجل أصول أودوا"
             value={OdooId || undefined}
             onChange={(val) => setOdooId(val ?? "")}
             style={{ width: isMobile ? "100%" : 400 }}
+            filterOption={(input, option) => {
+              console.log("🚀 ~ UniversityAssetsPage ~ option:", option)
+              console.log("🚀 ~ UniversityAssetsPage ~ input:", input)
+              const text = (option?.children as string) || "";
+              return text.toLowerCase().includes(input.toLowerCase());
+            }}
+            optionFilterProp="label"
+            optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            // style={{ width: "100%" }}
+
           >
             {mosandaList.map((o) => (
               <Option key={o.MosandaOdooAssetId} value={o.MosandaOdooAssetId}>
                 {o.MosandaOdooAssetModelName}
               </Option>
             ))}
-          </Select>
+          </Select> */}
           <Select
             allowClear
             placeholder="بحث بالموظف"
@@ -1092,19 +1232,19 @@ const UniversityAssetsPage = () => {
             ))}
           </Select>
           {/* ── حالة الأصل — فلتر مستقل ── */}
-        <Select
-          allowClear
-          placeholder="بحث بحالة الأصل"
-          value={selectedStatusId || undefined}
-          onChange={(val) => setSelectedStatusId(val ?? "")}
-          style={{ width: isMobile ? "100%" : 180 }}
-        >
-          {statuses.map((s) => (
-            <Option key={s.StatusId} value={s.StatusId}>
-              {s.StatusNameAr}
-            </Option>
-          ))}
-        </Select>
+          <Select
+            allowClear
+            placeholder="بحث بحالة الأصل"
+            value={selectedStatusId || undefined}
+            onChange={(val) => setSelectedStatusId(val ?? "")}
+            style={{ width: isMobile ? "100%" : 180 }}
+          >
+            {statuses.map((s) => (
+              <Option key={s.StatusId} value={s.StatusId}>
+                {s.StatusNameAr}
+              </Option>
+            ))}
+          </Select>
         </div>
         <div className="assets-export-btns" style={{ display: "flex", gap: "5px" }}>
           <Button onClick={exportToExcel}>Export Excel</Button>
@@ -1512,6 +1652,7 @@ const UniversityAssetsPage = () => {
                 );
                 if (selected) {
                   setCorrectionModelName(selected.MosandaOdooAssetModelName);
+                  setCompanyName(selected.CompanyName)
                 }
               }
               // =========================================================
@@ -1543,6 +1684,111 @@ const UniversityAssetsPage = () => {
         </Form.Item>
       </Modal>
 
+
+      <Modal
+        open={openModelnewStaus}
+        onCancel={() => {
+          setOpenModelnewStaus(false)
+        }}
+        // ✅ responsive width
+        width={isMobile ? "100%" : "85%"}
+        style={
+          isMobile
+            ? { top: 0, paddingBottom: 0, maxWidth: "100vw", margin: 0 }
+            : { top: 20 }
+        }
+        // ✅ على الموبايل ياخد كل الشاشه
+        styles={{
+          body: {
+            padding: isMobile ? 12 : 24,
+            maxHeight: isMobile ? "calc(100vh - 110px)" : "75vh",
+            overflowY: "auto",
+          },
+        }}
+        footer={[
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, width: "100%" }}>
+
+            <Button key="cancel" onClick={() => {
+              setOpenModelnewStaus(false)
+            }} disabled={correctionLoading}>
+              إلغاء
+            </Button>,
+            <Button
+              key="save"
+              type="primary"
+              loading={correctionLoading}
+              onClick={handleSavenewStaus}
+            >
+              تغيير الحاله
+            </Button>
+          </div>,
+        ]}
+        title={
+          <div>
+            <span style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+              تغيير حالة الأصل
+            </span>
+
+          </div>
+        }
+        destroyOnClose
+        centered={!isMobile}
+      >
+        <Form.Item
+          label={
+            <span style={{ fontWeight: 600 }}>
+              الحاله
+              {/* <span style={{ color: "#888", fontSize: "12px", marginRight: "6px" }}>(اختياري)</span> */}
+            </span>
+          }
+        // extra={
+        //   // <span style={{ color: "#888", fontSize: "12px" }}>
+        //   //   ابحث في القائمة واختر الموديل المطابق إن وجد
+        //   // </span>
+        // }
+        >
+          <AntSelect
+            showSearch
+            allowClear
+            placeholder="اختر الحاله ..."
+            value={newStaus}
+            onChange={(value) => {
+              setnewStaus(value);
+              // ============ NEW: تحديث اسم الموديل تلقائياً ============
+              // if (value) {
+              //   const selected = mosandaList.find(
+              //     (item: any) => item.MosandaOdooAssetId === value
+              //   );
+              //   if (selected) {
+              //     setCorrectionModelName(selected.MosandaOdooAssetModelName);
+              //   }
+              // }
+              // =========================================================
+            }}
+            // loading={correctionLoading}
+            // filterOption={(input, option) => {
+            //   const text = (option?.label as string) || "";
+            //   return text.toLowerCase().includes(input.toLowerCase());
+            // }}
+            // optionFilterProp="label"
+            // optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
+            style={{ width: "100%" }}
+          >
+            {statuses?.map((item: any) => (
+              <Option
+                key={item.StatusNameEn}
+                value={item.StatusNameEn}
+                label={item.StatusNameAr}  // ← يظهر ده فقط بعد الاختيار
+              >
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span style={{ fontWeight: 500 }}>{item.StatusNameAr}</span>
+
+                </div>
+              </Option>
+            ))}
+          </AntSelect>
+        </Form.Item>
+      </Modal>
       {/* ── Modal الإضافة/التعديل ── */}
       {openFormModel && (
         <Modal
