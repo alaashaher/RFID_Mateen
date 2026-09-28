@@ -1176,7 +1176,7 @@ const UniversityAssetsPage = () => {
               }}
               optionFilterProp="label"
               optionLabelProp="label"   // ← مهم: عشان لما يتختار يظهر الـ label فقط
-              style={{ width: "100%" }}
+              style={{ width: "450px" }}
             >
               {mosandaList?.map((item: any) => (
                 <Option
